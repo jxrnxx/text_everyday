@@ -1,8 +1,8 @@
 {
-    "name": "x_template",
+    "name": "text_everyday",
     "description": "a ts-react template for dota2 modding, together with some helper scripts",
     "license": "MIT",
-    "repository": "https://github.com/XavierCHN/x-template",
+    "repository": "https://github.com/XavierCHN/text_everyday",
     "scripts": {
         "lint": "eslint --ext .js,.ts,.tsx --quiet --fix \"./content/panorama/src/**/*.{js,ts,tsx}\" \"./game/scripts/src/**/*.{js,ts,tsx}\" \"./scripts/**/*.{js,ts,tsx}\"",
         "postinstall": "tsx scripts/install.ts",

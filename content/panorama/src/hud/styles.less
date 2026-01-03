@@ -6,6 +6,44 @@
     height: 100%;
 }
 
+.invitation-root {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    background-image: url('s2r://panorama/images/custom_game/login_background.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    z-index: 10000;
+}
+
+.invitation-dialog {
+    align: center center;
+    flow-children: down;
+    width: 600px;
+    padding: 60px 40px;
+    background-color: rgba(30, 35, 40, 0.85);
+    border: 1px solid rgba(194, 160, 96, 0.3);
+    box-shadow: 0px 0px 40px 0px rgba(0,0,0,0.8);
+    border-radius: 12px;
+}
+
+.invitation-title {
+    font-size: 48px;
+    font-weight: bold;
+    color: #f0e6d2;
+    horizontal-align: center;
+    margin-bottom: 10px;
+    text-shadow: 0px 2px 8px 2.0 #000000;
+    letter-spacing: 4px;
+    text-align: center;
+}
+
+.invitation-input-container {
+    flow-children: right;
+    horizontal-align: center;
+    margin-bottom: 25px;
+}
+
 .QRCode {
     horizontal-align: right;
     vertical-align: bottom;

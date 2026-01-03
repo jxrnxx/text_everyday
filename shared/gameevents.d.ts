@@ -8,4 +8,18 @@ declare interface CustomGameEventDeclarations {
         foo: number;
         bar: string;
     };
+
+    /** Send verification code to server */
+    to_server_verify_code: {
+        code: string;
+    };
+
+    /** Receive verification result from server */
+    from_server_verify_result: {
+        success: boolean;
+        message?: string;
+    };
+
+    /** Stop custom sounds on client */
+    stop_custom_sounds: {};
 }

@@ -13,4 +13,5 @@
     },
     "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
     "eslint.run": "onSave",
+    "less.lint.unknownProperties": "ignore"
 }

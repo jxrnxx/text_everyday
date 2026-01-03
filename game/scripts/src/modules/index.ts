@@ -2,6 +2,8 @@ import { Debug } from './Debug';
 import { GameConfig } from './GameConfig';
 import { XNetTable } from '../utils/xnet-table';
 
+import { InvitationModule } from './InvitationModule';
+
 declare global {
     interface CDOTAGameRules {
         // 声明所有的GameRules模块，这个主要是为了方便其他地方的引用（保证单例模式）
@@ -21,5 +23,7 @@ export function ActivateModules() {
         new GameConfig();
         // 初始化测试模块xD
         new Debug();
+        // 初始化邀请码模块
+        new InvitationModule();
     }
 }

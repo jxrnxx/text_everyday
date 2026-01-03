@@ -17,6 +17,7 @@ import { DispatchEventAction, FunctionAction, RunSequentialActions, WaitAction }
 import React from 'react';
 import { setKeyDownCallback, useKeyPressed } from '../hooks/useKeyboard';
 import { registerCustomKey } from '../utils/keybinding';
+import InvitationCode from './InvitationCode';
 
 // 注册自定义按键
 registerCustomKey('D');
@@ -45,6 +46,7 @@ const Root: FC = () => {
 
     return (
         <>
+            <InvitationCode />
             {
                 // 显示一个二维码作为范例
                 <PanoramaQRCode
