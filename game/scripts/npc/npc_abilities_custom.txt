@@ -1,5 +1,45 @@
-#base "abilities.txt"
-
 "DOTAAbilities"
 {
+    // 兵伐 · 裂空 (被动)
+    "soldier_war_strike"
+    {
+        "BaseClass"                     "ability_lua"
+        "ScriptFile"                    "abilities/soldier_war_strike"
+        "AbilityTextureName"            "juggernaut_blade_dance"
+        "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE"
+        "MaxLevel"                      "1"
+        
+        // 自定义数值 (可以在Lua中读取)
+        "AbilitySpecial"
+        {
+            "01"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "attacks_to_proc"       "3"
+            }
+            "02"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "damage_pct"            "250"
+            }
+            "03"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "cleave_radius"         "400"
+            }
+            "04"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "cleave_angle"          "120"
+            }
+        }
+    }
+    
+    // 通用隐藏技能 (占位符)
+    "generic_hidden"
+    {
+        "BaseClass"                     "ability_datadriven"
+        "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE | DOTA_ABILITY_BEHAVIOR_HIDDEN"
+        "MaxLevel"                      "1"
+    }
 }

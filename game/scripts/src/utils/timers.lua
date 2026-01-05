@@ -129,7 +129,7 @@ end
 TIMERS_THINK = 0.01
 
 if _G.Timers == nil then
-	print ( '[Timers] creating Timers' )
+	-- print ( '[Timers] creating Timers' )
 	_G.Timers = {}
 	setmetatable(Timers, {
 		__call = function(t, ...)

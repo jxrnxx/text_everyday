@@ -102,7 +102,7 @@ export class TrainingRoomManager {
     private static GenerateRoom(index: number) {
         const config = this.ROOM_CONFIGS[index];
         const center = config.center;
-        print(`[TrainingRoomManager] Generating ${config.name} at ${center}`);
+        print(`[TrainingRoomManager] Generating ${config.name} at ${center.x}, ${center.y}`);
 
         // 1. FLOOR GENERATION
         if (config.name === "天枢界域") {

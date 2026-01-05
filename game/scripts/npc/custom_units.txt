@@ -99,6 +99,10 @@
 		"AttackRange" "100"
 		"BoundsHullName" "DOTA_HULL_SIZE_HUMAN"
 		"HasInventory" "0"
+		"AttackAcquisitionRange" "800"
+		"ChaseDistance" "1000"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
 	}
 
 

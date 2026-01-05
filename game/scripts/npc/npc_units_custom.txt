@@ -45,6 +45,7 @@
         "StatusHealthRegen"     "1.0"
         "StatusMana"            "0"
         "MovementSpeed"         "300"
+        "MovementCapabilities"  "DOTA_UNIT_CAP_MOVE_GROUND"
         
         // 攻击
         "AttackCapabilities"    "DOTA_UNIT_CAP_MELEE_ATTACK"
@@ -58,7 +59,10 @@
         "TeamName"              "DOTA_TEAM_BADGUYS"
         "VisionDaytimeRange"    "500"
         "VisionNighttimeRange"  "500"
-        "AttackAcquisitionRange" "500"
+        "AttackAcquisitionRange" "800"
+        "ChaseDistance"          "1000"
+        "CombatClassAttack"      "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+        "CombatClassDefend"      "DOTA_COMBAT_CLASS_DEFEND_BASIC"
         
         // 击杀奖励
         "BountyXP"              "10"

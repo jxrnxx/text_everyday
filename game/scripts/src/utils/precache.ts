@@ -37,7 +37,16 @@ export default function Precache(context: CScriptPrecacheContext) {
             
             // General
             "models/development/invisiblebox.vmdl",
-            "particles/units/heroes/hero_cloud/cloud_base_smoke.vpcf"
+            "particles/units/heroes/hero_cloud/cloud_base_smoke.vpcf",
+
+            // Soldier Path
+            "particles/units/heroes/hero_sven/sven_spell_great_cleave_gods_strength.vpcf",
+            "particles/units/heroes/hero_juggernaut/jugg_crit_blur.vpcf",
+            "particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf",
+            // Soldier War Strike New
+            "particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_trigger_crit_red.vpcf",
+            "particles/units/heroes/hero_dragon_knight/dragon_knight_breathe_fire.vpcf",
+            "particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf"
         ],
         context
     );
@@ -45,7 +54,7 @@ export default function Precache(context: CScriptPrecacheContext) {
     precacheEveryResourceInKV(
         [
             // kv文件路径
-            // 'npc_abilities_custom.txt',
+            'npc_abilities_custom.txt',
         ],
         context
     );
@@ -65,7 +74,7 @@ export default function Precache(context: CScriptPrecacheContext) {
         ],
         context
     );
-    print(`[Precache] Precache finished.`);
+    // print(`[Precache] Precache finished.`);
 }
 
 // 预载入KV文件中的所有资源
@@ -112,6 +121,7 @@ function precacheItems(itemList: string[], context: CScriptPrecacheContext) {
 
 // 一个辅助的，从KV表中解析出所有资源并预载入的方法
 function precacheEverythingFromTable(kvTable: any, context: CScriptPrecacheContext) {
+    if (!kvTable) return;
     for (const [k, v] of pairs(kvTable)) {
         if (type(v) === 'table') {
             precacheEverythingFromTable(v, context);

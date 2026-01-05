@@ -2,25 +2,34 @@
 // 游戏模式类
 export class GameMode {
     private static isGameStarted = false;
-    private static currentWaveTimer: string | null = null; // 存储计时器ID以便取消
+    private static get currentWaveTimer(): string | null {
+        return (GameRules as any)._CurrentWaveTimer || null;
+    }
+
+    private static set currentWaveTimer(value: string | null) {
+        (GameRules as any)._CurrentWaveTimer = value;
+    }
 
     public static Activate() {
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.GOODGUYS, 4);
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.BADGUYS, 0);
+        SendToConsole("sv_cheats 1"); // 确保 restart 指令可用
 
         GameRules.SetPreGameTime(0); 
         GameRules.SetHeroSelectionTime(0); 
         GameRules.SetStrategyTime(0); 
         GameRules.GetGameModeEntity().SetCustomGameForceHero("npc_dota_hero_juggernaut");
         GameRules.GetGameModeEntity().SetFogOfWarDisabled(true);
+        GameRules.GetGameModeEntity().SetCameraDistanceOverride(1450); // 调整镜头高度
 
         ListenToGameEvent('npc_spawned', (event) => this.OnNpcSpawned(event), undefined);
         
-        // 监听聊天指令: 输入 r 或 R 重新加载脚本 (无需重启游戏)
+        // 监听聊天指令
         ListenToGameEvent("player_chat", (event) => {
-            if (event.text === "r" || event.text === "R") {
-                print("[GameMode] 收到指令: 重新加载脚本 (script_reload)");
-                SendToConsole("script_reload");
+            const text = event.text.toLowerCase();
+            if (text === "r" || text === "restart") {
+                // print("[GameMode] 收到指令: 执行全量重启 (restart)");
+                SendToConsole("restart");
             }
         }, undefined);
 
@@ -32,7 +41,7 @@ export class GameMode {
 
             if (player) {
                 if (code === "1" || code === "669571") { 
-                    print(`[GameMode] 玩家 ${playerID} 验证通过`);
+                    // print(`[GameMode] 玩家 ${playerID} 验证通过`);
                     CustomGameEventManager.Send_ServerToPlayer(player, "from_server_verify_result", {
                         success: true,
                         message: "验证成功"
@@ -52,11 +61,11 @@ export class GameMode {
             }
         });
 
-        print("[GameMode] 游戏模式已激活: 等待验证...");
+        // print("[GameMode] 游戏模式已激活: 等待验证...");
 
         // 如果是重新加载脚本 (游戏已经在进行中)，则自动执行一次软重启以应用新逻辑
         if (GameRules.State_Get() >= 4) { // 4 = DOTA_GAMERULES_STATE_PRE_GAME
-            print("[GameMode] 检测到脚本重载，自动执行 RestartGame...");
+            // print("[GameMode] 检测到脚本重载，自动执行 RestartGame...");
             this.RestartGame(); 
         }
     }
@@ -65,7 +74,7 @@ export class GameMode {
     private static StartGame() {
         if (this.isGameStarted) return;
         this.isGameStarted = true;
-        print("[GameMode] 游戏正式开始！启动刷怪和计时...");
+        // print("[GameMode] 游戏正式开始！启动刷怪和计时...");
 
         // 通知前端开始计时 (修正时间显示)
         CustomGameEventManager.Send_ServerToAllClients("update_game_timer_start", { 
@@ -134,6 +143,7 @@ export class GameMode {
         const unit = EntIndexToHScript(event.entindex) as CDOTA_BaseNPC;
         if (!unit) return;
         if (unit.IsRealHero()) {
+            unit.SetBaseMoveSpeed(600); // 测试用：设置移速 600
             const playerId = unit.GetPlayerOwnerID();
             if (playerId >= 0 && playerId <= 3) {
                  // 只有在游戏刚加载时传送，重启时由RestartGame处理
@@ -153,17 +163,31 @@ export class GameMode {
     private static StartWave(waveNumber: number) {
         if (!this.isGameStarted) return; // 如果游戏重置了，停止刷怪
 
-        print(`[GameMode] 第 ${waveNumber} 波开始！(持续60秒)`);
+        // print(`[GameMode] 第 ${waveNumber} 波开始！(持续60秒)`);
 
         // ... (目标获取逻辑)
-        let targetEntity = Entities.FindByName(undefined, "dota_goodguys_fort");
+        // 优先寻找自定义基地 "npc_dota_home_base"
+        let targetEntity = Entities.FindAllByClassname("npc_dota_building").find(e => (e as CDOTA_BaseNPC).GetUnitName() === "npc_dota_home_base");
+        
+        // 如果找不到，尝试找默认基地
+        if (!targetEntity) {
+            targetEntity = Entities.FindByName(undefined, "dota_goodguys_fort");
+        }
+
         let targetPos: Vector = Vector(0, 0, 0);
 
         if (targetEntity) {
             targetPos = targetEntity.GetAbsOrigin();
-            print(`[GameMode DEBUG] 找到基地目标: dota_goodguys_fort, 位置: ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+            // print(`[GameMode DEBUG] 找到基地目标: ${(targetEntity as CDOTA_BaseNPC).GetUnitName() || "dota_goodguys_fort"}, 位置: ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+            
+            // 简单的防错：如果是那个诡异的地图角落坐标 (-11712)，说明这个实体可能损坏了，强制归零
+            if (targetPos.x < -10000 && targetPos.y < -10000) {
+                 print(`[GameMode DEBUG] 警告: 目标坐标异常 (可能未放置好)，重置为 (0,0,0)`);
+                 targetPos = Vector(0, 0, 0);
+            }
+
         } else {
-            print(`[GameMode DEBUG] 警告: 未找到 dota_goodguys_fort，尝试查找玩家英雄...`);
+            print(`[GameMode DEBUG] 警告: 未找到 dota_goodguys_fort 或 npc_dota_home_base，尝试查找玩家英雄...`);
             const playerHero = PlayerResource.GetSelectedHeroEntity(0);
             if (playerHero) {
                 targetEntity = playerHero;
@@ -171,19 +195,25 @@ export class GameMode {
                 print(`[GameMode DEBUG] 找到英雄目标: ${playerHero.GetUnitName()}, 位置: ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
             } else {
                  print(`[GameMode DEBUG] 严重警告: 既找不到基地也找不到英雄，怪物将攻击 (0,0,0)`);
+                 targetPos = Vector(0, 0, 0);
             }
         }
 
-        let duration = 60; 
-        let interval = 0.5;
+        let duration = 30; 
+        let interval = 0.8;
         let ticks = duration / interval;
         let currentTick = 0;
 
         // 启动持续刷怪计时器
-        Timers.CreateTimer(0, () => {
-            if (!this.isGameStarted) return undefined; // 安全检查：游戏重置则停止
+        // 启动持续刷怪计时器
+        this.currentWaveTimer = Timers.CreateTimer(0, () => {
+             if (!this.isGameStarted) {
+                this.currentWaveTimer = null;
+                return undefined; // 安全检查：游戏重置则停止
+            }
             if (currentTick >= ticks) {
-                print(`[GameMode] 第 ${waveNumber} 波结束`);
+                // print(`[GameMode] 第 ${waveNumber} 波结束`);
+                this.currentWaveTimer = null;
                 return undefined;
             }
 
@@ -195,38 +225,76 @@ export class GameMode {
                     const spawnerPos = spawner.GetAbsOrigin();
                     CreateUnitByNameAsync("npc_enemy_zombie_lvl1", spawnerPos, true, undefined, undefined, DotaTeam.BADGUYS, (unit) => {
                         if (unit) {
-                            unit.SetAcquisitionRange(800); // 加大仇恨范围
+                            unit.SetAcquisitionRange(700); // 仇恨范围 700
 
-                            // 强制赋予 AI 思考能力，防止发呆
+                            // 强制赋予 AI 思考能力 (优化版：只在必要时干预)
                             unit.SetContextThink("ZombieThink", () => {
                                 if (unit && !unit.IsNull() && unit.IsAlive()) {
-                                    // 检查寻路状态
-                                    const canFindPath = GridNav.CanFindPath(unit.GetAbsOrigin(), targetPos);
-                                    
-                                    // 如果没有在攻击，强制往目标走
-                                    if (unit.IsIdle() || !unit.IsAttacking()) {
-                                        // 如果寻路失败，尝试找一下附近的空地 (防卡住)
-                                        if (!canFindPath) {
-                                            print(`[DEBUG] 僵尸无法寻路到目标! 尝试原地 FindClearSpace`);
-                                            FindClearSpaceForUnit(unit, unit.GetAbsOrigin(), true);
-                                        }
+                                    const origin = unit.GetAbsOrigin();
+                                    const currentTarget = unit.GetAggroTarget();
 
-                                         ExecuteOrderFromTable({
+                                    // 1. Leash 机制 (防风筝/脱战)
+                                    // 引擎自带的 ChaseDistance 往往对自定义单位无效，所以保留这个简单的距离检查
+                                    if (currentTarget && currentTarget.IsHero()) {
+                                        const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
+                                        if (dist > 1000) { 
+                                            // 追太远了，放弃追击，继续去打基地
+                                            ExecuteOrderFromTable({
+                                                UnitIndex: unit.entindex(),
+                                                OrderType: UnitOrder.ATTACK_MOVE,
+                                                Position: targetPos,
+                                                Queue: false
+                                            });
+                                            return 1.0;
+                                        }
+                                        return 0.5; // 正在追英雄，检查频率稍微高一点
+                                    }
+
+                                    // 2. 只有在攻击基地(建筑)时，才去检测周围有没有英雄
+                                    // 这样避免了走路时也一直在搜敌(原生 AttackMove 走路时会自动搜敌)
+                                    if (currentTarget && currentTarget.IsBuilding()) {
+                                        const enemies = FindUnitsInRadius(
+                                            unit.GetTeamNumber(),
+                                            origin,
+                                            undefined,
+                                            800, // 就在这个时候看一眼周围有没有人
+                                            UnitTargetTeam.ENEMY,
+                                            UnitTargetType.HERO, // 只找英雄
+                                            UnitTargetFlags.NONE,
+                                            FindOrder.CLOSEST,
+                                            false
+                                        );
+
+                                        if (enemies.length > 0) {
+                                            // 既然在打塔的时候旁边有人，那肯定是玩家来守塔了，转火！
+                                            ExecuteOrderFromTable({
+                                                UnitIndex: unit.entindex(),
+                                                OrderType: UnitOrder.ATTACK_TARGET,
+                                                TargetIndex: enemies[0].entindex(),
+                                                Queue: false
+                                            });
+                                            return 1.0;
+                                        }
+                                    }
+
+                                    // 3. 断线重连/发呆补救
+                                    // 如果单位当前没有在做什么 (Idle)，才下达命令
+                                    if (unit.IsIdle()) {
+                                        const canFindPath = GridNav.CanFindPath(origin, targetPos);
+                                        if (!canFindPath) {
+                                            FindClearSpaceForUnit(unit, origin, true);
+                                        }
+                                        ExecuteOrderFromTable({
                                             UnitIndex: unit.entindex(),
                                             OrderType: UnitOrder.ATTACK_MOVE,
                                             Position: targetPos,
                                             Queue: false,
                                         });
-
-                                        // 偶尔打印一下状态 (每3秒打印一次，避免刷屏)
-                                        if (GameRules.GetGameTime() % 3.0 < 0.2) {
-                                            print(`[DEBUG] 僵尸正在思考... 目标位置: ${targetPos}, 寻路检查: ${canFindPath ? "通过" : "失败"}`);
-                                        }
                                     }
-                                    return 1.0; // 每秒检查一次
+                                    return 1.0; 
                                 }
                                 return undefined;
-                            }, 0.1); 
+                            }, 0.1);
                         }
                     });
                 }

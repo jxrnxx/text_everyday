@@ -1,2 +1,6 @@
 ﻿Tokens,English,SChinese
 addon_game_name,YOUR ADDON NAME,你的游戏名
+DOTA_Tooltip_ability_soldier_war_strike,War Strike,兵伐 · 裂空
+DOTA_Tooltip_ability_soldier_war_strike_Description,"Every 3 attacks, the 4th attack deals AOE critical damage.","每攻击3次，第4次攻击必定暴击，并对前方扇形区域造成 AOE 伤害。"
+DOTA_Tooltip_modifier_soldier_war_strike,兵伐 · 裂空,
+DOTA_Tooltip_modifier_soldier_war_strike_Description,每3次攻击触发一次范围暴击。,
