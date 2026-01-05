@@ -22,4 +22,12 @@ declare interface CustomGameEventDeclarations {
 
     /** Stop custom sounds on client */
     stop_custom_sounds: {};
+
+    /** Sync game timer start time */
+    update_game_timer_start: {
+        startTime: number;
+    };
+
+    /** Reset game timer to 0 */
+    reset_game_timer: {};
 }

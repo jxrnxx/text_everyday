@@ -1,1 +1,18 @@
-#base "heroes.txt"
+"DOTAHeroes"
+{
+    // 覆盖剑圣作为测试英雄
+    "npc_dota_hero_juggernaut"
+    {
+        "override_hero"         "npc_dota_hero_juggernaut"
+        "StatusHealth"          "2000"
+        "StatusHealthRegen"     "10"
+        "StatusMana"            "1000"
+        "AttackDamageMin"       "100"
+        "AttackDamageMax"       "120"
+        "AttributePrimary"      "DOTA_ATTRIBUTE_AGILITY"
+        "AttributeBaseStrength" "50"
+        "AttributeBaseAgility"  "50"
+        "AttributeBaseIntelligence" "50"
+        "MovementSpeed"         "350"
+    }
+}

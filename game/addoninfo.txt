@@ -5,10 +5,10 @@
 	IsTemplate = false
 	maps = 
 	[
-		"dota",
+		"xishen",
 	]
 	CheckAFKPlayers = false
-	DefaultMap = "dota"
+	DefaultMap = "xishen"
 	Default_Keys = 
 	[
 	]
@@ -20,11 +20,12 @@
 	ForceDefaultGuide = false
 	MinimalPrecache = false
 	MinPlayers = 1
-	MaxPlayers = 10
+	MaxPlayers = 4
 	map_options = 
 	[
 		{
-			map = "dota"
+			map = "xishen"
+			MaxPlayers = 4
 		},
 	]
 	PenaltiesEnabled = false

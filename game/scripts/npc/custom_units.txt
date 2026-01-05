@@ -44,10 +44,62 @@
 		"RingRadius" "70"
 		"HasInventory" "1"
 	}
-
-
-
-
+	"npc_dota_home_base" {
+		"BaseClass" "npc_dota_building"
+		"Model" "models/props_structures/radiant_tower002.vmdl"
+		"ModelScale" "1"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"HealthBarOffset" "250"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
+		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
+		"ArmorPhysical" "20"
+		"StatusHealth" "5000"
+		"StatusHealthRegen" "10"
+		"StatusMana" "0"
+		"BoundsHullName" "DOTA_HULL_SIZE_BUILDING"
+		"HasInventory" "0"
+	}
+	"npc_enemy_zombie_lvl1" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/heroes/undying/undying_minion.vmdl"
+		"ModelScale" "1"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"HealthBarOffset" "140"
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "0"
+		"StatusHealth" "200"
+		"StatusHealthRegen" "1"
+		"StatusMana" "0"
+		"BountyGoldMin" "5"
+		"BountyGoldMax" "10"
+		"AttackDamageMin" "30"
+		"AttackDamageMax" "30"
+		"AttackRate" "1.5000"
+		"AttackAnimationPoint" "0.3000"
+		"AttackRange" "100"
+		"BoundsHullName" "DOTA_HULL_SIZE_HUMAN"
+		"HasInventory" "0"
+	}
 
 
 
