@@ -1,0 +1,99 @@
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="./character_sheet.less" />
+    </styles>
+
+    <scripts>
+        <include src="./character_sheet.tsx" />
+    </scripts>
+
+    <Panel class="CharacterSheetRoot" hittest="false">
+        <Panel id="CharSheetContainer" class="CharSheetContainer Hidden">
+            <!-- Header -->
+            <Panel class="SheetHeader">
+                <Label text="#CharSheet_Title" class="SheetTitle" />
+                <Button class="CloseButton" onactivate="ToggleCharSheet()" />
+            </Panel>
+
+            <!-- Main Grid Content -->
+            <Panel class="SheetContent">
+                
+                <!-- Col 1: Cultivation (Custom Stats) -->
+                <Panel class="StatColumn">
+                    <Label class="ColumnTitle" text="#CharSheet_Cultivation" />
+                    <Panel class="Divider" />
+                    
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Constitution" />
+                        <Label id="Val_Constitution" class="StatValue" text="0" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Martial" />
+                        <Label id="Val_Martial" class="StatValue" text="0" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Divinity" />
+                        <Label id="Val_Divinity" class="StatValue" text="0" />
+                    </Panel>
+                </Panel>
+
+                <!-- Col 2: Body (Base Stats) -->
+                <Panel class="StatColumn">
+                    <Label class="ColumnTitle" text="#CharSheet_Body" />
+                    <Panel class="Divider" />
+
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Damage" />
+                        <Panel class="ValueGroup">
+                            <Label id="Val_DamageBase" class="StatValue White" text="0" />
+                            <Label id="Val_DamageBonus" class="StatValue Green" text="+0" />
+                        </Panel>
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Armor" />
+                        <Label id="Val_Armor" class="StatValue" text="0" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Health" />
+                        <Label id="Val_Health" class="StatValue" text="0 / 0" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Mana" />
+                        <Label id="Val_Mana" class="StatValue" text="0 / 0" />
+                    </Panel>
+                </Panel>
+
+                <!-- Col 3: Dao (Misc & Economy) -->
+                <Panel class="StatColumn">
+                    <Label class="ColumnTitle" text="#CharSheet_Dao" />
+                    <Panel class="Divider" />
+
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_AtkSpeed" />
+                        <Label id="Val_AtkSpeed" class="StatValue" text="0" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_MoveSpeed" />
+                        <Label id="Val_MoveSpeed" class="StatValue" text="0" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_KillsFaith" />
+                        <Panel class="ValueGroup">
+                            <Label id="Val_Kills" class="StatValue" text="0" />
+                            <Label text="/" class="StatSplitter" />
+                            <Label id="Val_Faith" class="StatValue Gold" text="0" />
+                        </Panel>
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_SpiritCoin" />
+                        <Label id="Val_SpiritCoin" class="StatValue Gold" text="0" />
+                    </Panel>
+                </Panel>
+
+            </Panel>
+            
+            <Label text="#CharSheet_CloseTip" class="FooterTip" />
+        </Panel>
+    </Panel>
+</root>

@@ -1,0 +1,153 @@
+.CharacterSheetRoot {
+    width: 100%;
+    height: 100%;
+}
+
+.CharSheetContainer {
+    width: 800px;
+    height: 500px;
+    align: center center;
+    background-color: gradient(linear, 0% 0%, 0% 100%, from(#1a1a1aF2), to(#000000F2));
+    border: 2px solid #D4AF37;
+    box-shadow: 0px 0px 20px #D4AF3722;
+    flow-children: down;
+    padding: 20px;
+    
+    transition-property: opacity, transform;
+    transition-duration: 0.2s;
+}
+
+.CharSheetContainer.Hidden {
+    opacity: 0;
+    transform: scale3d(0.9, 0.9, 1);
+    visibility: collapse;
+}
+
+/* Header */
+.SheetHeader {
+    width: 100%;
+    height: 60px;
+    border-bottom: 2px solid #D4AF3744;
+    flow-children: right;
+    padding-bottom: 5px;
+}
+
+.SheetTitle {
+    font-size: 32px;
+    font-family: "Goudy Trajan EB", "Microsoft YaHei", serif;
+    color: #D4AF37;
+    vertical-align: center;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-left: 10px;
+    text-shadow: 0px 2px 4px 3.0 #000000;
+}
+
+/* Main Content Grid */
+.SheetContent {
+    width: 100%;
+    height: fill-parent-flow(1);
+    flow-children: right;
+    margin-top: 25px;
+}
+
+.StatColumn {
+    width: fill-parent-flow(1);
+    height: 100%;
+    flow-children: down;
+    padding: 0px 15px;
+}
+
+.ColumnTitle {
+    font-size: 24px;
+    color: #D4AF37;
+    horizontal-align: center;
+    font-family: "Microsoft YaHei", serif;
+    font-weight: bold;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+    text-shadow: 0px 2px 2px 2.0 #000000;
+}
+
+.Divider {
+    width: 100%;
+    height: 1px;
+    background-color: gradient(linear, 0% 0%, 100% 0%, from(#D4AF3700), color-stop(0.5, #D4AF3788), to(#D4AF3700));
+    margin-bottom: 20px;
+}
+
+/* Rows */
+.StatRow {
+    width: 100%;
+    flow-children: right;
+    margin-bottom: 12px;
+    padding: 2px 5px;
+    background-color: gradient(linear, 0% 0%, 100% 0%, from(#FFFFFF00), color-stop(0.5, #FFFFFF05), to(#FFFFFF00));
+    transition-property: brightness;
+    transition-duration: 0.1s;
+}
+
+.StatRow:hover {
+    brightness: 1.5;
+}
+
+.StatLabel {
+    font-size: 18px;
+    color: #C0C0C0;
+    vertical-align: center;
+    width: 40%;
+    font-family: "Microsoft YaHei";
+    text-shadow: 0px 1px 2px 2.0 #000000;
+}
+
+.ValueGroup {
+    flow-children: right;
+    horizontal-align: right;
+    width: 60%;
+}
+
+.StatValue {
+    font-size: 20px;
+    color: #f0e68c;
+    font-weight: bold;
+    horizontal-align: right;
+    text-shadow: 0px 0px 5px #D4AF3744;
+    font-family: "Microsoft YaHei";
+}
+
+.StatValue.Green { color: #55FF55; margin-left: 5px; }
+.StatValue.White { color: #FFFFFF; }
+.StatValue.Gold { color: #FFD700; }
+
+.StatSplitter {
+    color: #888;
+    margin: 0px 8px;
+    font-size: 18px;
+    vertical-align: center;
+}
+
+/* Footer */
+.FooterTip {
+    align: center bottom;
+    color: #666;
+    font-size: 14px;
+    margin-top: 15px;
+    letter-spacing: 1px;
+}
+
+.CloseButton {
+    width: 32px;
+    height: 32px;
+    background-image: url("s2r://panorama/images/hud/reborn/icon_x_close_psd.vtex");
+    background-size: 100%;
+    align: right top;
+    wash-color: #AA8855;
+    margin-right: 5px;
+    margin-top: 5px;
+    transition-property: wash-color, transform;
+    transition-duration: 0.2s;
+}
+.CloseButton:hover {
+    wash-color: #FFD700;
+    transform: rotateZ(90deg);
+}

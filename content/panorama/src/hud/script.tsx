@@ -32,8 +32,8 @@ render(<Root />, $.GetContextPanel());
 
 // Helper: Reload Scripts with 'R' (Only in Tools Mode)
 if (Game.IsInToolsMode()) {
-    $.RegisterKeyBind($.GetContextPanel(), "key_r", () => {
-        Game.ServerCmd("dota_reload_addon_script");
+    $.RegisterKeyBind($.GetContextPanel(), 'key_r', () => {
+        Game.ServerCmd('dota_reload_addon_script');
     });
 }
 

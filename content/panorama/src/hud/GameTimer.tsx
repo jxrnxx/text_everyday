@@ -1,5 +1,5 @@
-
-import React, { FC, useEffect, useState } from 'react';
+import type { FC } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameEvent } from '../hooks/useGameEvent';
 
 const GameTimer: FC = () => {
@@ -8,7 +8,7 @@ const GameTimer: FC = () => {
     const [startTimeOffset, setStartTimeOffset] = useState(0);
 
     // 监听游戏开始
-    useGameEvent("update_game_timer_start", (event: { startTime: number }) => {
+    useGameEvent('update_game_timer_start', (event: { startTime: number }) => {
         console.log(`[UI] Received game start signal. Using local time as baseline.`);
         // 使用客户端当前时间作为基准，确保立刻开始计时 (避免服务端/客户端时间差导致的延迟)
         setStartTimeOffset(Game.GetDOTATime(false, false));
@@ -16,7 +16,7 @@ const GameTimer: FC = () => {
     });
 
     // 监听游戏重置
-    useGameEvent("reset_game_timer", () => {
+    useGameEvent('reset_game_timer', () => {
         console.log(`[UI] received game reset`);
         setIsActive(false);
         setTime(0);
@@ -44,24 +44,23 @@ const GameTimer: FC = () => {
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-
     return (
-        <Panel 
-            style={{ 
-                horizontalAlign: 'center', 
-                marginTop: '10px', 
-                flowChildren: 'right'
+        <Panel
+            style={{
+                horizontalAlign: 'center',
+                marginTop: '10px',
+                flowChildren: 'right',
             }}
         >
-            <Label 
-                text={formatTime(time)} 
+            <Label
+                text={formatTime(time)}
                 style={{
                     color: '#FFF',
                     fontSize: '24px',
                     fontWeight: 'bold',
                     textShadow: '0px 0px 4px 2.0 #000000',
                     fontFamily: 'Radiance',
-                    letterSpacing: '2px'
+                    letterSpacing: '2px',
                 }}
             />
         </Panel>

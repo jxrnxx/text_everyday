@@ -5,48 +5,48 @@ export default function Precache(context: CScriptPrecacheContext) {
     precacheResource(
         [
             // Aurora
-            "models/heroes/undying/undying_tower.vmdl",
-            "models/heroes/rattletrap/rattletrap_world.vmdl",
-            "particles/units/heroes/hero_viper/viper_nethertoxin.vpcf",
+            'models/heroes/undying/undying_tower.vmdl',
+            'models/heroes/rattletrap/rattletrap_world.vmdl',
+            'particles/units/heroes/hero_viper/viper_nethertoxin.vpcf',
             // "models/props_nature/rock_flat_cluster01a.vmdl", // REMOVED (ERROR)
-            "models/props_structures/bad_ancient001.vmdl", 
-            "particles/units/heroes/hero_pugna/pugna_ward_ambient.vpcf",
+            'models/props_structures/bad_ancient001.vmdl',
+            'particles/units/heroes/hero_pugna/pugna_ward_ambient.vpcf',
             // Red Dust
-            "models/heroes/lanaya/lanaya_trap_crystal.vmdl",
-            "models/heroes/void_spirit/void_spirit_model.vmdl",
-            "models/heroes/void_spirit/void_spirit_remnant.vmdl", 
-            "particles/units/heroes/hero_void_spirit/void_spirit_ambient.vpcf",
-            "models/props_structures/good_ancient001.vmdl", // CENTERPIECE
-           
+            'models/heroes/lanaya/lanaya_trap_crystal.vmdl',
+            'models/heroes/void_spirit/void_spirit_model.vmdl',
+            'models/heroes/void_spirit/void_spirit_remnant.vmdl',
+            'particles/units/heroes/hero_void_spirit/void_spirit_ambient.vpcf',
+            'models/props_structures/good_ancient001.vmdl', // CENTERPIECE
+
             // Wuji
-            "models/heroes/shadow_fiend/shadow_fiend.vmdl",
-            "models/heroes/undying/undying_minion.vmdl",
-            "models/heroes/shadow_demon/shadow_demon.vmdl", // Pillar
-            "particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf",
-            "particles/units/heroes/hero_doom_bringer/doom_bringer_doom_ring.vpcf",
+            'models/heroes/shadow_fiend/shadow_fiend.vmdl',
+            'models/heroes/undying/undying_minion.vmdl',
+            'models/heroes/shadow_demon/shadow_demon.vmdl', // Pillar
+            'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf',
+            'particles/units/heroes/hero_doom_bringer/doom_bringer_doom_ring.vpcf',
             // Tianshu
-            "models/heroes/oracle/oracle.vmdl",
-            "models/props_structures/good_barracks_melee002.vmdl",
-            "models/props_structures/good_barracks_melee001.vmdl", // GOLD TECH FLOOR
-            "models/props_structures/good_barracks_ranged001.vmdl", // TECH PILLAR
-            "models/props_structures/good_tower001.vmdl", 
-            "particles/units/heroes/hero_keeper_of_the_light/keeper_of_the_light_illuminate_charge.vpcf",
-            "particles/units/heroes/hero_omniknight/omniknight_purification.vpcf",
-            "particles/units/heroes/hero_oracle/oracle_fates_edict.vpcf", // TECH RUNE
-            "particles/units/heroes/hero_tinker/tinker_defense_matrix.vpcf", // TECH SHIELD
-            
+            'models/heroes/oracle/oracle.vmdl',
+            'models/props_structures/good_barracks_melee002.vmdl',
+            'models/props_structures/good_barracks_melee001.vmdl', // GOLD TECH FLOOR
+            'models/props_structures/good_barracks_ranged001.vmdl', // TECH PILLAR
+            'models/props_structures/good_tower001.vmdl',
+            'particles/units/heroes/hero_keeper_of_the_light/keeper_of_the_light_illuminate_charge.vpcf',
+            'particles/units/heroes/hero_omniknight/omniknight_purification.vpcf',
+            'particles/units/heroes/hero_oracle/oracle_fates_edict.vpcf', // TECH RUNE
+            'particles/units/heroes/hero_tinker/tinker_defense_matrix.vpcf', // TECH SHIELD
+
             // General
-            "models/development/invisiblebox.vmdl",
-            "particles/units/heroes/hero_cloud/cloud_base_smoke.vpcf",
+            'models/development/invisiblebox.vmdl',
+            'particles/units/heroes/hero_cloud/cloud_base_smoke.vpcf',
 
             // Soldier Path
-            "particles/units/heroes/hero_sven/sven_spell_great_cleave_gods_strength.vpcf",
-            "particles/units/heroes/hero_juggernaut/jugg_crit_blur.vpcf",
-            "particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf",
+            'particles/units/heroes/hero_sven/sven_spell_great_cleave_gods_strength.vpcf',
+            'particles/units/heroes/hero_juggernaut/jugg_crit_blur.vpcf',
+            'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf',
             // Soldier War Strike New
-            "particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_trigger_crit_red.vpcf",
-            "particles/units/heroes/hero_dragon_knight/dragon_knight_breathe_fire.vpcf",
-            "particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf"
+            'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_trigger_crit_red.vpcf',
+            'particles/units/heroes/hero_dragon_knight/dragon_knight_breathe_fire.vpcf',
+            'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf',
         ],
         context
     );

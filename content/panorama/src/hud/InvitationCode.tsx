@@ -1,5 +1,5 @@
-
-import React, { FC, useState } from 'react';
+import type { FC } from 'react';
+import React, { useState } from 'react';
 import { useGameEvent } from '../hooks/useGameEvent';
 
 const InvitationCode: FC = () => {
@@ -20,7 +20,7 @@ const InvitationCode: FC = () => {
 
     // Listen for stop sound event
     useGameEvent('stop_custom_sounds', () => {
-        console.log("Server requested to stop custom sounds.");
+        console.log('Server requested to stop custom sounds.');
         // Game.StopSound requires an ID returned by EmitSound, so we cannot stop global sounds by name here easily.
         // We rely on the server to StopSoundOn the client entity.
     });
@@ -37,18 +37,21 @@ const InvitationCode: FC = () => {
     }
 
     return (
-        <Panel
-            hittest={true}
-            className="invitation-root"
-        >
+        <Panel hittest={true} className="invitation-root">
             {/* Centered Dialog */}
             <Panel className="invitation-dialog">
-                <Label
-                    text="欢迎来到修仙世界"
-                    className="invitation-title"
+                <Label text="欢迎来到修仙世界" className="invitation-title" />
+
+                <Panel
+                    style={{
+                        width: '80%',
+                        height: '2px',
+                        backgroundColor:
+                            'gradient( linear, 0% 0%, 100% 0%, from(rgba(255,255,255,0)), color-stop(0.5, #c2a060), to(rgba(255,255,255,0)) )',
+                        horizontalAlign: 'center',
+                        marginBottom: '30px',
+                    }}
                 />
-                
-                <Panel style={{ width: '80%', height: '2px', backgroundColor: 'gradient( linear, 0% 0%, 100% 0%, from(rgba(255,255,255,0)), color-stop(0.5, #c2a060), to(rgba(255,255,255,0)) )', horizontalAlign: 'center', marginBottom: '30px' }} />
 
                 <Label
                     text="请输入验证码"
@@ -64,7 +67,7 @@ const InvitationCode: FC = () => {
                 <Panel className="invitation-input-container">
                     <TextEntry
                         text={inputValue}
-                        ontextentrychange={(e) => {
+                        ontextentrychange={e => {
                             setInputValue(e.text);
                             setErrorMsg('');
                         }}
@@ -97,7 +100,7 @@ const InvitationCode: FC = () => {
                         }}
                     >
                         <Label
-                            text={isChecking ? "验证中..." : "提交"}
+                            text={isChecking ? '验证中...' : '提交'}
                             style={{
                                 color: '#2b1d0e',
                                 fontSize: '22px',
@@ -122,16 +125,16 @@ const InvitationCode: FC = () => {
                     />
                 ) : null}
             </Panel>
-            
+
             {/* Footer / Version / Copyright if needed */}
-            <Label 
-                text="Powered by AntiGravity" 
-                style={{ 
-                    align: 'center bottom', 
-                    marginBottom: '20px', 
-                    color: 'rgba(255,255,255,0.3)', 
-                    fontSize: '14px' 
-                }} 
+            <Label
+                text="Powered by AntiGravity"
+                style={{
+                    align: 'center bottom',
+                    marginBottom: '20px',
+                    color: 'rgba(255,255,255,0.3)',
+                    fontSize: '14px',
+                }}
             />
         </Panel>
     );

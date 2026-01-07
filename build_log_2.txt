@@ -1,5 +1,0 @@
-
-> prod:vscripts
-> tstl --project game/scripts/tsconfig.json
-
-game/scripts/src/addon_game_mode.ts(21,30): error TS2304: Cannot find name 'DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP'.

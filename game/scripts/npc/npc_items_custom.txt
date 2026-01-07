@@ -1,1 +1,63 @@
-#base "items_list.txt"
+"DOTAItems"
+{
+    // -------------------------------------------------------------------------
+    // Custom Stats Items
+    // -------------------------------------------------------------------------
+
+    "item_buy_constitution"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_buy_stats"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1201"
+        "ItemCost"              "1000"
+        "ItemRetainParticles"   "1"
+        "ItemDeclarations"      "DECLARE_PURCHASES_TO_TEAMMATES | DECLARE_PURCHASES_IN_SPEECH"
+        "AbilityTextureName"    "item_tome_of_knowledge"
+        
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "1"
+        "ItemStackable"         "1"
+        "ItemShareability"      "ITEM_FULLY_SHAREABLE"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    "item_buy_martial"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_buy_stats"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1202"
+        "ItemCost"              "1000"
+        "ItemRetainParticles"   "1"
+        "ItemDeclarations"      "DECLARE_PURCHASES_TO_TEAMMATES | DECLARE_PURCHASES_IN_SPEECH"
+        "AbilityTextureName"    "item_tome_of_agility"
+
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "1"
+        "ItemStackable"         "1"
+        "ItemShareability"      "ITEM_FULLY_SHAREABLE"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    "item_buy_divinity"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_buy_stats"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1203"
+        "ItemCost"              "1000"
+        "ItemRetainParticles"   "1"
+        "ItemDeclarations"      "DECLARE_PURCHASES_TO_TEAMMATES | DECLARE_PURCHASES_IN_SPEECH"
+        "AbilityTextureName"    "item_tome_of_strength"
+
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "1"
+        "ItemStackable"         "1"
+        "ItemShareability"      "ITEM_FULLY_SHAREABLE"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+}

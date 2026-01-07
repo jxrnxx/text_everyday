@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 
 // Headers based on user provided list (57 columns)
@@ -39,7 +38,7 @@ const baseData = {
     42: '10',
     43: '0',
     52: 'DOTA_HULL_SIZE_BUILDING',
-    57: '0'
+    57: '0',
 };
 
 const zombieData = {
@@ -63,7 +62,7 @@ const zombieData = {
     50: '0.3',
     51: '100',
     52: 'DOTA_HULL_SIZE_HUMAN',
-    57: '0'
+    57: '0',
 };
 
 const output = createRow(baseData) + '\n' + createRow(zombieData);

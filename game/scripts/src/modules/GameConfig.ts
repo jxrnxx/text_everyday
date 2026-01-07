@@ -35,7 +35,7 @@ export class GameConfig {
         game.SetCustomXPRequiredToReachNextLevel({
             // 设置自定义英雄每个等级所需经验，这里的经验是升级到这一级所需要的*总经验）
             1: 0,
-            2: 100, 
+            2: 100,
             3: 300,
             4: 500,
             5: 1000,
@@ -95,7 +95,7 @@ export class GameConfig {
         game.SetCameraDistanceOverride(1700); // 设置镜头距离
         game.SetCameraZRange(0, 5000); // 设置镜头高度范围
         game.SetFixedRespawnTime(999); // 设置固定重生时间
-        
+
         // Disable vanilla attributes
         game.SetCustomAttributeDerivedStatValue(AttributeDerivedStats.STRENGTH_HP, 0);
         game.SetCustomAttributeDerivedStatValue(AttributeDerivedStats.STRENGTH_HP_REGEN, 0.1);

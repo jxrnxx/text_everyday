@@ -1,5 +1,4 @@
-
-import { reloadable } from "../utils/tstl-utils";
+import { reloadable } from '../utils/tstl-utils';
 
 interface TrainingData {
     roomState: boolean;
@@ -16,7 +15,7 @@ export class TrainingManager {
     private playerData: Map<PlayerID, TrainingData> = new Map();
     private spawnTimer: Map<PlayerID, string> = new Map();
 
-    private readonly MONSTER_UNIT_NAME = "npc_enemy_zombie_lvl1";
+    private readonly MONSTER_UNIT_NAME = 'npc_enemy_zombie_lvl1';
     private readonly MAX_MONSTERS_DEFAULT = 9;
 
     public static GetInstance(): TrainingManager {
@@ -31,8 +30,8 @@ export class TrainingManager {
     }
 
     private Initialize() {
-        ListenToGameEvent("entity_killed", (event) => this.OnEntityKilled(event), undefined);
-        print("[TrainingManager] Initialized with Wave Logic");
+        ListenToGameEvent('entity_killed', event => this.OnEntityKilled(event), undefined);
+        print('[TrainingManager] Initialized with Wave Logic');
     }
 
     private GetPlayerData(playerId: PlayerID): TrainingData {
@@ -42,7 +41,7 @@ export class TrainingManager {
                 roomState: false,
                 liveMonsters: [],
                 spawnCount: this.MAX_MONSTERS_DEFAULT,
-                tier: 1
+                tier: 1,
             };
             this.playerData.set(playerId, data);
         }
@@ -54,11 +53,11 @@ export class TrainingManager {
      */
     public EnterRoom(playerId: PlayerID) {
         if (!PlayerResource.IsValidPlayerID(playerId)) return;
-        
+
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (!hero || !hero.IsAlive()) {
-             print(`[TrainingManager] Player ${playerId} hero invalid or dead, cannot enter.`);
-             return;
+            print(`[TrainingManager] Player ${playerId} hero invalid or dead, cannot enter.`);
+            return;
         }
 
         const data = this.GetPlayerData(playerId);
@@ -66,12 +65,12 @@ export class TrainingManager {
         // Teleport to Room
         const teleportPointName = `point_room_${playerId + 1}`;
         const teleportPoint = Entities.FindByName(undefined, teleportPointName);
-        
+
         if (teleportPoint) {
             const origin = teleportPoint.GetAbsOrigin();
             FindClearSpaceForUnit(hero, origin, true);
             hero.Stop(); // Stop current actions
-            
+
             // Camera
             PlayerResource.SetCameraTarget(playerId, hero);
             Timers.CreateTimer(0.1, () => {
@@ -80,7 +79,7 @@ export class TrainingManager {
 
             // Update State
             data.roomState = true;
-            
+
             // Start Spawn Loop immediately
             this.CheckAndSpawn(playerId);
 
@@ -98,7 +97,7 @@ export class TrainingManager {
 
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         const data = this.GetPlayerData(playerId);
-        
+
         // Teleport to Base (F4)
         const spawnPointName = `start_player_${playerId + 1}`;
         const spawnPoint = Entities.FindByName(undefined, spawnPointName);
@@ -107,8 +106,8 @@ export class TrainingManager {
             const origin = spawnPoint.GetAbsOrigin();
             FindClearSpaceForUnit(hero, origin, true);
             hero.Stop();
-             
-             // Camera reset
+
+            // Camera reset
             PlayerResource.SetCameraTarget(playerId, hero);
             Timers.CreateTimer(0.1, () => {
                 PlayerResource.SetCameraTarget(playerId, undefined);
@@ -120,7 +119,7 @@ export class TrainingManager {
 
         // Performance Cleanup
         this.CleanupRoom(playerId);
-        
+
         print(`[TrainingManager] Player ${playerId} exited training room.`);
     }
 
@@ -152,19 +151,19 @@ export class TrainingManager {
             if (spawner) {
                 const spawnPos = spawner.GetAbsOrigin();
                 const hero = PlayerResource.GetSelectedHeroEntity(playerId);
-                
+
                 // Spawn full wave
                 for (let i = 0; i < data.spawnCount; i++) {
-                     const monster = CreateUnitByName(this.MONSTER_UNIT_NAME, spawnPos, true, undefined, undefined, DotaTeam.BADGUYS);
-                     if (monster) {
-                         monster.SetAcquisitionRange(1000);
-                         data.liveMonsters.push(monster.entindex()); // Store Index
+                    const monster = CreateUnitByName(this.MONSTER_UNIT_NAME, spawnPos, true, undefined, undefined, DotaTeam.BADGUYS);
+                    if (monster) {
+                        monster.SetAcquisitionRange(1000);
+                        data.liveMonsters.push(monster.entindex()); // Store Index
 
-                         // Force Attack Hero
-                         if (hero) {
-                             monster.SetForceAttackTarget(hero);
-                         }
-                     }
+                        // Force Attack Hero
+                        if (hero) {
+                            monster.SetForceAttackTarget(hero);
+                        }
+                    }
                 }
                 nextCheckDelay = 1.0; // Wait longer after a fresh spawn
             }
@@ -172,10 +171,10 @@ export class TrainingManager {
 
         // 3. Schedule next check
         const timerId = Timers.CreateTimer(nextCheckDelay, () => {
-             this.CheckAndSpawn(playerId);
-             return undefined;
+            this.CheckAndSpawn(playerId);
+            return undefined;
         });
-        
+
         this.spawnTimer.set(playerId, timerId);
     }
 
@@ -189,7 +188,7 @@ export class TrainingManager {
 
         // 2. Access Monsters directly and REMOVE them
         const data = this.GetPlayerData(playerId);
-        
+
         for (const entIndex of data.liveMonsters) {
             const unit = EntIndexToHScript(entIndex) as CDOTA_BaseNPC;
             if (unit && !unit.IsNull()) {

@@ -5,49 +5,10 @@
 // Template: https://github.com/XavierCHN/x-template
 "XLSXContent"
 {
-	"npc_kv_custom_earthshaker" {
-		"BaseClass" "npc_dota_creature"
-		"Model" "models/heroes/earthshaker/earthshaker.vmdl"
-		"ModelScale" "1"
-		"Creature" {
-			"AttachWearables" {
-				"1" { "ItemDef" "123" }
-				"2" { "ItemDef" "223" }
-			}
-		}
-		"SoundSet" "Hero_EarthShaker"
-		"GameSoundsFile" "soundevents/game_sounds_heroes/game_sounds_earthshaker.vsndevts"
-		"VoiceFile" "soundevents/voscripts/game_sounds_vo_earthshaker.vsndevts"
-		"Ability1" ""
-		"Ability2" ""
-		"Ability3" ""
-		"Ability4" ""
-		"Ability5" ""
-		"Ability6" ""
-		"ConsideredHero" "1"
-		"HealthBarOffset" "200"
-		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
-		"ArmorPhysical" "5"
-		"MagicalResistance" "0"
-		"StatusHealth" "500"
-		"StatusHealthRegen" "0"
-		"StatusMana" "100"
-		"StatusManaRegen" "0"
-		"BountyGoldMin" "0"
-		"BountyGoldMax" "0"
-		"AttackDamageMin" "50"
-		"AttackDamageMax" "60"
-		"AttackRate" "1.5000"
-		"AttackAnimationPoint" "0.3000"
-		"AttackRange" "130"
-		"BoundsHullName" "DOTA_HULL_SIZE_HERO"
-		"RingRadius" "70"
-		"HasInventory" "1"
-	}
 	"npc_dota_home_base" {
 		"BaseClass" "npc_dota_building"
 		"Model" "models/props_structures/radiant_tower002.vmdl"
-		"ModelScale" "1"
+		"ModelScale" "1.3000"
 		"Creature" {
 			"AttachWearables" {
 			}
@@ -58,12 +19,12 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
-		"HealthBarOffset" "250"
+		"HealthBarOffset" "400"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
 		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
 		"ArmorPhysical" "20"
-		"StatusHealth" "5000"
-		"StatusHealthRegen" "10"
+		"StatusHealth" "10000"
+		"StatusHealthRegen" "20"
 		"StatusMana" "0"
 		"BoundsHullName" "DOTA_HULL_SIZE_BUILDING"
 		"HasInventory" "0"
@@ -83,18 +44,18 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
-		"HealthBarOffset" "140"
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "0"
-		"StatusHealth" "200"
-		"StatusHealthRegen" "1"
+		"StatusHealth" "90"
+		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
-		"BountyGoldMin" "5"
-		"BountyGoldMax" "10"
-		"AttackDamageMin" "30"
-		"AttackDamageMax" "30"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
+		"AttackDamageMin" "8"
+		"AttackDamageMax" "10"
 		"AttackRate" "1.5000"
 		"AttackAnimationPoint" "0.3000"
 		"AttackRange" "100"
@@ -104,8 +65,8 @@
 		"ChaseDistance" "1000"
 		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
 		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
-		"CustomDrop_Coin" "5"
-		"CustomDrop_Faith" "5"
+		"CustomDrop_Coin" "15"
+		"CustomDrop_Faith" "1"
 	}
 
 

@@ -1,34 +1,33 @@
-
-import { TrainingRoomManager } from "./TrainingRoomManager";
+import { TrainingRoomManager } from './TrainingRoomManager';
 
 export class InvitationModule {
     constructor() {
         // Listen for identification code from client
-        CustomGameEventManager.RegisterListener("to_server_verify_code", (_, event) => {
-            const playerID = (event as any).PlayerID as PlayerID; 
+        CustomGameEventManager.RegisterListener('to_server_verify_code', (_, event) => {
+            const playerID = (event as any).PlayerID as PlayerID;
             this.OnVerifyCode(playerID, (event as any).code);
         });
-        print("InvitationModule initialized");
+        print('InvitationModule initialized');
 
         // Initialize Training Rooms (Procedural Generation)
         TrainingRoomManager.Init();
     }
 
     private OnVerifyCode(playerID: PlayerID, code: string) {
-        const correctCode = "669571";
+        const correctCode = '669571';
         const player = PlayerResource.GetPlayer(playerID);
-        
+
         if (!player) return;
 
         if (code === correctCode) {
-            CustomGameEventManager.Send_ServerToPlayer(player, "from_server_verify_result", {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                 success: true,
-                message: "Verification Successful"
+                message: 'Verification Successful',
             });
             print(`Player ${playerID} verified successfully.`);
-            
+
             // Spawn Hero Logic: Force Pick Juggernaut
-            const heroName = "npc_dota_hero_juggernaut"; 
+            const heroName = 'npc_dota_hero_juggernaut';
             let hero = PlayerResource.GetSelectedHeroEntity(playerID);
 
             if (hero) {
@@ -38,7 +37,7 @@ export class InvitationModule {
                 if (hero.GetUnitName() !== heroName) {
                     const newHero = PlayerResource.ReplaceHeroWith(playerID, heroName, 0, 0);
                     if (newHero) {
-                        hero = newHero; 
+                        hero = newHero;
                     }
                 }
             } else {
@@ -49,10 +48,10 @@ export class InvitationModule {
 
             if (hero) {
                 hero.RespawnHero(false, false);
-                
+
                 // Teleport to user's exclusive Training Room
                 const respawnPos = TrainingRoomManager.GetRespawnPosition(playerID);
-                hero.SetAbsOrigin(respawnPos); 
+                hero.SetAbsOrigin(respawnPos);
                 FindClearSpaceForUnit(hero, respawnPos, true);
 
                 // Set camera to the hero
@@ -64,17 +63,16 @@ export class InvitationModule {
             }
 
             // Stop Background Music and Interface Sounds
-            CustomGameEventManager.Send_ServerToPlayer(player, "stop_custom_sounds", {});
-            
-            StopSoundOn("ui_hero_select_music_loop", player);
-            StopSoundOn("ui_hero_select_music_intro", player);
-            StopSoundOn("ui.main_menu_music", player);
-            StopSoundOn("gamestart.01", player);
+            CustomGameEventManager.Send_ServerToPlayer(player, 'stop_custom_sounds', {});
 
+            StopSoundOn('ui_hero_select_music_loop', player);
+            StopSoundOn('ui_hero_select_music_intro', player);
+            StopSoundOn('ui.main_menu_music', player);
+            StopSoundOn('gamestart.01', player);
         } else {
-            CustomGameEventManager.Send_ServerToPlayer(player, "from_server_verify_result", {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                 success: false,
-                message: "Invalid Invitation Code"
+                message: 'Invalid Invitation Code',
             });
             print(`Player ${playerID} verification failed with code: ${code}`);
         }
