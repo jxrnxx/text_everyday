@@ -1,0 +1,4 @@
+"CustomNetTables"
+{
+    "economy" "1"
+}

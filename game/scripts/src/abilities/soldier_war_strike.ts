@@ -12,7 +12,7 @@ export class soldier_war_strike extends BaseAbility {
     }
 
     Precache(context: CScriptPrecacheContext) {
-        PrecacheResource("particle", "particles/econ/items/tuskarr/ti9_tusk_jungle_arms/ti9_tusk_arms_ambient_gem_glow.vpcf", context);
+        PrecacheResource("particle", "particles/mars_shield_bash_crit_strike_text.vpcf", context);
         PrecacheResource("particle", "particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf", context);
         PrecacheResource("particle", "particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf", context);
     }
@@ -111,24 +111,45 @@ export class modifier_soldier_war_strike extends BaseModifier {
         const caster = this.GetParent();
         const origin = caster.GetAbsOrigin();
         
-        // Calculate Forward Direction (2D)
-        const forward = caster.GetForwardVector();
-        forward.z = 0; 
-        const forward2D = forward.Normalized();
 
-        // 1. Particle: Tusk Gem Glow (Ambient)
-        // Position: In front of the caster (replacing the fan).
-        const p1 = ParticleManager.CreateParticle("particles/econ/items/tuskarr/ti9_tusk_jungle_arms/ti9_tusk_arms_ambient_gem_glow.vpcf", ParticleAttachment.CUSTOMORIGIN, caster);
-        
-        // Offset: 200 units in front + 50 units Z (Chest/Head height)
-        const frontPos = (origin + (forward2D * 200) as Vector + Vector(0,0,50)) as Vector;
-        ParticleManager.SetParticleControl(p1, 0, frontPos);
-        
-        // Duration: Increased to 2.5s so user can clearly see it.
-        Timers.CreateTimer(2.5, () => {
-             ParticleManager.DestroyParticle(p1, false);
-             ParticleManager.ReleaseParticleIndex(p1);
-        });
+
+        // 1. 获取基础信息
+        // caster/origin defined above at lines 111-112
+        const forward = caster.GetForwardVector();
+        const forward2D = Vector(forward.x, forward.y, 0).Normalized();
+
+        // 2. [修正] 距离改为 100 (贴脸释放)
+        const distance = 100;
+
+        // 3. 计算 CP1 位置 (扇形中心点)
+        const targetPos = Vector(
+            origin.x + (forward.x * distance),
+            origin.y + (forward.y * distance),
+            origin.z + 60 // 抬高高度
+        ) as Vector;
+
+        // 4. 创建特效
+        const pIndex = ParticleManager.CreateParticle(
+            "particles/mars_shield_bash_crit_strike_text.vpcf", 
+            ParticleAttachment.ABSORIGIN_FOLLOW, 
+            caster
+        );
+
+        // CP 0: 英雄脚下
+        ParticleManager.SetParticleControl(pIndex, 0, origin);
+
+        // CP 1: 扇形位置
+        ParticleManager.SetParticleControl(pIndex, 1, targetPos);
+
+        // CP 2: 你要求的参数 (5, 0, 0)
+        ParticleManager.SetParticleControl(pIndex, 2, Vector(5, 0, 0));
+
+        // [关键一步!] 强制设置特效的“正前方”为英雄的“正前方”
+        // 这能解决扇形“反向/内凹”的问题
+        ParticleManager.SetParticleControlForward(pIndex, 0, forward);
+        ParticleManager.SetParticleControlForward(pIndex, 1, forward);
+
+        ParticleManager.ReleaseParticleIndex(pIndex);
 
         // 2. Particle: Explosion - REMOVED
         // User felt SF Raze was "too obvious" / distracting.

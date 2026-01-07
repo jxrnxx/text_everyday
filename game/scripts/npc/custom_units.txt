@@ -67,6 +67,7 @@
 		"StatusMana" "0"
 		"BoundsHullName" "DOTA_HULL_SIZE_BUILDING"
 		"HasInventory" "0"
+		"CustomDrop_Faith" "0"
 	}
 	"npc_enemy_zombie_lvl1" {
 		"BaseClass" "npc_dota_creature"
@@ -103,6 +104,8 @@
 		"ChaseDistance" "1000"
 		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
 		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "5"
+		"CustomDrop_Faith" "5"
 	}
 
 

@@ -19,6 +19,9 @@ declare interface CustomGameEventDeclarations {
         success: boolean;
         message?: string;
     };
+    // Training Room Events
+    cmd_c2s_train_enter: {};
+    cmd_c2s_train_exit: {};
 
     /** Stop custom sounds on client */
     stop_custom_sounds: {};
@@ -30,4 +33,11 @@ declare interface CustomGameEventDeclarations {
 
     /** Reset game timer to 0 */
     reset_game_timer: {};
+
+    /** Economy update (SpiritCoin/Faith) */
+    economy_update: {
+        player_id: PlayerID;
+        spirit_coin: number;
+        faith: number;
+    };
 }

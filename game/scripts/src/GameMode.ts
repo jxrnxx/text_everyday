@@ -1,3 +1,5 @@
+import { EconomySystem } from "./mechanics/EconomySystem";
+import { TrainingManager } from "./systems/TrainingManager";
 
 // 游戏模式类
 export class GameMode {
@@ -22,6 +24,13 @@ export class GameMode {
         GameRules.GetGameModeEntity().SetFogOfWarDisabled(true);
         GameRules.GetGameModeEntity().SetCameraDistanceOverride(1450); // 调整镜头高度
 
+        // [Economy] Disable native gold
+        GameRules.SetGoldTickTime(99999);
+        GameRules.SetGoldPerTick(0);
+
+        // [Economy] Initialize Custom Economy System
+        EconomySystem.GetInstance();
+
         ListenToGameEvent('npc_spawned', (event) => this.OnNpcSpawned(event), undefined);
         
         // 监听聊天指令
@@ -32,6 +41,48 @@ export class GameMode {
                 SendToConsole("restart");
             }
         }, undefined);
+
+        // [Training] Register Console Test Commands
+        ListenToGameEvent("player_chat", (event) => {
+            const text = event.text.toLowerCase().trim();
+            const playerId = event.playerid;
+            
+            if (text === "cmd_train_enter") {
+                TrainingManager.GetInstance().EnterRoom(playerId);
+            }
+            
+            if (text === "cmd_train_exit") {
+                TrainingManager.GetInstance().ExitRoom(playerId);
+            }
+        }, undefined);
+
+        // Register Console Commands for Keybinding (Cross-Layer Solution)
+        Convars.RegisterCommand("cmd_train_enter", (_, strPlayerId) => {
+            const playerId = Number(strPlayerId);
+            if (playerId != null && !isNaN(playerId)) {
+                TrainingManager.GetInstance().EnterRoom(playerId as PlayerID);
+            }
+        }, "Enter Training Room", 0);
+
+        Convars.RegisterCommand("cmd_train_exit", (_, strPlayerId) => {
+            const playerId = Number(strPlayerId);
+            if (playerId != null && !isNaN(playerId)) {
+                TrainingManager.GetInstance().ExitRoom(playerId as PlayerID);
+            }
+        }, "Exit Training Room", 0);
+
+        // [Training] Listen for F3/F4 Key Events from Panorama
+        CustomGameEventManager.RegisterListener("cmd_c2s_train_enter", (_, event) => {
+            const playerID = (event as any).PlayerID as PlayerID;
+            print(`[GameMode] Received F3 Event from Player ${playerID}`);
+            TrainingManager.GetInstance().EnterRoom(playerID);
+        });
+
+        CustomGameEventManager.RegisterListener("cmd_c2s_train_exit", (_, event) => {
+            const playerID = (event as any).PlayerID as PlayerID;
+            print(`[GameMode] Received F4 Event from Player ${playerID}`);
+            TrainingManager.GetInstance().ExitRoom(playerID);
+        });
 
         // 监听前端验证码请求
         CustomGameEventManager.RegisterListener("to_server_verify_code", (_, event) => {
@@ -141,11 +192,19 @@ export class GameMode {
     private static OnNpcSpawned(event: NpcSpawnedEvent) {
         // ... (保持原有逻辑不变，只展示部分)
         const unit = EntIndexToHScript(event.entindex) as CDOTA_BaseNPC;
-        if (!unit) return;
+        if (unit) {
+            // [Economy] Disable native gold bounty for all units
+            unit.SetMaximumGoldBounty(0);
+            unit.SetMinimumGoldBounty(0);
+        }
+        
         if (unit.IsRealHero()) {
             unit.SetBaseMoveSpeed(600); // 测试用：设置移速 600
             const playerId = unit.GetPlayerOwnerID();
             if (playerId >= 0 && playerId <= 3) {
+                 // Initialize Economy for this player if not already
+                 EconomySystem.GetInstance().InitPlayer(playerId);
+
                  // 只有在游戏刚加载时传送，重启时由RestartGame处理
                  // 但为了保险，还是保留这个出生传送逻辑
                 const spawnPointName = `start_player_${playerId + 1}`; 

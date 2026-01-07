@@ -82,7 +82,7 @@ const InvitationCode: FC = () => {
                         placeholder="..."
                         multiline={false}
                         // @ts-ignore
-                        onTextEntrySubmit={handleSubmit} // 支持回车提交
+                        oninputsubmit={handleSubmit} // 支持回车提交
                     />
                     <Button
                         onactivate={handleSubmit}

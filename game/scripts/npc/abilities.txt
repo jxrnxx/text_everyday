@@ -64,4 +64,19 @@
             "particle"  "particles/units/heroes/hero_tiny/tiny_toss_blur.vpcf"
 		}
 	}
+	"soldier_war_strike" {
+		"BaseClass" "ability_lua"
+		"ScriptFile" "abilities/soldier_war_strike.lua"
+		"AbilityValues" {
+			"attacks_to_proc" "3"
+			"damage_pct" "250"
+			"cleave_radius" "400"
+			"cleave_angle" "120"
+			"unknown_var_0" "1"
+		}
+		"AbilityCooldown" "juggernaut_blade_dance"
+		"AbilityManaCost" "DOTA_ABILITY_TYPE_BASIC"
+		"AbilityType" "DOTA_ABILITY_BEHAVIOR_PASSIVE"
+		"AbilityCastRange" "0"
+	}
 }

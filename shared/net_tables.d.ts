@@ -9,6 +9,12 @@ declare interface CustomNetTableDeclarations {
     hero_list: {
         hero_list: Record<string, string> | string[];
     };
+    economy: {
+        [key: string]: {
+            spirit_coin: number;
+            faith: number;
+        };
+    };
     custom_net_table_1: {
         key_1: number;
         key_2: string;

@@ -42,4 +42,90 @@
         "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE | DOTA_ABILITY_BEHAVIOR_HIDDEN"
         "MaxLevel"                      "1"
     }
+
+    // 冰霜新星
+    "crystal_nova_x"
+    {
+        "BaseClass"                     "ability_lua"
+        "ScriptFile"                    "examples/abilities/crystal_nova_x.lua"
+        "AbilityTextureName"            "crystal_maiden_crystal_nova"
+        "MaxLevel"                      "4"
+        "AbilityCooldown"               "12.0 12.0 12.0 12.0"
+        "AbilityManaCost"               "100 120 140 160"
+        
+        "AbilityType"                   "DOTA_ABILITY_TYPE_BASIC"
+        "AbilityUnitDamageType"         "DAMAGE_TYPE_MAGICAL"
+        "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_POINT | DOTA_ABILITY_BEHAVIOR_AOE"
+        "AbilityCastRange"              "700"
+        "AbilityCastPoint"              "0.3"
+
+        "AbilityValues"
+        {
+            "duration"                  "4.5"
+            "aoe_radius"                "400"
+            "movespeed_slow"            "-20 -30 -40 -50"
+            "attackspeed_slow"          "-20 -30 -40 -50"
+            "vision_duration"           "6.0"
+            "vision_radius"             "900"
+            "nova_damage"               "100 150 200 250"
+        }
+    }
+
+    // 反击螺旋
+    "counter_helix_x"
+    {
+        "BaseClass"                     "ability_lua"
+        "ScriptFile"                    "examples/abilities/counter_helix_x.lua"
+        "AbilityTextureName"            "axe_counter_helix"
+        "MaxLevel"                      "4"
+        
+        "AbilityType"                   "DOTA_ABILITY_TYPE_BASIC"
+        "AbilityUnitDamageType"         "DAMAGE_TYPE_PURE"
+        "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE"
+
+        "AbilityValues"
+        {
+            "damage"                    "75 110 145 180"
+            "radius"                    "275"
+            "hit_count"                 "7 6 5 4"
+        }
+
+        "Precache"
+        {
+            "soundfile"                 "soundevents/game_sounds_heroes/game_sounds_axe.vsndevts"
+            "particle"                  "particles/units/heroes/hero_axe/axe_counterhelix_ad.vpcf"
+        }
+    }
+
+    // 投掷
+    "tiny_toss_x"
+    {
+        "BaseClass"                     "ability_lua"
+        "ScriptFile"                    "examples/abilities/tiny_toss_x.lua"
+        "AbilityTextureName"            "tiny_toss"
+        "MaxLevel"                      "4"
+        "AbilityCooldown"               "10"
+        "AbilityManaCost"               "70"
+        
+        "AbilityUnitDamageType"         "DAMAGE_TYPE_MAGICAL"
+        "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_UNIT_TARGET | DOTA_ABILITY_BEHAVIOR_AOE"
+        "AbilityUnitTargetTeam"         "DOTA_UNIT_TARGET_TEAM_BOTH"
+        "AbilityUnitTargetType"         "DOTA_UNIT_TARGET_HERO | DOTA_UNIT_TARGET_BASIC"
+        "AbilityCastRange"              "1200"
+        "AbilityCastPoint"              "0"
+
+        "AbilityValues"
+        {
+            "duration"                  "1.1"
+            "grab_radius"               "275"
+            "radius"                    "275"
+            "bonus_damage_pct"          "30 60 90"
+            "toss_damage"               "200 250 300 350"
+        }
+
+        "Precache"
+        {
+            "particle"                  "particles/units/heroes/hero_tiny/tiny_toss_blur.vpcf"
+        }
+    }
 }

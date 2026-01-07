@@ -44,7 +44,6 @@ const GameTimer: FC = () => {
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    console.log('[UI] GameTimer initialized with fontSize: 24px');
 
     return (
         <Panel 

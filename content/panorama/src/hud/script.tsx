@@ -14,14 +14,29 @@ import { type FC } from 'react';
 import { render } from 'react-panorama-x';
 import GameTimer from './GameTimer';
 import InvitationCode from './InvitationCode';
+import EconomyDisplay from './EconomyDisplay';
+import TrainingButtons from './TrainingButtons';
 
 const Root: FC = () => {
     return (
         <>
             <GameTimer />
             <InvitationCode />
+            <EconomyDisplay />
+            <TrainingButtons />
         </>
     );
 };
 
 render(<Root />, $.GetContextPanel());
+
+// Helper: Reload Scripts with 'R' (Only in Tools Mode)
+if (Game.IsInToolsMode()) {
+    $.RegisterKeyBind($.GetContextPanel(), "key_r", () => {
+        Game.ServerCmd("dota_reload_addon_script");
+    });
+}
+
+// Global Key Binds for Training Room
+// We are moving keybind logic to 'custom_keybinds.js' to avoid UI script errors and conflicts.
+// The debug buttons below remain for mouse-based testing.
