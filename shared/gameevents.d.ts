@@ -40,4 +40,13 @@ declare interface CustomGameEventDeclarations {
         spirit_coin: number;
         faith: number;
     };
+
+    /** Custom Stats Update (Server -> Client) */
+    custom_stats_update: {
+        entindex: number;
+        stats: any; // Using any to avoid sharing complex HeroStats interface for now
+    };
+    
+    /** Request Custom Stats (Client -> Server) */
+    request_custom_stats: {};
 }

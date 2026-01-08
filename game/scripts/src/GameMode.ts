@@ -1,3 +1,4 @@
+print('[DEBUG] GameMode.ts MODULE LOADING...');
 import { EconomySystem } from './mechanics/EconomySystem';
 import { TrainingManager } from './systems/TrainingManager';
 import { CustomStats } from './systems/CustomStats';
@@ -33,6 +34,13 @@ export class GameMode {
 
         // [Economy] Initialize Custom Economy System
         EconomySystem.GetInstance();
+        
+        // [Stats] Initialize Custom Server Event Listeners
+        try {
+            CustomStats.Init();
+        } catch (e) {
+            print(`[GameMode] FAILED TO INIT CUSTOM STATS: ${e}`);
+        }
 
         ListenToGameEvent('npc_spawned', event => this.OnNpcSpawned(event), undefined);
 

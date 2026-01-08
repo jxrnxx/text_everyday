@@ -1,4 +1,5 @@
 "CustomNetTables"
 {
     "economy" "1"
+    "custom_stats" "1"
 }

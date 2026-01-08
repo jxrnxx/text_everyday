@@ -1,18 +1,7 @@
 import { reloadable } from '../utils/tstl-utils';
 import * as json_heroes from '../json/npc_heroes_custom.json';
 
-declare global {
-    interface CustomGameEventDeclarations {
-        custom_stats_changed: {
-            unit_index: EntityIndex;
-            stats: {
-                constitution: number;
-                martial: number;
-                divinity: number;
-            };
-        };
-    }
-}
+// Custom Game Event Declarations moved to shared/gameevents.d.ts
 
 // 定义自定义属性接口
 interface HeroStats {
@@ -24,6 +13,7 @@ interface HeroStats {
     crit_chance: number;
     crit_damage: number;
     main_stat: string;
+    profession?: string;
 }
 
 const DEFAULT_STATS: HeroStats = {
@@ -38,38 +28,53 @@ const DEFAULT_STATS: HeroStats = {
 
 @reloadable
 export class CustomStats {
-    constructor() {
-        // 构造函数，如果需要单例模式可以调整，这里作为静态工具类使用也很方便
-    }
+    // Server-side memory cache to guarantee immediate data access
+    private static cache: { [key: string]: HeroStats } = {};
 
     /**
-     * 初始化英雄的自定义属性 (在此之前通常先检查是否已存在)
+     * 初始化英雄的自定义属性
      */
     public static InitializeHeroStats(hero: CDOTA_BaseNPC_Hero) {
         if (!hero || hero.IsNull()) return;
 
-        // 检查是否已经有数据，避免重生重置
-        const existing = CustomNetTables.GetTableValue('custom_stats' as any, tostring(hero.GetEntityIndex()));
-        if (existing) return;
+        // 检查是否已经有数据 (Check Cache first)
+        const unitIndex = tostring(hero.GetEntityIndex());
+        if (this.cache[unitIndex]) return;
 
-        // -------------------------------------------------------------------------
-        // Initial Stats Logic (Starter Package)
-        // -------------------------------------------------------------------------
+        // ... (Keep existing JSON lookup logic) ...
         const unitName = hero.GetUnitName();
         // @ts-ignore
-        const heroData = json_heroes[unitName];
+        const jsonImport = json_heroes;
+        // @ts-ignore
+        const root = jsonImport.DOTAHeroes || jsonImport.XLSXContent || (jsonImport.default && jsonImport.default.XLSXContent) || jsonImport;
+        
+        let heroData = root[unitName];
+        
+        if (!heroData) {
+            // Reverse lookup logic
+            for (const key in root) {
+                const candidate = root[key];
+                if (candidate && candidate.override_hero === unitName) {
+                    heroData = candidate;
+                    break;
+                }
+            }
+        }
+
         const mainStat = (heroData && heroData.CustomMainStat) ? heroData.CustomMainStat : 'Martial';
 
         const initialStats: HeroStats = {
-            constitution: 5, // Universal Base (250 HP)
+            constitution: 5,
             martial: 2,
             divinity: 2,
             rank: 1,
             crit_chance: 0,
             crit_damage: 150,
-            main_stat: mainStat
+            main_stat: mainStat,
+            profession: (heroData && heroData.CustomJob) ? heroData.CustomJob : "无名小卒"
         };
-
+        
+        // Logic for specific stats
         if (mainStat === 'Martial') {
             initialStats.martial = 8;
             initialStats.divinity = 2;
@@ -77,41 +82,43 @@ export class CustomStats {
             initialStats.divinity = 8;
             initialStats.martial = 2;
         } else {
-            // Default split if unknown
             initialStats.martial = 5;
             initialStats.divinity = 5;
         }
         
-        // 写入初始数据
-        CustomNetTables.SetTableValue('custom_stats' as any, tostring(hero.GetEntityIndex()), initialStats);
+        // 1. Write to Cache (Source of Truth)
+        this.cache[unitIndex] = initialStats;
 
-        // 添加属性处理器 Modifier
-        // 确保 modifier_custom_stats_handler 已经注册
+        // 2. Write to NetTable (For Client Sync)
+        CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, initialStats);
+
+        // Add Modifier
         hero.AddNewModifier(hero, undefined, 'modifier_custom_stats_handler', {});
 
-        print(`[CustomStats] Initialized stats for ${unitName}: Con=${initialStats.constitution}, Mar=${initialStats.martial}, Div=${initialStats.divinity}`);
+        print(`[CustomStats] Initialized stats for ${unitName} (Job: ${initialStats.profession})`);
+        
+        // Send to client immediately
+        this.SendStatsToClient(hero, initialStats);
     }
 
     /**
      * 增加指定属性
-     * @param unit 目标单位
-     * @param statType 属性类型: "constitution" | "martial" | "divinity"
-     * @param value 增加的值 (可以是负数)
      */
     public static AddStat(unit: CDOTA_BaseNPC, statType: keyof HeroStats, value: number) {
         if (!unit || unit.IsNull()) return;
 
         const unitIndex = tostring(unit.GetEntityIndex());
-        const currentStats = CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
+        // Read from Cache -> Fallback to NetTable -> Fallback to Default
+        const currentStats = this.cache[unitIndex] || CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
 
-        if (currentStats[statType] !== undefined) {
-            currentStats[statType] = (currentStats[statType] as number) + value;
+        if (currentStats[statType] !== undefined && typeof currentStats[statType] === 'number') {
+            (currentStats as any)[statType] += value;
+            
+            // Update Cache & NetTable
+            this.cache[unitIndex] = currentStats;
             CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, currentStats);
-
-            // 可以发送事件通知前端显示飘字等 (可选)
-            // CustomGameEventManager.Send_ServerToAllClients("custom_stats_changed", { unit_index: unit.GetEntityIndex(), stats: currentStats });
         } else {
-            print(`[CustomStats] Invalid stat type: ${statType}`);
+            print(`[CustomStats] Invalid or non-numeric stat type: ${statType}`);
         }
     }
 
@@ -120,9 +127,10 @@ export class CustomStats {
      */
     public static GetStat(unit: CDOTA_BaseNPC, statType: keyof HeroStats): number {
         if (!unit || unit.IsNull()) return 0;
-        const stats = CustomNetTables.GetTableValue('custom_stats' as any, tostring(unit.GetEntityIndex()));
+        const stats = this.GetAllStats(unit);
         if (stats && stats[statType] !== undefined) {
-            return stats[statType];
+            const val = (stats as any)[statType];
+            return typeof val === 'number' ? val : 0;
         }
         return 0;
     }
@@ -132,7 +140,40 @@ export class CustomStats {
      */
     public static GetAllStats(unit: CDOTA_BaseNPC): HeroStats {
         if (!unit || unit.IsNull()) return { ...DEFAULT_STATS };
-        const stats = CustomNetTables.GetTableValue('custom_stats' as any, tostring(unit.GetEntityIndex()));
-        return stats ? (stats as HeroStats) : { ...DEFAULT_STATS };
+        const unitIndex = tostring(unit.GetEntityIndex());
+        // Prioritize Cache
+        return this.cache[unitIndex] || CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
+    }
+    
+    /**
+     * 发送属性数据给客户端
+     */
+    public static SendStatsToClient(unit: CDOTA_BaseNPC, explicitStats?: HeroStats) {
+        if (!unit || unit.IsNull() || !unit.IsRealHero()) return;
+
+        const player = PlayerResource.GetPlayer(unit.GetPlayerOwnerID());
+        if (!player) return;
+
+        // Use explicit, or fetch from Cache via GetAllStats
+        const stats = explicitStats || this.GetAllStats(unit);
+        
+        CustomGameEventManager.Send_ServerToPlayer(player, "custom_stats_update", {
+            entindex: unit.GetEntityIndex(),
+            stats: stats
+        });
+    }
+
+    public static Init() {
+        CustomGameEventManager.RegisterListener("request_custom_stats", (_, event) => {
+            const playerId = event.PlayerID;
+            const player = PlayerResource.GetPlayer(playerId);
+            if (!player) return;
+            const hero = player.GetAssignedHero();
+            if (hero) {
+                // This now triggers GetAllStats -> Reads from Cache -> Returns Correct Data
+                CustomStats.SendStatsToClient(hero);
+            }
+        });
+        print("[CustomStats] System Initialized with Memory Cache.");
     }
 }

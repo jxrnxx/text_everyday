@@ -93,5 +93,7 @@
 		"StatusHealthRegen" "0"
 		"StatusManaRegen" "1"
 		"HasInventory" "1"
+		"CustomMainStat" "Martial"
+		"CustomJob" "ha_ha_ha"
 	}
 }

@@ -12,30 +12,54 @@ const RANK_DATA = {
 
 const DEFAULT_RANK = { title: "凡胎", desc: "肉眼凡胎，受困于世。" };
 
+const JOB_NAME_MAP: { [key: string]: string } = {
+    "bing_shen_dao": "兵神道",
+    // Add other mappings here as needed
+};
+
 let isOpen = false;
 
 function ToggleCharSheet() {
-    $.Msg("[AntiGravity] ToggleCharSheet called");
+    $.Msg("[AntiGravity] ToggleCharSheet called! isOpen was: " + isOpen);
     isOpen = !isOpen;
-    $('#CharSheetContainer').SetHasClass('Hidden', !isOpen);
+    const panel = $('#CharSheetContainer');
+    if (panel) {
+        panel.SetHasClass('Hidden', !isOpen);
+        $.Msg("[AntiGravity] Toggled class 'Hidden'. Now isOpen: " + isOpen + ", Check class: " + panel.BHasClass('Hidden'));
+    } else {
+        $.Msg("[AntiGravity] ERROR: Could not find #CharSheetContainer!");
+    }
 
     if (isOpen) {
         UpdateAllStats();
+        // Request fresh data via event (Backup for NetTable)
+        GameEvents.SendCustomGameEventToServer("request_custom_stats", {} as any);
         Game.EmitSound('ui_menu_activate_open');
     } else {
         Game.EmitSound('ui_menu_activate_close');
     }
 }
 
-// Expose to Global for XML button (Close Button)
+// Expose to Global
 ($.GetContextPanel() as any).ToggleCharSheet = ToggleCharSheet;
+(Game.GetLocalPlayerInfo() as any).ToggleCharSheet = ToggleCharSheet; // Hacker attempt to expose wider
 
 function UpdateAllStats() {
     const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
     if (localHero === -1) return;
 
     // 1. Custom Stats from NetTable
-    const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, String(localHero));
+    const netTableKey = String(localHero);
+    const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, netTableKey);
+    
+    // DEBUG LOG
+    $.Msg(`[AntiGravity] UpdateAllStats: LocalHero=${localHero}, Key=${netTableKey}, HasData=${!!netTableData}`);
+    if (!netTableData) {
+        // Log all keys to see if we have a mismatch
+        const allData = CustomNetTables.GetAllTableValues('custom_stats' as any);
+        $.Msg(`[AntiGravity] Dumping 'custom_stats' keys: ${JSON.stringify(allData)}`);
+    }
+
     if (netTableData) {
         // Basic Stats
         ($('#Val_Constitution') as LabelPanel).text = (netTableData as any).constitution.toString();
@@ -51,11 +75,17 @@ function UpdateAllStats() {
         ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
         // Tooltip for Rank Desc could be added here later
         
-        // Profession (Map main_stat to text)
-        const mainStat = (netTableData as any).main_stat || 'Martial';
-        let professionName = "未知";
-        if (mainStat === 'Martial') professionName = "兵家"; // Soldier
-        else if (mainStat === 'Divinity') professionName = "神官"; // Divinity? 
+        // Profession (Map Hero Name to Title)
+        // Profession
+        // Check if server sent profession in NetTable
+        let professionKey = (netTableData as any).profession;
+        let professionName = "-"; // Default to dash if not found
+
+        if (professionKey && professionKey !== "undefined") {
+            professionName = JOB_NAME_MAP[professionKey] || professionKey;
+        }
+        
+        ($ as any).Msg("[AntiGravity] NetTable Profession: " + professionName);
         ($('#Val_Profession') as LabelPanel).text = professionName;
 
         // Crit
@@ -139,15 +169,26 @@ function Init() {
         // Unregister first to ideally clear old binds (though API doesn't fully support unregistering keybinds cleanly)
         // Game.CreateCustomKeyBind('C', ''); // Hacky try
 
-        Game.AddCommand('ToggleCharSheetCmd', ToggleCharSheet, '', 0);
-        Game.CreateCustomKeyBind('C', 'ToggleCharSheetCmd');
-        $.Msg("[AntiGravity] Keybind 'C' registered for ToggleCharSheetCmd on context: " + $.GetContextPanel().id);
+    // Register Command
+        const cmdName = "ToggleCharSheet_" + Math.floor(Math.random() * 10000);
+        Game.AddCommand(cmdName, ToggleCharSheet, '', 0);
+        Game.CreateCustomKeyBind('C', cmdName);
+        $.Msg("[AntiGravity] Registered KeyBind 'C' to command: " + cmdName);
 
         // NetTable Listeners
         CustomNetTables.SubscribeNetTableListener('custom_stats' as any, (table, key, data) => {
             if (key === String(Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer()))) {
                 if (isOpen) UpdateAllStats();
             }
+        });
+
+        // Event Listener (Fallback / Alternative)
+        GameEvents.Subscribe("custom_stats_update", (event: any) => {
+             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+             if (event.entindex === localHero) {
+                 $.Msg("[AntiGravity] Received custom_stats_update event!");
+                 UpdateStatsFromEvent(event.stats);
+             }
         });
 
         CustomNetTables.SubscribeNetTableListener('economy' as any, (table, key, data) => {
@@ -167,6 +208,38 @@ function Init() {
     } catch (e) {
         $.Msg("[AntiGravity] Error in character_sheet init: " + e);
     }
+}
+
+// Helper to update from direct object
+function UpdateStatsFromEvent(stats: any) {
+    $.Msg("[AntiGravity] UpdateStatsFromEvent called. Payload: " + JSON.stringify(stats));
+    if (!stats) return;
+
+    ($('#Val_Constitution') as LabelPanel).text = stats.constitution.toString();
+    ($('#Val_Martial') as LabelPanel).text = stats.martial.toString();
+    ($('#Val_Divinity') as LabelPanel).text = stats.divinity.toString();
+
+    const rankLevel = stats.rank || 1;
+    // @ts-ignore
+    const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
+    ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
+
+    // Profession
+    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+    const unitName = Entities.GetUnitName(localHero);
+    let professionName = "无名小卒";
+
+    // Use Profession from Server
+    if (stats.profession) {
+        professionName = JOB_NAME_MAP[stats.profession] || stats.profession;
+    }
+    
+    ($('#Val_Profession') as LabelPanel).text = professionName;
+
+    const critChance = stats.crit_chance || 0;
+    const critDmg = stats.crit_damage || 150;
+    ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
+    ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
 }
 
 (function () {

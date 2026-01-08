@@ -59,7 +59,7 @@
 		"AttackRate" "1.5000"
 		"AttackAnimationPoint" "0.3000"
 		"AttackRange" "100"
-		"BoundsHullName" "DOTA_HULL_SIZE_HUMAN"
+		"BoundsHullName" "DOTA_HULL_SIZE_HERO"
 		"HasInventory" "0"
 		"AttackAcquisitionRange" "800"
 		"ChaseDistance" "1000"
