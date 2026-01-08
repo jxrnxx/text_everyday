@@ -1,3 +1,17 @@
+
+
+// Rank Data Structure
+const RANK_DATA = {
+    1: { title: "凡胎", desc: "肉眼凡胎，受困于世。" },
+    2: { title: "觉醒", desc: "窥见真实，打破枷锁。" },
+    3: { title: "宗师", desc: "技近乎道，登峰造极。" },
+    4: { title: "半神", desc: "神性初显，超脱凡俗。" },
+    5: { title: "神话", desc: "传颂之名，永恒不朽。" },
+    6: { title: "禁忌", desc: "不可直视，不可名状。" }
+};
+
+const DEFAULT_RANK = { title: "凡胎", desc: "肉眼凡胎，受困于世。" };
+
 let isOpen = false;
 
 function ToggleCharSheet() {
@@ -23,9 +37,32 @@ function UpdateAllStats() {
     // 1. Custom Stats from NetTable
     const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, String(localHero));
     if (netTableData) {
+        // Basic Stats
         ($('#Val_Constitution') as LabelPanel).text = (netTableData as any).constitution.toString();
         ($('#Val_Martial') as LabelPanel).text = (netTableData as any).martial.toString();
         ($('#Val_Divinity') as LabelPanel).text = (netTableData as any).divinity.toString();
+
+        // New Stats: Rank, Profession, Crit
+        const rankLevel = (netTableData as any).rank || 1;
+        // @ts-ignore
+        const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
+        
+        // Rank
+        ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
+        // Tooltip for Rank Desc could be added here later
+        
+        // Profession (Map main_stat to text)
+        const mainStat = (netTableData as any).main_stat || 'Martial';
+        let professionName = "未知";
+        if (mainStat === 'Martial') professionName = "兵家"; // Soldier
+        else if (mainStat === 'Divinity') professionName = "神官"; // Divinity? 
+        ($('#Val_Profession') as LabelPanel).text = professionName;
+
+        // Crit
+        const critChance = (netTableData as any).crit_chance || 0;
+        const critDmg = (netTableData as any).crit_damage || 150;
+        ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
+        ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
     }
 
     // 2. Economy from NetTable
@@ -95,13 +132,16 @@ function AutoUpdate() {
 // -------------------------------------------------------------------------
 // Init
 // -------------------------------------------------------------------------
-(function () {
-    $.Msg("[AntiGravity] character_sheet.tsx loaded");
+function Init() {
+    $.Msg("[AntiGravity] character_sheet.tsx Init executing...");
     
     try {
+        // Unregister first to ideally clear old binds (though API doesn't fully support unregistering keybinds cleanly)
+        // Game.CreateCustomKeyBind('C', ''); // Hacky try
+
         Game.AddCommand('ToggleCharSheetCmd', ToggleCharSheet, '', 0);
         Game.CreateCustomKeyBind('C', 'ToggleCharSheetCmd');
-        $.Msg("[AntiGravity] Keybind 'C' registered for ToggleCharSheetCmd");
+        $.Msg("[AntiGravity] Keybind 'C' registered for ToggleCharSheetCmd on context: " + $.GetContextPanel().id);
 
         // NetTable Listeners
         CustomNetTables.SubscribeNetTableListener('custom_stats' as any, (table, key, data) => {
@@ -118,7 +158,19 @@ function AutoUpdate() {
 
         // Start Loop
         AutoUpdate();
+        
+        // Heartbeat for debugging
+        $.Schedule(1.0, function Heartbeat() {
+             $.Msg("[AntiGravity] Character Sheet script alive. IsOpen: " + isOpen);
+             $.Schedule(5.0, Heartbeat);
+        });
     } catch (e) {
         $.Msg("[AntiGravity] Error in character_sheet init: " + e);
     }
+}
+
+(function () {
+    $.Msg("[AntiGravity] character_sheet.tsx loaded. Scheduling Init...");
+    // Delay init by 0.1s to ensure Game context is ready
+    $.Schedule(0.1, Init);
 })();

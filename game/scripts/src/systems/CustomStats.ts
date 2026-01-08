@@ -1,4 +1,5 @@
 import { reloadable } from '../utils/tstl-utils';
+import * as json_heroes from '../json/npc_heroes_custom.json';
 
 declare global {
     interface CustomGameEventDeclarations {
@@ -18,12 +19,21 @@ interface HeroStats {
     constitution: number;
     martial: number;
     divinity: number;
+    // New Stats
+    rank: number;
+    crit_chance: number;
+    crit_damage: number;
+    main_stat: string;
 }
 
 const DEFAULT_STATS: HeroStats = {
     constitution: 5,
     martial: 5,
     divinity: 5,
+    rank: 1,
+    crit_chance: 0,
+    crit_damage: 150,
+    main_stat: 'Martial'
 };
 
 @reloadable
@@ -42,14 +52,44 @@ export class CustomStats {
         const existing = CustomNetTables.GetTableValue('custom_stats' as any, tostring(hero.GetEntityIndex()));
         if (existing) return;
 
+        // -------------------------------------------------------------------------
+        // Initial Stats Logic (Starter Package)
+        // -------------------------------------------------------------------------
+        const unitName = hero.GetUnitName();
+        // @ts-ignore
+        const heroData = json_heroes[unitName];
+        const mainStat = (heroData && heroData.CustomMainStat) ? heroData.CustomMainStat : 'Martial';
+
+        const initialStats: HeroStats = {
+            constitution: 5, // Universal Base (250 HP)
+            martial: 2,
+            divinity: 2,
+            rank: 1,
+            crit_chance: 0,
+            crit_damage: 150,
+            main_stat: mainStat
+        };
+
+        if (mainStat === 'Martial') {
+            initialStats.martial = 8;
+            initialStats.divinity = 2;
+        } else if (mainStat === 'Divinity') {
+            initialStats.divinity = 8;
+            initialStats.martial = 2;
+        } else {
+            // Default split if unknown
+            initialStats.martial = 5;
+            initialStats.divinity = 5;
+        }
+        
         // 写入初始数据
-        CustomNetTables.SetTableValue('custom_stats' as any, tostring(hero.GetEntityIndex()), DEFAULT_STATS);
+        CustomNetTables.SetTableValue('custom_stats' as any, tostring(hero.GetEntityIndex()), initialStats);
 
         // 添加属性处理器 Modifier
         // 确保 modifier_custom_stats_handler 已经注册
         hero.AddNewModifier(hero, undefined, 'modifier_custom_stats_handler', {});
 
-        print(`[CustomStats] Initialized stats for ${hero.GetUnitName()}`);
+        print(`[CustomStats] Initialized stats for ${unitName}: Con=${initialStats.constitution}, Mar=${initialStats.martial}, Div=${initialStats.divinity}`);
     }
 
     /**

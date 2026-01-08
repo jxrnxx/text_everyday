@@ -9,6 +9,10 @@ CharSheet_Cultivation,Cultivation,修行
 CharSheet_Constitution,Constitution,根骨
 CharSheet_Martial,Martial,武道
 CharSheet_Divinity,Divinity,神念
+CharSheet_Rank,Rank,阶位
+CharSheet_Profession,Profession,职业
+CharSheet_CritChance,Crit Chance,会心
+CharSheet_CritDamage,Crit Damage,爆伤
 CharSheet_Body,Body,肉身
 CharSheet_Damage,Damage,攻击力
 CharSheet_Armor,Armor,护甲
@@ -17,6 +21,6 @@ CharSheet_Mana,Mana,魔法
 CharSheet_Dao,Dao,天道
 CharSheet_AtkSpeed,Atk Speed,攻速
 CharSheet_MoveSpeed,Move Speed,移速
-CharSheet_KillsFaith,Kills / Faith,杀敌 / 信仰
+CharSheet_KillsFaith,Kills / Faith,信仰
 CharSheet_SpiritCoin,Spirit Coin,灵石
 CharSheet_CloseTip,Press [C] to Close,按 [C] 关闭

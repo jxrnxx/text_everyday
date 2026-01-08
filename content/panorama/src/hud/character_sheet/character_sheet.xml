@@ -24,6 +24,17 @@
                     <Label class="ColumnTitle" text="#CharSheet_Cultivation" />
                     <Panel class="Divider" />
                     
+                    <!-- NEW: Rank & Profession -->
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Rank" />
+                        <Label id="Val_Rank" class="StatValue" text="凡胎" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_Profession" />
+                        <Label id="Val_Profession" class="StatValue" text="-" />
+                    </Panel>
+                    <Panel class="Divider" />
+
                     <Panel class="StatRow">
                         <Label class="StatLabel" text="#CharSheet_Constitution" />
                         <Label id="Val_Constitution" class="StatValue" text="0" />
@@ -54,6 +65,17 @@
                         <Label class="StatLabel" text="#CharSheet_Armor" />
                         <Label id="Val_Armor" class="StatValue" text="0" />
                     </Panel>
+                    
+                    <!-- NEW: Crit Stats -->
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_CritChance" />
+                        <Label id="Val_CritChance" class="StatValue" text="0%" />
+                    </Panel>
+                    <Panel class="StatRow">
+                        <Label class="StatLabel" text="#CharSheet_CritDamage" />
+                        <Label id="Val_CritDamage" class="StatValue" text="150%" />
+                    </Panel>
+
                     <Panel class="StatRow">
                         <Label class="StatLabel" text="#CharSheet_Health" />
                         <Label id="Val_Health" class="StatValue" text="0 / 0" />
