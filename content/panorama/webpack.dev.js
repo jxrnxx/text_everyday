@@ -54,7 +54,6 @@ module.exports = {
                 options: { presets: ['@babel/preset-react', '@babel/preset-env'] },
             },
             {
-                test: /\.css$/,
                 test: /\.(css|less)$/,
                 issuer: /\.xml$/,
                 loader: 'file-loader',

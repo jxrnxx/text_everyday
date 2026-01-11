@@ -49,4 +49,32 @@ declare interface CustomGameEventDeclarations {
     
     /** Request Custom Stats (Client -> Server) */
     request_custom_stats: {};
+
+    // ===== Progression Constraints System Events =====
+    /** Request rank up (Client -> Server) */
+    cmd_attempt_rank_up: {};
+
+    /** Rank up result (Server -> Client) */
+    rank_up_result: {
+        success: boolean;
+        new_rank: number;
+        message: string;
+    };
+
+    /** Open merchant panel for specific shop (Server -> Client) */
+    open_merchant_panel: {
+        shop_id: number;
+    };
+
+    /** Request stat breakthrough (Client -> Server) */
+    cmd_request_breakthrough: {
+        target_tier: number;
+    };
+
+    /** Breakthrough result (Server -> Client) */
+    breakthrough_result: {
+        success: boolean;
+        new_tier: number;
+        message: string;
+    };
 }

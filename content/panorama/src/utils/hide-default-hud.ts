@@ -20,7 +20,11 @@ function HideDefaultHud() {
     GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_INVENTORY_SHOP, false);
     // 隐藏顶部栏
     GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_TOP_BAR, false);
-    // GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_ACTION_PANEL, false);
+    // 隐藏单位信息面板（商人点击不显示原生UI）
+    // 14 = DOTA_DEFAULT_UI_HERO_SELECTION_TEAMS / Unit selection panel
+    GameUI.SetDefaultUIEnabled(14 as DotaDefaultUIElement_t, false);
+    // 隐藏整个底部动作面板 (英雄技能栏 + 单位信息)
+    GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_ACTION_PANEL, false);
 
     // 左上角的击杀、死亡、助攻补刀等
     HideHudElements('quickstats');
@@ -38,6 +42,34 @@ function HideDefaultHud() {
     HideHudElements('stash');
     // 隐藏暂停信息
     HideHudElements('PausedInfo');
+    // 隐藏选中单位信息面板 (商人等)
+    HideHudElements('selected_container');
+    HideHudElements('selected');
+    HideHudElements('SelectedEntityHealth');
 }
 
 HideDefaultHud();
+
+// 延迟再隐藏一次（确保面板已加载）
+$.Schedule(1.0, () => {
+    HideHudElements('selected_container');
+    HideHudElements('selected');
+    // 隐藏底部动作面板的各个部分
+    HideHudElements('HUDElements');
+    HideHudElements('lower_hud');
+    HideHudElements('center_block');
+    HideHudElements('center_with_stats');
+    HideHudElements('unitPortrait');
+    HideHudElements('PortraitGroup');
+    HideHudElements('inventory_items');
+    HideHudElements('AbilitiesAndStatBranch');
+    HideHudElements('HeroInventory');
+});
+
+// 每秒持续检查并隐藏（某些面板会动态加载）
+$.Schedule(0.5, function hideLoop() {
+    HideHudElements('center_block');
+    HideHudElements('center_with_stats');
+    HideHudElements('PortraitGroup');
+    $.Schedule(2.0, hideLoop);
+});

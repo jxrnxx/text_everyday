@@ -1,0 +1,91 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+    prompt_warn =
+    {
+        type = "dota_src1_2d"
+        vsnd_files =
+        [
+            "sounds/prompt_warn.vsnd",
+        ]
+        volume = "10"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "75.000000"
+		distance_max = "1500.000000"
+		event_type = "1.000000"
+        weights =
+        [
+            "1",
+        ]
+    }
+    prompt_tongzhi1 =  // 声音定义名称，用于标识该声音配置
+    {
+        type = "dota_src1_2d"  // 声音类型，使用Dota 2引擎支持的3D声音格式
+        vsnd_files =  // 声音文件路径
+        [
+            "sounds/tongzhi1.vsnd",  // 使用的音效文件
+        ]
+        volume = "10"  // 声音播放的基础音量，数值越大音量越高
+        pitch = "1.000000"  // 默认音调，1.0为正常音调
+        soundlevel = "75.000000"  // 声音级别，决定声音的传播范围
+        distance_max = "1500.000000"  // 声音传播的最大距离，单位为单位长度
+        event_type = "1.000000"  // 声音事件类型，标识事件用途或优先级
+        weights =  // 声音权重配置，用于随机播放多个音效时分配概率
+        [
+            "1",  // 单一音效权重为1
+        ]
+    }
+        prompt_shadi =  // 声音定义名称，用于标识该声音配置
+    {
+        type = "dota_src1_2d"  // 声音类型，使用Dota 2引擎支持的3D声音格式
+        vsnd_files =  // 声音文件路径
+        [
+            "sounds/shadi.vsnd",  // 使用的音效文件
+        ]
+        volume = "10"  // 声音播放的基础音量，数值越大音量越高
+        pitch = "1.000000"  // 默认音调，1.0为正常音调
+        soundlevel = "75.000000"  // 声音级别，决定声音的传播范围
+        distance_max = "1500.000000"  // 声音传播的最大距离，单位为单位长度
+        event_type = "1.000000"  // 声音事件类型，标识事件用途或优先级
+        weights =  // 声音权重配置，用于随机播放多个音效时分配概率
+        [
+            "1",  // 单一音效权重为1
+        ]
+    }
+    prompt_tongzhi2 =
+    {
+        type = "dota_src1_2d"
+        vsnd_files =
+        [
+            "sounds/tongzhi2.vsnd",
+        ]
+        volume = "10"
+		pitch = "1.000000"
+		soundlevel = "75.000000"
+		distance_max = "1500.000000"
+		event_type = "1.000000"
+        weights =
+        [
+            "1",
+        ]
+    }
+
+        prompt_shunyi =
+    {
+        type = "dota_src1_2d"
+        vsnd_files =
+        [
+            "sounds/shunyi.vsnd",
+        ]
+        volume = "10"
+		pitch = "1.000000"
+		soundlevel = "75.000000"
+		distance_max = "1500.000000"
+		event_type = "1.000000"
+        weights =
+        [
+            "1",
+        ]
+    }
+}   

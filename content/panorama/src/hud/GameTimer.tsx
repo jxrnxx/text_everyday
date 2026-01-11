@@ -9,15 +9,13 @@ const GameTimer: FC = () => {
 
     // 监听游戏开始
     useGameEvent('update_game_timer_start', (event: { startTime: number }) => {
-        console.log(`[UI] Received game start signal. Using local time as baseline.`);
-        // 使用客户端当前时间作为基准，确保立刻开始计时 (避免服务端/客户端时间差导致的延迟)
+        // 使用客户端当前时间作为基准，确保立刻开始计时
         setStartTimeOffset(Game.GetDOTATime(false, false));
         setIsActive(true);
     });
 
     // 监听游戏重置
     useGameEvent('reset_game_timer', () => {
-        console.log(`[UI] received game reset`);
         setIsActive(false);
         setTime(0);
     });

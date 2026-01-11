@@ -59,3 +59,246 @@
         opacity: 0.8;
     }
 }
+
+// NPC呼吸动画
+@keyframes npc-breathing {
+    0% {
+        transform: scale3d(1.0, 1.0, 1.0);
+    }
+    50% {
+        // transform: scale3d(1.015, 1.02, 1.0);
+        transform: scale3d(1.018, 1.03, 1.018);
+    }
+    100% {
+        transform: scale3d(1.0, 1.0, 1.0);
+    }
+}
+
+.NpcBreathing {
+    animation-name: npc-breathing;
+    animation-duration: 2.5s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+// 全修按钮发光动画 (使用 Panorama 兼容语法)
+@keyframes 'purchase-glow' {
+    0% {
+        wash-color: #ffffff00;
+    }
+    50% {
+        wash-color: #ffdd4488;
+    }
+    100% {
+        wash-color: #ffffff00;
+    }
+}
+
+.PurchaseReady {
+    animation-name: purchase-glow;
+    animation-duration: 1.5s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+
+// 光点闪烁动画
+@keyframes 'dot-pulse' {
+    0% {
+        opacity: 0.6;
+        box-shadow: 0px 0px 6px 3px #ffffffcc;
+    }
+    50% {
+        opacity: 1.0;
+        box-shadow: 0px 0px 12px 6px #ffffffe0;
+    }
+    100% {
+        opacity: 0.6;
+        box-shadow: 0px 0px 6px 3px #ffffffcc;
+    }
+}
+
+// 发光边框脉冲动画 - 红金燃烧交替
+@keyframes 'glow-pulse' {
+    0% {
+        box-shadow: 0px 0px 6px 2px #ffd700aa, 0px 0px 12px 4px #ff660066;
+    }
+    25% {
+        box-shadow: 0px 0px 10px 3px #ff8844cc, 0px 0px 18px 6px #ff440088;
+    }
+    50% {
+        box-shadow: 0px 0px 8px 3px #ffaa22dd, 0px 0px 20px 8px #ffd70099;
+    }
+    75% {
+        box-shadow: 0px 0px 12px 4px #ff6622cc, 0px 0px 16px 5px #ff550077;
+    }
+    100% {
+        box-shadow: 0px 0px 6px 2px #ffd700aa, 0px 0px 12px 4px #ff660066;
+    }
+}
+
+// 缩放呼吸动画
+@keyframes 'scale-breath' {
+    0% {
+        transform: scale3d(1.0, 1.0, 1.0);
+    }
+    50% {
+        transform: scale3d(1.05, 1.05, 1.05);
+    }
+    100% {
+        transform: scale3d(1.0, 1.0, 1.0);
+    }
+}
+
+// 方形轨迹动画 - 光点沿边框内侧移动 (A→B→D→C→A)
+@keyframes 'square-orbit' {
+    0% {
+        // A点 (左上)
+        position: 0px 0px 0px;
+    }
+    25% {
+        // B点 (左下)
+        position: 0px 44px 0px;
+    }
+    50% {
+        // D点 (右下)
+        position: 44px 44px 0px;
+    }
+    75% {
+        // C点 (右上)
+        position: 44px 0px 0px;
+    }
+    100% {
+        // 回到A点
+        position: 0px 0px 0px;
+    }
+}
+
+.OrbitGlow { // 光点容器 - 隐藏
+    width: 0px;
+    height: 0px;
+    opacity: 0;
+}
+
+.OrbitDot { // 光点 - 隐藏
+    width: 0px;
+    height: 0px;
+    opacity: 0;
+}
+
+.OrbitTail { // 拖尾 - 隐藏
+    width: 0px;
+    height: 0px;
+    opacity: 0;
+}
+
+.GlowBorder { // 燃烧边框效果
+    width: 100%;
+    height: 100%;
+    position: 0px 0px 0px;
+    border-radius: 6px;
+    border: 1px solid #ffd70088;
+    animation-name: glow-pulse;
+    animation-duration: 0.8s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+.BreathScale { // 呼吸缩放容器
+    animation-name: scale-breath;
+    animation-duration: 1.5s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    overflow: noclip; // 允许子元素溢出显示光效
+}
+
+// 燃烧边框动画 - 红金交替火焰
+@keyframes 'burning-flame' {
+    0% {
+        box-shadow: 0px 0px 8px 3px #ffd700cc, 0px 0px 16px 6px #ff660088;
+    }
+    20% {
+        box-shadow: 0px 0px 12px 4px #ff7722dd, 0px 0px 22px 8px #ff4400aa;
+    }
+    40% {
+        box-shadow: 0px 0px 10px 4px #ffaa33ee, 0px 0px 18px 7px #ffd70099;
+    }
+    60% {
+        box-shadow: 0px 0px 14px 5px #ff5500dd, 0px 0px 24px 9px #ff3300bb;
+    }
+    80% {
+        box-shadow: 0px 0px 10px 3px #ffcc22dd, 0px 0px 20px 7px #ff880099;
+    }
+    100% {
+        box-shadow: 0px 0px 8px 3px #ffd700cc, 0px 0px 16px 6px #ff660088;
+    }
+}
+
+.BurningBorder { // 燃烧边框效果
+    width: 100%;
+    height: 100%;
+    position: 0px 0px 0px;
+    border-radius: 6px;
+    border: 1px solid #ffd70099;
+    animation-name: burning-flame;
+    animation-duration: 0.6s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+// 图片金色光环效果 - 强化版
+@keyframes 'golden-aura' {
+    0% {
+        wash-color: #ffd70055;
+        img-shadow: 0px 0px 10px 5px #ffd700aa;
+    }
+    50% {
+        wash-color: #ffee88aa;
+        img-shadow: 0px 0px 20px 10px #ffd700ff;
+    }
+    100% {
+        wash-color: #ffd70055;
+        img-shadow: 0px 0px 10px 5px #ffd700aa;
+    }
+}
+
+.BurningImage { // 金色光环效果
+    animation-name: golden-aura;
+    animation-duration: 1.2s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    overflow: noclip;
+}
+
+// 玉简悬浮窗淡入动画
+@keyframes 'jade-fade-in' {
+    0% {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+// 玉简悬浮窗呼吸光效 (青绿色)
+@keyframes 'jade-glow' {
+    0% {
+        box-shadow: 0px 0px 10px 3px rgba(60, 120, 110, 0.3);
+    }
+    50% {
+        box-shadow: 0px 0px 15px 5px rgba(80, 140, 130, 0.45);
+    }
+    100% {
+        box-shadow: 0px 0px 10px 3px rgba(60, 120, 110, 0.3);
+    }
+}
+
+.JadeTooltip {
+    animation-name: jade-fade-in, jade-glow;
+    animation-duration: 0.15s, 2s;
+    animation-timing-function: ease-out, ease-in-out;
+    animation-iteration-count: 1, infinite;
+    animation-fill-mode: forwards, none;
+}

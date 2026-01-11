@@ -1,0 +1,31 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+    lizhi =
+    {
+        type = "dota_src1_3d"
+        vsnd_files =
+        [
+            "sounds/lizhi1.vsnd",
+        ]
+        volume_min = "1.000000"
+        volume_max = "80.000000"
+        pitch_min = "1.000000"
+        pitch_max = "80.000000"
+        chan_type = "6"
+		memory_type = "0"	
+        soundlevel_min= "78.000000"
+        soundlevel_max = "78.000000"
+        mixgroup = "Ultimates"
+        spread_radius = "1200.000000"
+        volume_fade_in = "1.500000"
+        volume_fade_out  = "1.500000"
+        start_point  = "0.000000"
+        end_point = "50.000000"
+        restart_time =  "0.000000"
+        stop_at_time  = "50.000000"
+        weights =
+        [
+            "1",
+        ]
+    }
+}   

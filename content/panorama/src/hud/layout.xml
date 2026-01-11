@@ -1,13 +1,11 @@
 <root>
-    <scripts>
-        <include src="./script.tsx" />
-        <include src="file://{resources}/scripts/custom_game/custom_keybinds.js" />
-    </scripts>
     <styles>
         <include src="s2r://panorama/styles/dotastyles.vcss_c" />
         <include src="./styles.less" />
     </styles>
+    <scripts>
+        <include src="./script.tsx" />
+    </scripts>
     <Panel class="root" hittest="false">
-        <include src="./character_sheet/character_sheet.xml" />
     </Panel>
 </root>

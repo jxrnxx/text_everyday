@@ -47,6 +47,9 @@ export default function Precache(context: CScriptPrecacheContext) {
             'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_trigger_crit_red.vpcf',
             'particles/units/heroes/hero_dragon_knight/dragon_knight_breathe_fire.vpcf',
             'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf',
+
+            // Cultivation Merchant
+            'models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl',
         ],
         context
     );

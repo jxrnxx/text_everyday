@@ -41,7 +41,7 @@ const EconomyDisplay = () => {
         <Panel style={styles.container}>
             {/* Spirit Coin Display */}
             <Panel style={styles.resourceRow}>
-                <Label text="精神币:" style={styles.labelCoin} />
+                <Label text="灵石:" style={styles.labelCoin} />
                 <Label text={spiritCoin.toString()} style={styles.valueCoin} />
             </Panel>
 

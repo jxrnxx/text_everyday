@@ -2,6 +2,8 @@ print('[DEBUG] GameMode.ts MODULE LOADING...');
 import { EconomySystem } from './mechanics/EconomySystem';
 import { TrainingManager } from './systems/TrainingManager';
 import { CustomStats } from './systems/CustomStats';
+import { RankSystem } from './systems/RankSystem';
+import { UpgradeSystem } from './systems/UpgradeSystem';
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
 
@@ -41,6 +43,42 @@ export class GameMode {
         } catch (e) {
             print(`[GameMode] FAILED TO INIT CUSTOM STATS: ${e}`);
         }
+
+        // [Rank] Initialize Rank System
+        try {
+            RankSystem.GetInstance();
+        } catch (e) {
+            print(`[GameMode] FAILED TO INIT RANK SYSTEM: ${e}`);
+        }
+
+        // [Upgrade] Initialize Upgrade System
+        try {
+            UpgradeSystem.GetInstance();
+        } catch (e) {
+            print(`[GameMode] FAILED TO INIT UPGRADE SYSTEM: ${e}`);
+        }
+
+        // [XP Filter] Block XP gain if at level cap (Rule A)
+        GameRules.GetGameModeEntity().SetModifyExperienceFilter(
+            (event: ModifyExperienceFilterEvent) => this.XPFilter(event),
+            this
+        );
+
+        // [Merchant] Listen for NPC interactions (Interaction Security)
+        ListenToGameEvent('dota_player_used_ability', () => {}, undefined); // Placeholder
+        ListenToGameEvent('dota_player_update_hero_selection', () => {}, undefined); // Placeholder
+        
+        // Actually listen to entity interactions via console command workaround
+        // Since dota_player_interact_npc isn't a standard event, we use custom command
+        Convars.RegisterCommand(
+            'cmd_interact_merchant',
+            (_, strPlayerId, entityName) => {
+                const playerId = Number(strPlayerId) as PlayerID;
+                this.OnMerchantInteract(playerId, entityName);
+            },
+            'Merchant Interaction Handler',
+            0
+        );
 
         ListenToGameEvent('npc_spawned', event => this.OnNpcSpawned(event), undefined);
 
@@ -112,6 +150,7 @@ export class GameMode {
             print(`[GameMode] Received F4 Event from Player ${playerID}`);
             TrainingManager.GetInstance().ExitRoom(playerID);
         });
+
 
         // 监听前端验证码请求
         CustomGameEventManager.RegisterListener('to_server_verify_code', (_, event) => {
@@ -398,5 +437,61 @@ export class GameMode {
             currentTick++;
             return interval;
         });
+    }
+
+    // ===== XP FILTER (Rule A: Level Lock) =====
+    /**
+     * Blocks XP gain if player is at level cap for their rank
+     * Formula: MaxLevel = (Rank + 1) * 10
+     */
+    private static XPFilter(event: ModifyExperienceFilterEvent): boolean {
+        const heroIndex = event.hero_entindex_const;
+        const hero = EntIndexToHScript(heroIndex) as CDOTA_BaseNPC_Hero;
+
+        if (!hero || hero.IsNull() || !hero.IsRealHero()) {
+            return true; // Allow XP for non-heroes
+        }
+
+        const currentLevel = hero.GetLevel();
+        const rank = CustomStats.GetStat(hero, 'rank') || 0;
+        const maxLevel = RankSystem.GetMaxLevelForRank(rank);
+
+        if (currentLevel >= maxLevel) {
+            // Block XP gain when at level cap
+            print(`[XP Filter] Blocking XP for ${hero.GetUnitName()}: Level ${currentLevel} >= Max ${maxLevel} (Rank ${rank})`);
+            return false;
+        }
+
+        return true;
+    }
+
+    // ===== MERCHANT INTERACTION (Interaction Security) =====
+    /**
+     * Validates that a player can only interact with their assigned merchant
+     * Mapping: PlayerID 0 -> shop_1, PlayerID 1 -> shop_2, etc.
+     */
+    private static OnMerchantInteract(playerID: PlayerID, entityName: string) {
+        if (!PlayerResource.IsValidPlayerID(playerID)) {
+            print(`[Merchant] Invalid player ID: ${playerID}`);
+            return;
+        }
+
+        // Expected shop name for this player
+        const expectedShopName = `shop_${playerID + 1}`;
+
+        if (entityName !== expectedShopName) {
+            print(`[Merchant] Player ${playerID} tried to access ${entityName}, but is assigned to ${expectedShopName}. Ignoring.`);
+            return;
+        }
+
+        // Valid interaction - open the merchant panel
+        print(`[Merchant] Player ${playerID} accessed ${entityName}. Opening panel.`);
+        
+        const player = PlayerResource.GetPlayer(playerID);
+        if (player) {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'open_merchant_panel', {
+                shop_id: playerID + 1,
+            });
+        }
     }
 }

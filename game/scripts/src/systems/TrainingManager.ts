@@ -5,6 +5,7 @@ interface TrainingData {
     liveMonsters: EntityIndex[]; // Store Entity Indices to avoid leaking handles
     spawnCount: number;
     tier: number;
+    merchantIndex: EntityIndex | null; // Track merchant for this player
 }
 
 @reloadable
@@ -16,6 +17,7 @@ export class TrainingManager {
     private spawnTimer: Map<PlayerID, string> = new Map();
 
     private readonly MONSTER_UNIT_NAME = 'npc_enemy_zombie_lvl1';
+    private readonly MERCHANT_UNIT_NAME = 'npc_cultivation_merchant';
     private readonly MAX_MONSTERS_DEFAULT = 9;
 
     public static GetInstance(): TrainingManager {
@@ -31,7 +33,6 @@ export class TrainingManager {
 
     private Initialize() {
         ListenToGameEvent('entity_killed', event => this.OnEntityKilled(event), undefined);
-        print('[TrainingManager] Initialized with Wave Logic');
     }
 
     private GetPlayerData(playerId: PlayerID): TrainingData {
@@ -42,6 +43,7 @@ export class TrainingManager {
                 liveMonsters: [],
                 spawnCount: this.MAX_MONSTERS_DEFAULT,
                 tier: 1,
+                merchantIndex: null,
             };
             this.playerData.set(playerId, data);
         }
@@ -56,7 +58,6 @@ export class TrainingManager {
 
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (!hero || !hero.IsAlive()) {
-            print(`[TrainingManager] Player ${playerId} hero invalid or dead, cannot enter.`);
             return;
         }
 
@@ -80,12 +81,11 @@ export class TrainingManager {
             // Update State
             data.roomState = true;
 
+            // Spawn Merchant if not already exists
+            this.SpawnMerchant(playerId);
+
             // Start Spawn Loop immediately
             this.CheckAndSpawn(playerId);
-
-            print(`[TrainingManager] Player ${playerId} entered training room.`);
-        } else {
-            print(`[TrainingManager] Error: Teleport point '${teleportPointName}' not found!`);
         }
     }
 
@@ -119,8 +119,6 @@ export class TrainingManager {
 
         // Performance Cleanup
         this.CleanupRoom(playerId);
-
-        print(`[TrainingManager] Player ${playerId} exited training room.`);
     }
 
     /**
@@ -205,7 +203,6 @@ export class TrainingManager {
         const playerId = killedUnit.GetPlayerID();
         const data = this.GetPlayerData(playerId);
         if (data.roomState) {
-            print(`[TrainingManager] Player ${playerId} died in training room. Forcing exit.`);
             this.ExitRoom(playerId);
         }
     }
@@ -216,6 +213,82 @@ export class TrainingManager {
     public UpgradeSpawnCount(playerId: PlayerID, amount: number) {
         const data = this.GetPlayerData(playerId);
         data.spawnCount += amount;
-        print(`[TrainingManager] Player ${playerId} spawn count upgraded to ${data.spawnCount}`);
+    }
+
+    // ===== MERCHANT MANAGEMENT =====
+    
+    /**
+     * Spawn a merchant NPC for the player at their designated shop point
+     * Only spawns if merchant doesn't already exist
+     */
+    private SpawnMerchant(playerId: PlayerID) {
+        const data = this.GetPlayerData(playerId);
+        
+        // Check if merchant already exists
+        if (data.merchantIndex !== null) {
+            const existingMerchant = EntIndexToHScript(data.merchantIndex) as CDOTA_BaseNPC;
+            if (existingMerchant && !existingMerchant.IsNull() && existingMerchant.IsAlive()) {
+                return;
+            }
+        }
+
+        // Find spawn point: point_shop_1, point_shop_2, etc.
+        const shopPointName = `point_shop_${playerId + 1}`;
+        const shopPoint = Entities.FindByName(undefined, shopPointName);
+
+        if (!shopPoint) {
+            return;
+        }
+
+        // Spawn merchant NPC
+        const spawnPos = shopPoint.GetAbsOrigin();
+        const merchant = CreateUnitByName(
+            this.MERCHANT_UNIT_NAME,
+            spawnPos,
+            true,
+            undefined,
+            undefined,
+            DotaTeam.GOODGUYS
+        );
+
+        if (merchant) {
+            // Set entity name for interaction security: shop_1, shop_2, etc.
+            merchant.SetEntityName(`shop_${playerId + 1}`);
+            
+            // Make merchant face a reasonable direction (toward center or player)
+            const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+            if (hero) {
+                const heroPos = hero.GetAbsOrigin();
+                const direction = ((heroPos - spawnPos) as Vector).Normalized();
+                merchant.SetForwardVector(direction);
+            }
+
+            // Persistent idle animation loop (survives alt-tab)
+            merchant.SetContextThink('MerchantIdleAnim', () => {
+                if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
+                    merchant.StartGesture(GameActivity.DOTA_IDLE);
+                    return 3.0; // Refresh animation every 3 seconds
+                }
+                return undefined; // Stop if merchant is gone
+            }, 0);
+
+            // Store reference
+            data.merchantIndex = merchant.entindex();
+        }
+    }
+
+    /**
+     * Remove a player's merchant (called when leaving or cleaning up)
+     */
+    private RemoveMerchant(playerId: PlayerID) {
+        const data = this.GetPlayerData(playerId);
+        
+        if (data.merchantIndex !== null) {
+            const merchant = EntIndexToHScript(data.merchantIndex) as CDOTA_BaseNPC;
+            if (merchant && !merchant.IsNull()) {
+                merchant.RemoveSelf();
+            }
+            data.merchantIndex = null;
+        }
     }
 }

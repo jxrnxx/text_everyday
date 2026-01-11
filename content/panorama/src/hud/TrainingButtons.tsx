@@ -1,67 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
+/**
+ * TrainingButtons - 练功/回城 快捷键处理
+ * F5: 进入练功房  
+ * F6: 返回基地
+ * 注意: 不显示UI按钮，只处理快捷键
+ * 
+ * F3/F4 被 Dota 默认占用（信使/巡逻），无法覆盖
+ * 所以改用 F5/F6
+ */
 const TrainingButtons = () => {
-    // Style definition
-    // Using simple object styles as requested by User's AI and proven safe patterns.
-    const btnStyle = {
-        width: '80px',
-        height: '140px',
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        margin: '10px',
-        boxShadow: '0px 0px 10px 0px #000000aa',
-    };
+    useEffect(() => {
+        // 注册 F5 快捷键 (进入练功房)
+        $.RegisterKeyBind($.GetContextPanel(), 'key_f5', () => {
+            const playerId = Players.GetLocalPlayer();
+            GameEvents.SendCustomGameEventToServer('cmd_c2s_train_enter', { PlayerID: playerId });
+        });
 
-    // Paths verified to exist in game/dota_addons/text_everyday/panorama/images/custom_game/
-    // Using {resources} mapping which points to the addon root content
-    const trainStyle = {
-        ...btnStyle,
-        backgroundImage: 'url("file://{resources}/images/custom_game/training_enter.png")',
-    };
+        // 注册 F6 快捷键 (返回基地)
+        $.RegisterKeyBind($.GetContextPanel(), 'key_f6', () => {
+            const playerId = Players.GetLocalPlayer();
+            GameEvents.SendCustomGameEventToServer('cmd_c2s_train_exit', { PlayerID: playerId });
+        });
+    }, []);
 
-    const homeStyle = {
-        ...btnStyle,
-        backgroundImage: 'url("file://{resources}/images/custom_game/training_exit.png")',
-    };
-
-    const labelStyle = {
-        color: 'white',
-        fontSize: '20px',
-        fontWeight: 'bold',
-        textShadow: '0px 0px 2px 2.0 #000000',
-        align: 'center center',
-        marginTop: '80px', // Align text to lower part of talisman
-        textAlign: 'center',
-    } as const;
-
-    // Command handlers
-    const sendEnter = () => GameEvents.SendCustomGameEventToServer('cmd_c2s_train_enter', {});
-    const sendExit = () => GameEvents.SendCustomGameEventToServer('cmd_c2s_train_exit', {});
-
-    return (
-        <Panel
-            hittest={false} // Container doesn't block clicks
-            style={{
-                flowChildren: 'right',
-                verticalAlign: 'bottom',
-                horizontalAlign: 'center',
-                marginRight: '650px',
-                marginBottom: '0px',
-            }}
-        >
-            {/* Train Button */}
-            <Button onactivate={sendEnter} style={trainStyle}>
-                <Label text="练功" style={labelStyle} />
-                <Label text="[F3]" style={{ ...labelStyle, fontSize: '12px', marginTop: '110px', color: '#ccc' }} />
-            </Button>
-
-            {/* Home Button */}
-            <Button onactivate={sendExit} style={homeStyle}>
-                <Label text="回城" style={labelStyle} />
-                <Label text="[F4]" style={{ ...labelStyle, fontSize: '12px', marginTop: '110px', color: '#ccc' }} />
-            </Button>
-        </Panel>
-    );
+    // 不显示按钮UI，只处理快捷键
+    return null;
 };
 
 export default TrainingButtons;

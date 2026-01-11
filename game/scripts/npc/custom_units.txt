@@ -68,7 +68,41 @@
 		"CustomDrop_Coin" "15"
 		"CustomDrop_Faith" "1"
 	}
-
+	"npc_cultivation_merchant" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl"
+		"ModelScale" "1"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"HealthBarOffset" "0"
+		"MovementSpeed" "0"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
+		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
+		"ArmorPhysical" "99"
+		"StatusHealth" "9999"
+		"StatusHealthRegen" "0"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
+		"AttackDamageMin" "0"
+		"AttackDamageMax" "0"
+		"AttackRate" "1"
+		"AttackAnimationPoint" "0"
+		"AttackRange" "0"
+		"BoundsHullName" "DOTA_HULL_SIZE_HERO"
+		"HasInventory" "0"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "0"
+		"CustomDrop_Coin" "0"
+	}
 
 
 

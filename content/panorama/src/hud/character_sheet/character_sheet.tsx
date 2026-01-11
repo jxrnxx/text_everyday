@@ -20,19 +20,15 @@ const JOB_NAME_MAP: { [key: string]: string } = {
 let isOpen = false;
 
 function ToggleCharSheet() {
-    $.Msg("[AntiGravity] ToggleCharSheet called! isOpen was: " + isOpen);
+    $.Msg("[CharSheet] ToggleCharSheet called, isOpen=" + isOpen);
     isOpen = !isOpen;
     const panel = $('#CharSheetContainer');
     if (panel) {
         panel.SetHasClass('Hidden', !isOpen);
-        $.Msg("[AntiGravity] Toggled class 'Hidden'. Now isOpen: " + isOpen + ", Check class: " + panel.BHasClass('Hidden'));
-    } else {
-        $.Msg("[AntiGravity] ERROR: Could not find #CharSheetContainer!");
     }
 
     if (isOpen) {
         UpdateAllStats();
-        // Request fresh data via event (Backup for NetTable)
         GameEvents.SendCustomGameEventToServer("request_custom_stats", {} as any);
         Game.EmitSound('ui_menu_activate_open');
     } else {
@@ -51,14 +47,6 @@ function UpdateAllStats() {
     // 1. Custom Stats from NetTable
     const netTableKey = String(localHero);
     const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, netTableKey);
-    
-    // DEBUG LOG
-    $.Msg(`[AntiGravity] UpdateAllStats: LocalHero=${localHero}, Key=${netTableKey}, HasData=${!!netTableData}`);
-    if (!netTableData) {
-        // Log all keys to see if we have a mismatch
-        const allData = CustomNetTables.GetAllTableValues('custom_stats' as any);
-        $.Msg(`[AntiGravity] Dumping 'custom_stats' keys: ${JSON.stringify(allData)}`);
-    }
 
     if (netTableData) {
         // Basic Stats
@@ -85,7 +73,6 @@ function UpdateAllStats() {
             professionName = JOB_NAME_MAP[professionKey] || professionKey;
         }
         
-        ($ as any).Msg("[AntiGravity] NetTable Profession: " + professionName);
         ($('#Val_Profession') as LabelPanel).text = professionName;
 
         // Crit
@@ -163,17 +150,11 @@ function AutoUpdate() {
 // Init
 // -------------------------------------------------------------------------
 function Init() {
-    $.Msg("[AntiGravity] character_sheet.tsx Init executing...");
-    
     try {
-        // Unregister first to ideally clear old binds (though API doesn't fully support unregistering keybinds cleanly)
-        // Game.CreateCustomKeyBind('C', ''); // Hacky try
-
     // Register Command
         const cmdName = "ToggleCharSheet_" + Math.floor(Math.random() * 10000);
         Game.AddCommand(cmdName, ToggleCharSheet, '', 0);
         Game.CreateCustomKeyBind('C', cmdName);
-        $.Msg("[AntiGravity] Registered KeyBind 'C' to command: " + cmdName);
 
         // NetTable Listeners
         CustomNetTables.SubscribeNetTableListener('custom_stats' as any, (table, key, data) => {
@@ -186,7 +167,6 @@ function Init() {
         GameEvents.Subscribe("custom_stats_update", (event: any) => {
              const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
              if (event.entindex === localHero) {
-                 $.Msg("[AntiGravity] Received custom_stats_update event!");
                  UpdateStatsFromEvent(event.stats);
              }
         });
@@ -199,20 +179,13 @@ function Init() {
 
         // Start Loop
         AutoUpdate();
-        
-        // Heartbeat for debugging
-        $.Schedule(1.0, function Heartbeat() {
-             $.Msg("[AntiGravity] Character Sheet script alive. IsOpen: " + isOpen);
-             $.Schedule(5.0, Heartbeat);
-        });
     } catch (e) {
-        $.Msg("[AntiGravity] Error in character_sheet init: " + e);
+        $.Msg("[CharSheet] Error in init: " + e);
     }
 }
 
 // Helper to update from direct object
 function UpdateStatsFromEvent(stats: any) {
-    $.Msg("[AntiGravity] UpdateStatsFromEvent called. Payload: " + JSON.stringify(stats));
     if (!stats) return;
 
     ($('#Val_Constitution') as LabelPanel).text = stats.constitution.toString();
@@ -243,7 +216,6 @@ function UpdateStatsFromEvent(stats: any) {
 }
 
 (function () {
-    $.Msg("[AntiGravity] character_sheet.tsx loaded. Scheduling Init...");
     // Delay init by 0.1s to ensure Game context is ready
     $.Schedule(0.1, Init);
 })();

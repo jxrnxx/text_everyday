@@ -108,7 +108,7 @@
                         </Panel>
                     </Panel>
                     <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_SpiritCoin" />
+                        <Label class="StatLabel" text="灵石" />
                         <Label id="Val_SpiritCoin" class="StatValue Gold" text="0" />
                     </Panel>
                 </Panel>
