@@ -13,6 +13,7 @@ import TrainingButtons from './TrainingButtons';
 import RankUpButton from './RankUpButton';
 import MerchantShopPanel from './MerchantShopPanel';
 import BackToLobbyButton from './BackToLobbyButton';
+import HeroHUD from './HeroHUD';
 
 const Root: FC = () => {
     return (
@@ -24,6 +25,7 @@ const Root: FC = () => {
             <TrainingButtons />
             <RankUpButton />
             <MerchantShopPanel />
+            <HeroHUD />
         </>
     );
 };
