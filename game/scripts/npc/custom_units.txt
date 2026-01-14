@@ -67,6 +67,7 @@
 		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
 		"CustomDrop_Coin" "15"
 		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
 	}
 	"npc_cultivation_merchant" {
 		"BaseClass" "npc_dota_creature"

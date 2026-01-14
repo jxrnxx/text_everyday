@@ -23,6 +23,13 @@ declare interface CustomGameEventDeclarations {
     cmd_c2s_train_enter: {};
     cmd_c2s_train_exit: {};
 
+    // Blink Dash Event (D Key)
+    cmd_c2s_blink_dash: {
+        x: number;
+        y: number;
+        z: number;
+    };
+
     /** Stop custom sounds on client */
     stop_custom_sounds: {};
 
@@ -76,5 +83,11 @@ declare interface CustomGameEventDeclarations {
         success: boolean;
         new_tier: number;
         message: string;
+    };
+
+    /** Merchant purchase stat (Client -> Server) */
+    cmd_merchant_purchase: {
+        stat_type: string;
+        amount: number;
     };
 }

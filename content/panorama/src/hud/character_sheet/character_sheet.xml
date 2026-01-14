@@ -16,106 +16,222 @@
                 <Button class="CloseButton" onactivate="ToggleCharSheet()" />
             </Panel>
 
-            <!-- Main Grid Content -->
-            <Panel class="SheetContent">
-                
-                <!-- Col 1: Cultivation (Custom Stats) -->
-                <Panel class="StatColumn">
-                    <Label class="ColumnTitle" text="#CharSheet_Cultivation" />
-                    <Panel class="Divider" />
+            <!-- Main Scrollable Content -->
+            <Panel class="SheetScrollWrapper">
+                <Panel class="SheetContent">
                     
-                    <!-- NEW: Rank & Profession -->
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Rank" />
-                        <Label id="Val_Rank" class="StatValue" text="凡胎" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Profession" />
-                        <Label id="Val_Profession" class="StatValue" text="-" />
-                    </Panel>
-                    <Panel class="Divider" />
-
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Constitution" />
-                        <Label id="Val_Constitution" class="StatValue" text="0" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Martial" />
-                        <Label id="Val_Martial" class="StatValue" text="0" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Divinity" />
-                        <Label id="Val_Divinity" class="StatValue" text="0" />
-                    </Panel>
-                </Panel>
-
-                <!-- Col 2: Body (Base Stats) -->
-                <Panel class="StatColumn">
-                    <Label class="ColumnTitle" text="#CharSheet_Body" />
-                    <Panel class="Divider" />
-
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Damage" />
-                        <Panel class="ValueGroup">
-                            <Label id="Val_DamageBase" class="StatValue White" text="0" />
-                            <Label id="Val_DamageBonus" class="StatValue Green" text="+0" />
+                    <!-- 第一列: 基础信息 + 15属性 -->
+                    <Panel class="StatColumn Wide">
+                        <Label class="ColumnTitle" text="属性数据" />
+                        <Panel class="Divider" />
+                        
+                        <!-- 基础信息 -->
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="阶位" />
+                            <Label id="Val_Rank" class="StatValue" text="凡胎" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="职业" />
+                            <Label id="Val_Profession" class="StatValue" text="-" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="等级" />
+                            <Label id="Val_Level" class="StatValue" text="1" />
+                        </Panel>
+                        <Panel class="Divider" />
+                        
+                        <!-- 根骨 3个属性 -->
+                        <Label class="SubTitle" text="【根骨】" />
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="基础" />
+                            <Label id="Val_Con_Base" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="成长" />
+                            <Label id="Val_Con_Gain" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="加成" />
+                            <Label id="Val_Con_Bonus" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Result">
+                            <Label class="StatLabel" text="面板" />
+                            <Label id="Val_Con_Panel" class="StatValue Gold" text="0" />
+                        </Panel>
+                        
+                        <!-- 武道 3个属性 -->
+                        <Label class="SubTitle" text="【武道】" />
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="基础" />
+                            <Label id="Val_Mar_Base" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="成长" />
+                            <Label id="Val_Mar_Gain" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="加成" />
+                            <Label id="Val_Mar_Bonus" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Result">
+                            <Label class="StatLabel" text="面板" />
+                            <Label id="Val_Mar_Panel" class="StatValue Gold" text="0" />
+                        </Panel>
+                        
+                        <!-- 神念 3个属性 -->
+                        <Label class="SubTitle" text="【神念】" />
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="基础" />
+                            <Label id="Val_Div_Base" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="成长" />
+                            <Label id="Val_Div_Gain" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="加成" />
+                            <Label id="Val_Div_Bonus" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Result">
+                            <Label class="StatLabel" text="面板" />
+                            <Label id="Val_Div_Panel" class="StatValue Gold" text="0" />
+                        </Panel>
+                        
+                        <!-- 身法 3个属性 -->
+                        <Label class="SubTitle" text="【身法】" />
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="基础" />
+                            <Label id="Val_Agi_Base" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="成长" />
+                            <Label id="Val_Agi_Gain" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="加成" />
+                            <Label id="Val_Agi_Bonus" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Result">
+                            <Label class="StatLabel" text="面板" />
+                            <Label id="Val_Agi_Panel" class="StatValue Gold" text="0" />
+                        </Panel>
+                        
+                        <!-- 攻击力 3个属性 -->
+                        <Label class="SubTitle" text="【攻击力】" />
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="基础" />
+                            <Label id="Val_Dmg_Base" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="成长" />
+                            <Label id="Val_Dmg_Gain" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="加成" />
+                            <Label id="Val_Dmg_Bonus" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Result">
+                            <Label class="StatLabel" text="面板" />
+                            <Label id="Val_Dmg_Panel" class="StatValue Gold" text="0" />
                         </Panel>
                     </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Armor" />
-                        <Label id="Val_Armor" class="StatValue" text="0" />
-                    </Panel>
-                    
-                    <!-- NEW: Crit Stats -->
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_CritChance" />
-                        <Label id="Val_CritChance" class="StatValue" text="0%" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_CritDamage" />
-                        <Label id="Val_CritDamage" class="StatValue" text="150%" />
-                    </Panel>
 
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Health" />
-                        <Label id="Val_Health" class="StatValue" text="0 / 0" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_Mana" />
-                        <Label id="Val_Mana" class="StatValue" text="0 / 0" />
-                    </Panel>
-                </Panel>
-
-                <!-- Col 3: Dao (Misc & Economy) -->
-                <Panel class="StatColumn">
-                    <Label class="ColumnTitle" text="#CharSheet_Dao" />
-                    <Panel class="Divider" />
-
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_AtkSpeed" />
-                        <Label id="Val_AtkSpeed" class="StatValue" text="0" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_MoveSpeed" />
-                        <Label id="Val_MoveSpeed" class="StatValue" text="0" />
-                    </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="#CharSheet_KillsFaith" />
-                        <Panel class="ValueGroup">
-                            <Label id="Val_Kills" class="StatValue" text="0" />
-                            <Label text="/" class="StatSplitter" />
-                            <Label id="Val_Faith" class="StatValue Gold" text="0" />
+                    <!-- 第二列: 计算结果 + 商店购买 -->
+                    <Panel class="StatColumn">
+                        <Label class="ColumnTitle" text="实战属性" />
+                        <Panel class="Divider" />
+                        
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="生命" />
+                            <Label id="Val_Health" class="StatValue" text="0 / 0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="法力" />
+                            <Label id="Val_Mana" class="StatValue" text="0 / 0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="攻击力" />
+                            <Label id="Val_Attack_Display" class="StatValue Gold" text="0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="护甲" />
+                            <Label id="Val_Armor" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="攻速" />
+                            <Label id="Val_AtkSpeed" class="StatValue" text="100" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="移速" />
+                            <Label id="Val_MoveSpeed" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="会心" />
+                            <Label id="Val_CritChance" class="StatValue" text="0%" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="爆伤" />
+                            <Label id="Val_CritDamage" class="StatValue" text="150%" />
+                        </Panel>
+                        <Panel class="Divider" />
+                        
+                        <Label class="ColumnTitle Small" text="商店购买" />
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="攻速+" />
+                            <Label id="Val_Shop_AtkSpeed" class="StatValue Green" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="回蓝+" />
+                            <Label id="Val_Shop_ManaRegen" class="StatValue Green" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="护甲+" />
+                            <Label id="Val_Shop_Armor" class="StatValue Green" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="移速+" />
+                            <Label id="Val_Shop_MoveSpeed" class="StatValue Green" text="0" />
+                        </Panel>
+                        <Panel class="StatRow Small">
+                            <Label class="StatLabel" text="攻击+" />
+                            <Label id="Val_Shop_Damage" class="StatValue Green" text="0" />
+                        </Panel>
+                        <Panel class="Divider" />
+                        
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="灵石" />
+                            <Label id="Val_SpiritCoin" class="StatValue Gold" text="0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="信仰" />
+                            <Panel class="ValueGroup">
+                                <Label id="Val_Kills" class="StatValue" text="0" />
+                                <Label text="/" class="StatSplitter" />
+                                <Label id="Val_Faith" class="StatValue Gold" text="0" />
+                            </Panel>
                         </Panel>
                     </Panel>
-                    <Panel class="StatRow">
-                        <Label class="StatLabel" text="灵石" />
-                        <Label id="Val_SpiritCoin" class="StatValue Gold" text="0" />
-                    </Panel>
-                </Panel>
 
+                    <!-- 第三列: 公式说明 -->
+                    <Panel class="StatColumn FormulaColumn">
+                        <Label class="ColumnTitle" text="公式说明" />
+                        <Panel class="Divider" />
+                        
+                        <Label id="Debug_Con" class="FormulaLabel" text="根骨: (基+成长×等级)×(1+加成)" />
+                        <Label id="Debug_Mar" class="FormulaLabel" text="武道: (基+成长×等级)×(1+加成)" />
+                        <Label id="Debug_Div" class="FormulaLabel" text="神念: (基+成长×等级)×(1+加成)" />
+                        <Label id="Debug_Agi" class="FormulaLabel" text="身法: (基+成长×等级)×(1+加成)" />
+                        <Panel class="Divider" />
+                        <Label id="Debug_Dmg" class="FormulaLabel" text="攻击: 基础+主属×2+商店" />
+                        <Label id="Debug_AtkSpeed" class="FormulaLabel" text="攻速: 100+身法面板+商店攻速" />
+                        <Label id="Debug_MoveSpeed" class="FormulaLabel" text="移速: 基础+身法×0.4+商店" />
+                        <Label id="Debug_HP" class="FormulaLabel" text="生命: 根骨面板×50" />
+                    </Panel>
+
+                </Panel>
             </Panel>
             
-            <Label text="#CharSheet_CloseTip" class="FooterTip" />
+            <Label text="按 [C] 关闭" class="FooterTip" />
         </Panel>
     </Panel>
 </root>

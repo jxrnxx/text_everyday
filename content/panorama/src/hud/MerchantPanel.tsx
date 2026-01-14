@@ -3,7 +3,8 @@
  * Cultivation Shop UI with tier-locked breakthrough functionality
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { openPanel, markPanelClosed, registerPanel, isAnyPanelOpen } from './PanelManager';
 
 interface ShopSlot {
     id: number;
@@ -19,16 +20,16 @@ const MerchantPanel: React.FC = () => {
     const [currentRank, setCurrentRank] = useState(0);
     const [feedbackMessage, setFeedbackMessage] = useState('');
 
-    // Shop slots (8 per tier)
+    // 第一层技能 (Tier 1) - 基础生存与输出
     const [slots, setSlots] = useState<ShopSlot[]>([
-        { id: 1, name: '体魄', purchased: false },
-        { id: 2, name: '武道', purchased: false },
-        { id: 3, name: '神念', purchased: false },
-        { id: 4, name: '根骨', purchased: false },
-        { id: 5, name: '悟性', purchased: false },
-        { id: 6, name: '气运', purchased: false },
-        { id: 7, name: '心境', purchased: false },
-        { id: 8, name: '道行', purchased: false },
+        { id: 1, name: '根骨', purchased: false },      // +5 根骨 → +250 HP, +2.5 HP/秒
+        { id: 2, name: '武道', purchased: false },      // +5 武道 → +10 攻击力
+        { id: 3, name: '神念', purchased: false },      // +5 神念 → +10 攻击力(法系)
+        { id: 4, name: '攻速', purchased: false },      // +5 攻速
+        { id: 5, name: '内息', purchased: false },      // +2 法力回复/秒
+        { id: 6, name: '护甲', purchased: false },      // +2 护甲
+        { id: 7, name: '法力', purchased: false },      // +20 最大法力
+        { id: 8, name: '吸血', purchased: false },      // +2% 吸血
     ]);
 
     // Calculate max tier for rank
@@ -63,9 +64,22 @@ const MerchantPanel: React.FC = () => {
         }
     };
 
+    // 面板引用，用于右键关闭
+    const panelRef = useRef<Panel | null>(null);
+    
+    // 内部关闭函数
+    const closeInternal = () => {
+        setIsVisible(false);
+        Game.EmitSound('Shop.PanelDown');
+    };
+    
     useEffect(() => {
+        // 注册到 PanelManager
+        registerPanel('merchant_panel', closeInternal);
+        
         // Listen for open panel event
         const openListener = GameEvents.Subscribe('open_merchant_panel', (event: any) => {
+            openPanel('merchant_panel'); // 这会自动关闭其他面板
             setIsVisible(true);
             setShopId(event.shop_id);
             refreshStats();
@@ -101,8 +115,14 @@ const MerchantPanel: React.FC = () => {
     }, []);
 
     const handleClose = () => {
-        setIsVisible(false);
-        Game.EmitSound('Shop.PanelDown');
+        closeInternal();
+        markPanelClosed('merchant_panel');
+    };
+    
+    // 右键关闭处理
+    const handleRightClick = () => {
+        handleClose();
+        return true; // 阻止默认行为
     };
 
     const handleSlotPurchase = (slotId: number) => {
@@ -137,7 +157,11 @@ const MerchantPanel: React.FC = () => {
     const maxTier = getMaxTierForRank(currentRank);
 
     return (
-        <Panel style={styles.overlay}>
+        <Panel 
+            style={styles.overlay}
+            // @ts-ignore
+            oncontextmenu={handleRightClick}
+        >
             <Panel style={styles.panel}>
                 {/* Header */}
                 <Panel style={styles.header}>

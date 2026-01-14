@@ -4,7 +4,7 @@ import 'panorama-polyfill-x/lib/timers';
 /** 隐藏一些默认的UI元素 */
 import '../utils/hide-default-hud';
 
-import { type FC } from 'react';
+import { type FC, useEffect } from 'react';
 import { render } from 'react-panorama-x';
 import GameTimer from './GameTimer';
 import InvitationCode from './InvitationCode';
@@ -14,6 +14,7 @@ import RankUpButton from './RankUpButton';
 import MerchantShopPanel from './MerchantShopPanel';
 import BackToLobbyButton from './BackToLobbyButton';
 import HeroHUD from './HeroHUD';
+import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
 const Root: FC = () => {
     return (
@@ -31,6 +32,15 @@ const Root: FC = () => {
 };
 
 render(<Root />, $.GetContextPanel());
+
+// ===== 全局右键关闭面板 =====
+// 当有面板打开时，右键点击任意位置关闭当前面板
+// 使用 SetPanelEvent 来捕获右键点击
+$.GetContextPanel().SetPanelEvent('oncontextmenu', () => {
+    if (isAnyPanelOpen()) {
+        closeCurrentPanel();
+    }
+});
 
 // Helper: Reload Scripts with 'R' (Only in Tools Mode)
 if (Game.IsInToolsMode()) {
@@ -55,3 +65,28 @@ const cmdExit = `cmd_train_exit ${localPlayerId}`;
 // Bind F3 and F4 keys
 Game.CreateCustomKeyBind('F3', cmdEnter);
 Game.CreateCustomKeyBind('F4', cmdExit);
+
+// ===== Dash Skill Keybind (D Key) =====
+// 使用和 C 键（角色面板）相同的模式
+const cmdDashName = 'cmd_dash_' + Math.floor(Math.random() * 10000);
+
+// 注册冲刺命令
+Game.AddCommand(cmdDashName, () => {
+    // 获取鼠标屏幕坐标
+    const cursorPos = GameUI.GetCursorPosition();
+    
+    // 转换为世界坐标
+    const worldPos = GameUI.GetScreenWorldPosition(cursorPos);
+    
+    if (worldPos) {
+        // 发送冲刺事件到服务端，包含鼠标世界坐标
+        GameEvents.SendCustomGameEventToServer('cmd_c2s_blink_dash', {
+            x: worldPos[0],
+            y: worldPos[1],
+            z: worldPos[2],
+        });
+    }
+}, '', 0);
+
+// 绑定 D 键到冲刺命令
+Game.CreateCustomKeyBind('D', cmdDashName);

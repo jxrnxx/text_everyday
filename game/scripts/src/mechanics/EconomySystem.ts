@@ -92,7 +92,8 @@ export class EconomySystem {
 
         const currentData = CustomNetTables.GetTableValue('economy', `player_${playerId}`);
         if (!currentData) {
-            this.UpdatePlayerEconomy(playerId, 0, 0);
+            // 初始灵石 200，让玩家可以直接买第一个技能
+            this.UpdatePlayerEconomy(playerId, 200, 0);
         }
     }
 

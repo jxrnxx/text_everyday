@@ -6,6 +6,7 @@ import { RankSystem } from './systems/RankSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
+import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
 
 // 游戏模式类
 export class GameMode {
@@ -26,9 +27,13 @@ export class GameMode {
         GameRules.SetPreGameTime(0);
         GameRules.SetHeroSelectionTime(0);
         GameRules.SetStrategyTime(0);
-        GameRules.GetGameModeEntity().SetCustomGameForceHero('npc_dota_hero_juggernaut');
-        GameRules.GetGameModeEntity().SetFogOfWarDisabled(true);
-        GameRules.GetGameModeEntity().SetCameraDistanceOverride(1450); // 调整镜头高度
+        GameRules.SetShowcaseTime(0);
+        
+        // 完全禁用英雄选择界面
+        const gameMode = GameRules.GetGameModeEntity();
+        gameMode.SetCustomGameForceHero('npc_dota_hero_juggernaut');
+        gameMode.SetFogOfWarDisabled(true);
+        gameMode.SetCameraDistanceOverride(1450); // 调整镜头高度
 
         // [Economy] Disable native gold
         GameRules.SetGoldTickTime(99999);
@@ -138,6 +143,19 @@ export class GameMode {
             0
         );
 
+        // [BlinkDash] 注册冲刺控制台命令
+        Convars.RegisterCommand(
+            'cmd_blink_dash',
+            (_, strPlayerId) => {
+                const playerId = Number(strPlayerId);
+                if (playerId != null && !isNaN(playerId)) {
+                    ExecuteDashFromCommand(playerId as PlayerID);
+                }
+            },
+            'Blink Dash',
+            0
+        );
+
         // [Training] Listen for F3/F4 Key Events from Panorama
         CustomGameEventManager.RegisterListener('cmd_c2s_train_enter', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
@@ -151,6 +169,15 @@ export class GameMode {
             TrainingManager.GetInstance().ExitRoom(playerID);
         });
 
+        // [BlinkDash] 监听冲刺事件
+        CustomGameEventManager.RegisterListener('cmd_c2s_blink_dash', (_, event) => {
+            const playerID = (event as any).PlayerID as PlayerID;
+            const x = (event as any).x as number;
+            const y = (event as any).y as number;
+            const z = (event as any).z as number;
+            const targetPos = Vector(x, y, z);
+            ExecuteDash(playerID, targetPos);
+        });
 
         // 监听前端验证码请求
         CustomGameEventManager.RegisterListener('to_server_verify_code', (_, event) => {
@@ -267,12 +294,37 @@ export class GameMode {
         }
 
         if (unit.IsRealHero()) {
+            const hero = unit as CDOTA_BaseNPC_Hero;
+            const heroName = hero.GetUnitName();
+            const playerId = hero.GetPlayerOwnerID();
+            
+            // 如果是剑圣，替换成自定义英雄 npc_hero_soldier_path
+            if (heroName === 'npc_dota_hero_juggernaut' && playerId >= 0) {
+                const newHero = PlayerResource.ReplaceHeroWith(
+                    playerId,
+                    'npc_hero_soldier_path',
+                    0, // gold
+                    0  // xp
+                );
+                if (newHero) {
+                    // 新英雄会触发另一次 OnNpcSpawned，所以这里直接返回
+                    return;
+                } else {
+                    // 替换失败，手动添加技能
+                    hero.AddAbility('soldier_war_strike');
+                    const ability = hero.FindAbilityByName('soldier_war_strike');
+                    if (ability) {
+                        ability.SetLevel(1);
+                    }
+                }
+            }
+            
             unit.SetBaseMoveSpeed(600); // 测试用：设置移速 600
 
             // [Stats] Initialize Custom Stats
             CustomStats.InitializeHeroStats(unit as CDOTA_BaseNPC_Hero);
 
-            const playerId = unit.GetPlayerOwnerID();
+
             if (playerId >= 0 && playerId <= 3) {
                 // Initialize Economy for this player if not already
                 EconomySystem.GetInstance().InitPlayer(playerId);

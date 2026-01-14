@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { openPanel, markPanelClosed, registerPanel } from './PanelManager';
 
 // 技能槽位数据
 interface SkillSlot {
@@ -21,26 +22,26 @@ const SLOT_COST = 200;
 
 // 8个技能配置 (带描述)
 const SKILL_CONFIG: SkillSlot[] = [
-    { id: 1, name: '体魄', stat: '+5', bonus: '生命', purchased: false },
-    { id: 2, name: '武道', stat: '+5', bonus: '攻击', purchased: false },
-    { id: 3, name: '神意', stat: '+5', bonus: '法力', purchased: false },
-    { id: 4, name: '戒寺', stat: '+10', bonus: '护甲', purchased: false },
-    { id: 5, name: '回能', stat: '+1', bonus: '回复', purchased: false },
-    { id: 6, name: '吸渍', stat: '+1%', bonus: '吸血', purchased: false },
-    { id: 7, name: '护斥', stat: '+2', bonus: '减伤', purchased: false },
-    { id: 8, name: '敏速', stat: '+30', bonus: '移速', purchased: false },
+    { id: 1, name: '根骨', stat: '+5', bonus: '根骨', purchased: false },
+    { id: 2, name: '武道', stat: '+5', bonus: '武道', purchased: false },
+    { id: 3, name: '神念', stat: '+5', bonus: '神念', purchased: false },
+    { id: 4, name: '护甲', stat: '+2', bonus: '护甲', purchased: false },
+    { id: 5, name: '回蓝', stat: '+2', bonus: '回蓝', purchased: false },
+    { id: 6, name: '攻速', stat: '+15', bonus: '攻速', purchased: false },
+    { id: 7, name: '移速', stat: '+20', bonus: '移速', purchased: false },
+    { id: 8, name: '攻击', stat: '+15', bonus: '攻击', purchased: false },
 ];
 
 // 技能描述 (用于悬浮窗)
 const SKILL_DESC: Record<string, string> = {
-    '体魄': '肉身根基',
-    '武道': '勇猛精进',
-    '神意': '神魂凝练',
-    '戒寺': '金刚不坏',
-    '回能': '生生不息',
-    '吸渍': '以战养战',
-    '护斥': '护体真气',
-    '敏速': '身法如风',
+    '根骨': '肉身根基，气血充沛',
+    '武道': '武学造诣，勇猛精进',
+    '神念': '神魂凝练，法力深厚',
+    '护甲': '金刚不坏，刀枪不入',
+    '回蓝': '内息运转，灵力回复',
+    '攻速': '出手如电，迅捷无双',
+    '移速': '身法如风，来去自如',
+    '攻击': '力量增幅，攻击提升',
 };
 
 // 槽位图片路径 (100x100px 填满版本)
@@ -90,34 +91,60 @@ const MerchantShopPanel: React.FC = () => {
     // handleClose 引用 - 需要在 useEffect 之前定义
     const handleCloseRef = React.useRef<() => void>(() => {});
     
-    // 检测点击商人打开面板 + 右键关闭
+    // 标记循环是否已启动，避免重复创建
+    const loopStartedRef = React.useRef(false);
+    
+    // 使用 ref 跟踪 isVisible 状态，避免闭包问题
+    const isVisibleRef = React.useRef(isVisible);
+    isVisibleRef.current = isVisible;
+    
+    // 检测点击商人打开面板 + 右键关闭 + 选中英雄关闭
     useEffect(() => {
+        // 仅在首次挂载时启动循环
+        if (loopStartedRef.current) return;
+        loopStartedRef.current = true;
+        
+        // 注册到 PanelManager
+        registerPanel('merchant_panel', () => {
+            setIsVisible(false);
+            Game.EmitSound('Shop.PanelDown');
+        });
+        
         const checkMerchantClick = () => {
             const selectedEntity = Players.GetLocalPlayerPortraitUnit();
+            const localPlayer = Players.GetLocalPlayer();
+            const heroIndex = Players.GetPlayerHeroEntityIndex(localPlayer);
             
             if (selectedEntity === -1) return;
             
             const unitName = Entities.GetUnitName(selectedEntity);
             const isMerchant = unitName === 'npc_cultivation_merchant';
+            const isOwnHero = selectedEntity === heroIndex;
 
             // 打开逻辑: 商人被选中且面板不可见
-            if (isMerchant && !isVisible) {
+            if (isMerchant && !isVisibleRef.current) {
+                openPanel('merchant_panel'); // 这会自动隐藏 HeroHUD
                 setIsVisible(true);
                 Game.EmitSound('Shop.PanelUp');
             }
             
-            // 关闭逻辑: 面板可见 + 右键按下
+            // 选中自己英雄时关闭面板
+            if (isVisibleRef.current && isOwnHero) {
+                handleCloseRef.current();
+            }
+            
+            // 右键关闭逻辑: 面板可见 + 右键按下
             const isRightDown = GameUI.IsMouseDown(1) || GameUI.IsMouseDown(2);
-            if (isVisible && isRightDown) {
+            if (isVisibleRef.current && isRightDown) {
                 handleCloseRef.current();
             }
         };
 
-        $.Schedule(0.2, function loop() {
+        $.Schedule(0.5, function loop() {
             checkMerchantClick();
-            $.Schedule(0.2, loop);
+            $.Schedule(0.1, loop); // 加快检测频率
         });
-    }, [isVisible]);
+    }, []);
     
     
     // ESC 键关闭
@@ -133,6 +160,7 @@ const MerchantShopPanel: React.FC = () => {
     const handleClose = () => {
         setIsVisible(false);
         Game.EmitSound('Shop.PanelDown');
+        markPanelClosed('merchant_panel'); // 通知 PanelManager 面板已关闭，HeroHUD 会自动显示
         
         // 强制选中玩家英雄，这样商人就被取消选中了
         // 下次点击商人才会被检测为"新选中"
@@ -143,9 +171,31 @@ const MerchantShopPanel: React.FC = () => {
         }
     };
 
+    // 技能名称到属性类型的映射
+    const STAT_TYPE_MAP: { [key: string]: string } = {
+        '根骨': 'constitution',
+        '武道': 'martial',
+        '神念': 'divinity',
+        '护甲': 'armor',
+        '回蓝': 'mana_regen',
+        '攻速': 'attack_speed',
+        '移速': 'move_speed',
+        '攻击': 'base_damage',
+    };
+
     const handlePurchase = (skill: SkillSlot) => {
         if (skill.purchased) return;
         
+        // 发送购买事件到服务端
+        const statType = STAT_TYPE_MAP[skill.name];
+        if (statType) {
+            GameEvents.SendCustomGameEventToServer('cmd_merchant_purchase', {
+                stat_type: statType,
+                amount: parseInt(skill.stat.replace('+', '')) || 0,
+            });
+        }
+        
+        // 更新UI状态
         setSkills(skills.map(s => 
             s.id === skill.id ? { ...s, purchased: true } : s
         ));
@@ -154,6 +204,18 @@ const MerchantShopPanel: React.FC = () => {
 
     const handlePurchaseAll = () => {
         // 全修 - 购买所有未购买的槽位
+        skills.forEach(skill => {
+            if (!skill.purchased) {
+                const statType = STAT_TYPE_MAP[skill.name];
+                if (statType) {
+                    GameEvents.SendCustomGameEventToServer('cmd_merchant_purchase', {
+                        stat_type: statType,
+                        amount: parseInt(skill.stat.replace('+', '')) || 0,
+                    });
+                }
+            }
+        });
+        
         setSkills(skills.map(s => ({ ...s, purchased: true })));
         Game.EmitSound('General.Buy');
         Game.EmitSound('Hero_Invoker.LevelUp');

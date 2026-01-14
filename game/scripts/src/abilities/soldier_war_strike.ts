@@ -3,7 +3,7 @@ import { BaseAbility, BaseModifier, registerAbility, registerModifier } from '..
 @registerAbility('soldier_war_strike')
 export class soldier_war_strike extends BaseAbility {
     GetIntro() {
-        return '每攻击2次，第3次攻击造成AOE暴击。';
+        return '每第3次攻击造成250%暴击伤害并对前方扇形区域内敌人造成等额物理伤害。';
     }
 
     GetIntrinsicModifierName() {
@@ -28,7 +28,7 @@ export class modifier_soldier_war_strike extends BaseModifier {
         const ability = this.GetAbility();
         if (ability) {
             const proc = ability.GetSpecialValueFor('attacks_to_proc');
-            this.attacks_to_proc = proc && proc > 0 ? proc : 3;
+            this.attacks_to_proc = proc && proc > 0 ? proc : 4;
 
             const dmg = ability.GetSpecialValueFor('damage_pct');
             this.damage_pct = dmg && dmg > 0 ? dmg : 250;
@@ -45,11 +45,17 @@ export class modifier_soldier_war_strike extends BaseModifier {
     }
 
     DeclareFunctions(): ModifierFunction[] {
-        return [ModifierFunction.ON_ATTACK_LANDED, ModifierFunction.PREATTACK_CRITICALSTRIKE];
+        return [ModifierFunction.ON_ATTACK_LANDED, ModifierFunction.PREATTACK_CRITICALSTRIKE, ModifierFunction.TOOLTIP];
     }
 
+    // 只有在有层数时才显示buff图标
     IsHidden(): boolean {
-        return false;
+        return this.GetStackCount() === 0;
+    }
+
+    // 返回Buff的图标贴图
+    GetTexture(): string {
+        return "soldier_war_strike";
     }
 
     IsPurgable(): boolean {
@@ -60,10 +66,15 @@ export class modifier_soldier_war_strike extends BaseModifier {
         return false;
     }
 
+    // Tooltip显示当前攻击计数 (1-4)
+    OnTooltip(): number {
+        return this.GetStackCount() + 1;
+    }
+
     // 预攻击暴击判定 (仅用于暴击红字显示，逻辑在Landed处理)
     GetModifierPreAttack_CriticalStrike(event: ModifierAttackEvent): number {
         if (!IsServer()) return 0;
-        // logic: if stack is 2, next hit (this one) is 3rd, so it crits.
+        // logic: if stack is 3, next hit (this one) is 4th, so it crits.
         if (this.GetStackCount() >= this.attacks_to_proc - 1) {
             return this.damage_pct;
         }
@@ -77,18 +88,17 @@ export class modifier_soldier_war_strike extends BaseModifier {
 
         const currentStacks = this.GetStackCount();
 
-        // Target: Trigger on 3rd hit.
-        // Stacks start at 0.
-        // Hit 1: Stacks 0 -> 1
-        // Hit 2: Stacks 1 -> 2
-        // Hit 3: Stacks 2 -> Trigger -> Reset 0
+        // 第3刀暴击逻辑:
+        // 初始: Stack 0 (隐藏图标)
+        // 第1刀: Stack 0 -> 1 (显示"1")
+        // 第2刀: Stack 1 -> 2 (显示"2")
+        // 第3刀: Stack 2 -> 触发暴击 -> Reset to 0 (隐藏图标)
 
         if (currentStacks >= this.attacks_to_proc - 1) {
             this.TriggerWarStrike(event.target);
             this.SetStackCount(0);
         } else {
             this.SetStackCount(currentStacks + 1);
-            // print(`[WarStrike] Stack increased to: ${this.GetStackCount()}`);
         }
     }
 

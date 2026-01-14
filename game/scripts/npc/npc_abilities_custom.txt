@@ -5,7 +5,7 @@
     {
         "BaseClass"                     "ability_lua"
         "ScriptFile"                    "abilities/soldier_war_strike"
-        "AbilityTextureName"            "juggernaut_blade_dance"
+        "AbilityTextureName"            "soldier_war_strike"
         "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE"
         "MaxLevel"                      "1"
         
