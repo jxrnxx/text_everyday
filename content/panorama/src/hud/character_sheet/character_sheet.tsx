@@ -17,6 +17,50 @@ const JOB_NAME_MAP: { [key: string]: string } = {
     // Add other mappings here as needed
 };
 
+// 获取本地化文本：支持多种格式
+// 1. #Loc{token} 格式：提取 token 后使用 $.Localize("#token")
+// 2. #token 格式：直接使用 $.Localize()
+// 3. 映射表查找
+// 4. 返回原始值
+function getLocalizedText(value: string | undefined, fallback: string = "-"): string {
+    if (!value || value === "undefined") return fallback;
+    
+    // 清理可能的换行符
+    value = value.trim();
+    
+    // 处理 #Loc{token} 格式 - 提取 {} 中的 token
+    const locMatch = value.match(/^#Loc\{(.+)\}$/);
+    if (locMatch) {
+        const token = locMatch[1];
+        // 先尝试直接使用 token 作为本地化键
+        const localized = $.Localize("#" + token);
+        if (localized && localized !== "#" + token) {
+            return localized;
+        }
+        // 否则尝试映射表
+        if (JOB_NAME_MAP[token]) {
+            return JOB_NAME_MAP[token];
+        }
+        return token; // 返回提取的 token
+    }
+    
+    // 如果是标准本地化 token（以 # 开头），使用 $.Localize()
+    if (value.startsWith("#")) {
+        const localized = $.Localize(value);
+        if (localized && localized !== value) {
+            return localized;
+        }
+    }
+    
+    // 否则尝试从映射表获取
+    if (JOB_NAME_MAP[value]) {
+        return JOB_NAME_MAP[value];
+    }
+    
+    // 返回原始值
+    return value;
+}
+
 let isOpen = false;
 
 // 内部关闭函数
@@ -71,60 +115,62 @@ function UpdateAllStats() {
         ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
         
         let professionKey = d.profession;
-        let professionName = "-";
-        if (professionKey && professionKey !== "undefined") {
-            professionName = JOB_NAME_MAP[professionKey] || professionKey;
-        }
+        const professionName = getLocalizedText(professionKey, "-");
         ($('#Val_Profession') as LabelPanel).text = professionName;
         ($('#Val_Level') as LabelPanel).text = level.toString();
         
         // ===== 15个属性字段 =====
         
-        // 根骨 (Constitution)
+        // 根骨 (Constitution) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const conBase = d.constitution_base || 0;
         const conGain = d.constitution_gain || 0;
         const conBonus = d.constitution_bonus || 0;
-        const conPanel = Math.floor((conBase + (level - 1) * conGain) * (1 + conBonus));
+        const conExtra = d.extra_constitution || 0;
+        const conPanel = Math.floor((conBase + (level - 1) * conGain + conExtra) * (1 + conBonus));
         ($('#Val_Con_Base') as LabelPanel).text = conBase.toString();
         ($('#Val_Con_Gain') as LabelPanel).text = conGain.toString();
         ($('#Val_Con_Bonus') as LabelPanel).text = conBonus.toString();
         ($('#Val_Con_Panel') as LabelPanel).text = conPanel.toString();
         
-        // 武道 (Martial)
+        // 武道 (Martial) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const marBase = d.martial_base || 0;
         const marGain = d.martial_gain || 0;
         const marBonus = d.martial_bonus || 0;
-        const marPanel = Math.floor((marBase + (level - 1) * marGain) * (1 + marBonus));
+        const marExtra = d.extra_martial || 0;
+        const marPanel = Math.floor((marBase + (level - 1) * marGain + marExtra) * (1 + marBonus));
         ($('#Val_Mar_Base') as LabelPanel).text = marBase.toString();
         ($('#Val_Mar_Gain') as LabelPanel).text = marGain.toString();
         ($('#Val_Mar_Bonus') as LabelPanel).text = marBonus.toString();
         ($('#Val_Mar_Panel') as LabelPanel).text = marPanel.toString();
         
-        // 神念 (Divinity)
+        // 神念 (Divinity) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const divBase = d.divinity_base || 0;
         const divGain = d.divinity_gain || 0;
         const divBonus = d.divinity_bonus || 0;
-        const divPanel = Math.floor((divBase + (level - 1) * divGain) * (1 + divBonus));
+        const divExtra = d.extra_divinity || 0;
+        const divPanel = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
         ($('#Val_Div_Base') as LabelPanel).text = divBase.toString();
         ($('#Val_Div_Gain') as LabelPanel).text = divGain.toString();
         ($('#Val_Div_Bonus') as LabelPanel).text = divBonus.toString();
         ($('#Val_Div_Panel') as LabelPanel).text = divPanel.toString();
         
-        // 身法 (Agility)
+        // 身法 (Agility) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const agiBase = d.agility_base || 0;
         const agiGain = d.agility_gain || 0;
         const agiBonus = d.agility_bonus || 0;
-        const agiPanel = Math.floor((agiBase + (level - 1) * agiGain) * (1 + agiBonus));
+        const agiExtra = d.extra_agility || 0;
+        const agiPanel = Math.floor((agiBase + (level - 1) * agiGain + agiExtra) * (1 + agiBonus));
         ($('#Val_Agi_Base') as LabelPanel).text = agiBase.toString();
         ($('#Val_Agi_Gain') as LabelPanel).text = agiGain.toString();
         ($('#Val_Agi_Bonus') as LabelPanel).text = agiBonus.toString();
         ($('#Val_Agi_Panel') as LabelPanel).text = agiPanel.toString();
         
-        // 攻击力 (Damage)
+        // 攻击力 (Damage) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成) + 主属性*2
         const dmgBase = d.damage_base || 0;
         const dmgGain = d.damage_gain || 0;
         const dmgBonus = d.damage_bonus || 0;
-        const dmgPanel = Math.floor((dmgBase + (level - 1) * dmgGain) * (1 + dmgBonus));
+        const dmgExtra = d.extra_base_damage || 0;
+        const dmgPanel = Math.floor((dmgBase + (level - 1) * dmgGain + dmgExtra) * (1 + dmgBonus));
         ($('#Val_Dmg_Base') as LabelPanel).text = dmgBase.toString();
         ($('#Val_Dmg_Gain') as LabelPanel).text = dmgGain.toString();
         ($('#Val_Dmg_Bonus') as LabelPanel).text = dmgBonus.toString();
@@ -132,9 +178,9 @@ function UpdateAllStats() {
         // 主属性计算
         const mainStat = d.main_stat || 'Martial';
         const mainPanel = mainStat === 'Martial' ? marPanel : divPanel;
-        const totalDmg = dmgPanel + mainPanel * 2 + (d.purchased_base_damage || 0);
+        const totalDmg = dmgPanel + mainPanel * 2;
         ($('#Val_Dmg_Panel') as LabelPanel).text = totalDmg.toString();
-        ($('#Val_Attack_Display') as LabelPanel).text = totalDmg.toString();  // 实战属性中的攻击力也用计算值
+        ($('#Val_Attack_Display') as LabelPanel).text = totalDmg.toString();
         
         // Crit
         const critChance = d.crit_chance || 0;
@@ -142,38 +188,38 @@ function UpdateAllStats() {
         ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
         ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
         
-        // 商店购买
-        const shopAtkSpeed = d.purchased_attack_speed || 0;
-        const shopManaRegen = d.purchased_mana_regen || 0;
-        const shopArmor = d.purchased_armor || 0;
-        const shopMoveSpeed = d.purchased_move_speed || 0;
-        const shopDamage = d.purchased_base_damage || 0;
+        // 游戏获取 (原商店购买 - 改用 extra_ 字段)
+        const extraAtkSpeed = d.extra_attack_speed || 0;
+        const extraManaRegen = d.extra_mana_regen || 0;
+        const extraArmor = d.extra_armor || 0;
+        const extraMoveSpeed = d.extra_move_speed || 0;
+        const extraDamage = d.extra_base_damage || 0;
         
-        ($('#Val_Shop_AtkSpeed') as LabelPanel).text = shopAtkSpeed.toString();
-        ($('#Val_Shop_ManaRegen') as LabelPanel).text = shopManaRegen.toString();
-        ($('#Val_Shop_Armor') as LabelPanel).text = shopArmor.toString();
-        ($('#Val_Shop_MoveSpeed') as LabelPanel).text = shopMoveSpeed.toString();
-        ($('#Val_Shop_Damage') as LabelPanel).text = shopDamage.toString();
+        ($('#Val_Shop_AtkSpeed') as LabelPanel).text = extraAtkSpeed.toString();
+        ($('#Val_Shop_ManaRegen') as LabelPanel).text = extraManaRegen.toString();
+        ($('#Val_Shop_Armor') as LabelPanel).text = extraArmor.toString();
+        ($('#Val_Shop_MoveSpeed') as LabelPanel).text = extraMoveSpeed.toString();
+        ($('#Val_Shop_Damage') as LabelPanel).text = extraDamage.toString();
         
         // 计算攻速面板值
-        const panelAtkSpeed = 100 + agiPanel + shopAtkSpeed;
+        const panelAtkSpeed = 100 + agiPanel + extraAtkSpeed;
         ($('#Val_AtkSpeed') as LabelPanel).text = panelAtkSpeed.toString();
         
-        // 公式说明 - 使用中文显示主属性
+        // 公式说明 - 使用正确的公式（包含额外获得值）
         const mainStatCN = mainStat === 'Martial' ? '武道' : '神念';
-        ($('#Debug_Con') as LabelPanel).text = `根骨: (${conBase}+(${level}-1)×${conGain})×(1+${conBonus}) = ${conPanel}`;
-        ($('#Debug_Mar') as LabelPanel).text = `武道: (${marBase}+(${level}-1)×${marGain})×(1+${marBonus}) = ${marPanel}`;
-        ($('#Debug_Div') as LabelPanel).text = `神念: (${divBase}+(${level}-1)×${divGain})×(1+${divBonus}) = ${divPanel}`;
-        ($('#Debug_Agi') as LabelPanel).text = `身法: (${agiBase}+(${level}-1)×${agiGain})×(1+${agiBonus}) = ${agiPanel}`;
-        ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×2 + 商店${shopDamage} = ${totalDmg}`;
-        ($('#Debug_AtkSpeed') as LabelPanel).text = `攻速: 100 + 身法${agiPanel} + 商店${shopAtkSpeed} = ${panelAtkSpeed}`;
-        ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel}) × 50 = ${conPanel * 50}`;
+        ($('#Debug_Con') as LabelPanel).text = `根骨: (${conBase}+(${level}-1)×${conGain}+${conExtra})×(1+${conBonus}) = ${conPanel}`;
+        ($('#Debug_Mar') as LabelPanel).text = `武道: (${marBase}+(${level}-1)×${marGain}+${marExtra})×(1+${marBonus}) = ${marPanel}`;
+        ($('#Debug_Div') as LabelPanel).text = `神念: (${divBase}+(${level}-1)×${divGain}+${divExtra})×(1+${divBonus}) = ${divPanel}`;
+        ($('#Debug_Agi') as LabelPanel).text = `身法: (${agiBase}+(${level}-1)×${agiGain}+${agiExtra})×(1+${agiBonus}) = ${agiPanel}`;
+        ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×2 = ${totalDmg}`;
+        ($('#Debug_AtkSpeed') as LabelPanel).text = `攻速: 100 + 身法${agiPanel} + 额外${extraAtkSpeed} = ${panelAtkSpeed}`;
+        ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×50 + 基础1 = ${conPanel * 50 + 1}`;
         
         // 移速公式
         const agiMoveBonus = Math.floor(agiPanel * 0.4);
-        const baseMoveSpeed = 300;  // 基础移速从配置读取
-        const panelMoveSpeed = baseMoveSpeed + agiMoveBonus + shopMoveSpeed;
-        ($('#Debug_MoveSpeed') as LabelPanel).text = `移速: ${baseMoveSpeed} + 身法${agiPanel}×0.4=${agiMoveBonus} + 商店${shopMoveSpeed} = ${panelMoveSpeed}`;
+        const baseMoveSpeed = 300;
+        const panelMoveSpeed = baseMoveSpeed + agiMoveBonus + extraMoveSpeed;
+        ($('#Debug_MoveSpeed') as LabelPanel).text = `移速: ${baseMoveSpeed} + 身法${agiPanel}×0.4=${agiMoveBonus} + 额外${extraMoveSpeed} = ${panelMoveSpeed}`;
     }
 
     // 2. Economy from NetTable

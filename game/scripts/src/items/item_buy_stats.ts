@@ -7,7 +7,7 @@ export class item_buy_constitution extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'constitution', 5);
+            CustomStats.AddStat(caster, 'extra_constitution', 5);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }
@@ -20,7 +20,7 @@ export class item_buy_martial extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'martial', 5);
+            CustomStats.AddStat(caster, 'extra_martial', 5);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }
@@ -33,7 +33,7 @@ export class item_buy_divinity extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'divinity', 5);
+            CustomStats.AddStat(caster, 'extra_divinity', 5);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }
@@ -46,7 +46,7 @@ export class item_buy_attack_speed extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'purchased_attack_speed', 5);
+            CustomStats.AddStat(caster, 'extra_attack_speed', 5);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }
@@ -59,7 +59,7 @@ export class item_buy_mana_regen extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'purchased_mana_regen', 2);
+            CustomStats.AddStat(caster, 'extra_mana_regen', 2);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }
@@ -72,7 +72,7 @@ export class item_buy_armor extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'purchased_armor', 2);
+            CustomStats.AddStat(caster, 'extra_armor', 2);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }
@@ -85,7 +85,7 @@ export class item_buy_max_mana extends BaseItem {
     OnSpellStart(): void {
         const caster = this.GetCaster();
         if (caster.IsRealHero()) {
-            CustomStats.AddStat(caster, 'purchased_max_mana', 20);
+            CustomStats.AddStat(caster, 'extra_max_mana', 20);
             caster.EmitSound('Item.TomeOfKnowledge');
             this.SpendCharge(1);
         }

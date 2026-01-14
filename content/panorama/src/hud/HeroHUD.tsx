@@ -7,6 +7,38 @@ const JOB_NAME_MAP: { [key: string]: string } = {
     // 其他职业映射
 };
 
+// 获取本地化文本：支持 #Token 格式 和 映射表
+function getLocalizedJobName(value: string | undefined, fallback: string = "..."): string {
+    if (!value || value === "undefined") return fallback;
+    
+    value = value.trim();
+    
+    // 如果是本地化 token（以 # 开头），使用 $.Localize()
+    if (value.startsWith("#")) {
+        const localized = $.Localize(value);
+        if (localized && localized !== value) {
+            return localized;
+        }
+        // 去掉 # 尝试
+        const tokenWithoutHash = value.substring(1);
+        if (JOB_NAME_MAP[tokenWithoutHash]) {
+            return JOB_NAME_MAP[tokenWithoutHash];
+        }
+    }
+    
+    // 尝试从映射表获取
+    if (JOB_NAME_MAP[value]) {
+        return JOB_NAME_MAP[value];
+    }
+    
+    // 返回原始值（如果是英文ID则返回fallback）
+    if (value.startsWith("npc_") || value.includes("_hero_")) {
+        return fallback;
+    }
+    
+    return value;
+}
+
 // 属性文字样式
 const statLabelStyle = {
     fontSize: '16px',
@@ -155,60 +187,78 @@ const HeroHUD: FC = () => {
                 const d = netTableData as any;
                 const level = Entities.GetLevel(localHero);
                 
-                // 职业
+                // 职业 - 使用本地化函数获取显示名称
                 const professionKey = d.profession;
-                if (professionKey && professionKey !== "undefined") {
-                    setProfessionName(JOB_NAME_MAP[professionKey] || professionKey);
-                }
+                setProfessionName(getLocalizedJobName(professionKey, "..."));
 
-                // 根骨、武道、神念 - 使用公式计算面板值
+                // 根骨、武道、神念 - 使用正确公式计算面板值
+                // 公式: (基础 + (等级-1) * 成长 + 额外获得值) * (1 + 加成)
                 const conBase = d.constitution_base || 0;
                 const conGain = d.constitution_gain || 0;
                 const conBonus = d.constitution_bonus || 0;
-                const constitution = Math.floor((conBase + (level - 1) * conGain) * (1 + conBonus));
+                const conExtra = d.extra_constitution || 0;
+                const constitution = Math.floor((conBase + (level - 1) * conGain + conExtra) * (1 + conBonus));
                 
                 const marBase = d.martial_base || 0;
                 const marGain = d.martial_gain || 0;
                 const marBonus = d.martial_bonus || 0;
-                const martial = Math.floor((marBase + (level - 1) * marGain) * (1 + marBonus));
+                const marExtra = d.extra_martial || 0;
+                const martial = Math.floor((marBase + (level - 1) * marGain + marExtra) * (1 + marBonus));
                 
                 const divBase = d.divinity_base || 0;
                 const divGain = d.divinity_gain || 0;
                 const divBonus = d.divinity_bonus || 0;
-                const divinity = Math.floor((divBase + (level - 1) * divGain) * (1 + divBonus));
+                const divExtra = d.extra_divinity || 0;
+                const divinity = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
                 
-                // 攻击力计算 = 基础攻击 + 主属性*2 + 商店
+                // 攻击力计算 = (基础攻击 + 额外攻击) + 主属性*2
                 const dmgBase = d.damage_base || 0;
                 const dmgGain = d.damage_gain || 0;
                 const dmgBonus = d.damage_bonus || 0;
-                const dmgPanel = Math.floor((dmgBase + (level - 1) * dmgGain) * (1 + dmgBonus));
+                const dmgExtra = d.extra_base_damage || 0;
+                const dmgPanel = Math.floor((dmgBase + (level - 1) * dmgGain + dmgExtra) * (1 + dmgBonus));
                 const mainStat = d.main_stat || 'Martial';
                 const mainPanel = mainStat === 'Martial' ? martial : divinity;
-                const shopDamage = d.purchased_base_damage || 0;
-                const totalAttack = dmgPanel + mainPanel * 2 + shopDamage;
+                const totalAttack = dmgPanel + mainPanel * 2;
+                
+                // 防御从 Entities API 获取
+                const defense = Math.floor(Entities.GetPhysicalArmorValue(localHero) || 0);
                 
                 setStats(prev => ({
                     ...prev,
                     constitution: constitution,
                     martial: martial,
                     divinity: divinity,
-                    attack: totalAttack,  // 使用计算的攻击力
+                    attack: totalAttack,
+                    defense: defense,
                 }));
             }
         };
 
-        // 延迟初始化，确保英雄实体准备好
-        $.Schedule(0.5, () => {
+        // 延迟初始化，确保英雄实体准备好 (增加到1秒)
+        $.Schedule(1.0, () => {
+            updateApiStats();
+            updateNetTableStats();
+        });
+        
+        // 再次延迟刷新 (3秒后确保数据已同步)
+        $.Schedule(3.0, () => {
             updateApiStats();
             updateNetTableStats();
         });
 
-        // 监听 NetTable 变化 (事件驱动，无需循环更新)
+        // 监听 NetTable 变化 (事件驱动)
         CustomNetTables.SubscribeNetTableListener('custom_stats' as any, (table, key, data) => {
             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
             if (key === String(localHero)) {
                 updateNetTableStats();
             }
+        });
+        
+        // 定期刷新 NetTable 数据 (每2秒，确保数据同步)
+        $.Schedule(1.0, function netTableLoop() {
+            updateNetTableStats();
+            $.Schedule(2.0, netTableLoop);
         });
 
         // HP/MP 更新（每0.2秒，约5fps，足够流畅且减少卡顿）
@@ -349,28 +399,57 @@ const HeroHUD: FC = () => {
                 width: '210px',
                 height: '250px',
                 position: '60px 295px 0px' as const,
-                flowChildren: 'down' as const,
             }}>
+                {/* 头像框内部发光粒子特效 - 底层 */}
+                <DOTAParticleScenePanel
+                    style={{
+                        width: '150px',
+                        height: '150px',
+                        position: '30px 30px 0px' as const,
+                        opacity: '0.6',
+                    }}
+                    // @ts-ignore
+                    hittest={false}
+                    particleName="particles/units/heroes/hero_wisp/wisp_ambient.vpcf"
+                    particleonly={true}
+                    startActive={true}
+                    cameraOrigin="0 0 150"
+                    lookAt="0 0 0"
+                    fov={50}
+                    squarePixels={true}
+                />
+                {/* 英雄动态头像 - 使用 DOTAScenePanel 显示 3D 模型 */}
+                <DOTAScenePanel
+                    // @ts-ignore
+                    unit="npc_dota_hero_juggernaut"
+                    style={{
+                        width: '145px',
+                        height: '145px',
+                        position: '32px 32px 0px' as const,
+                    }}
+                />
+                {/* 头像框背景图（中层） */}
                 <Image 
                     src="file://{resources}/images/hero_portrait_frame_v2.png"
                     style={{
                         width: '210px',
                         height: '210px',
+                        position: '0px 0px 0px' as const,
                     }}
                 />
-                {/* 英雄职业名称 - 从NetTable获取 */}
+                {/* 英雄职业名称（顶层）- 位置上移 */}
                 <Label 
                     text={professionName}
                     style={{
+                        width: '210px',
+                        position: '0px 162px 0px' as const,
                         fontSize: '22px',
                         fontWeight: 'bold' as const,
                         fontFamily: 'SimHei, Microsoft YaHei, sans-serif',
                         color: '#f0d080',
                         textShadow: '0px 0px 4px #ffcc00, 0px 1px 2px #000000',
-                        horizontalAlign: 'center' as const,
                         textAlign: 'center' as const,
                         letterSpacing: '2px',
-                        marginTop: '-48px',
                     }}
                 />
             </Panel>
@@ -493,10 +572,28 @@ const HeroHUD: FC = () => {
                                 height: '34px',
                                 marginTop: '2px',
                                 marginLeft: '2px',
+                                overflow: 'clip' as const,
                             }}
                         >
                             {/* 高光层 */}
                             <Panel className="HpBarShine" />
+                            {/* 流动粒子特效 */}
+                            <DOTAParticleScenePanel
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    opacity: '0.8',
+                                }}
+                                // @ts-ignore
+                                hittest={false}
+                                particleName="particles/healthbar_burner2.vpcf"
+                                particleonly={true}
+                                startActive={true}
+                                cameraOrigin="-700 -395 120"
+                                lookAt="0 -385 15"
+                                fov={60}
+                                squarePixels={true}
+                            />
                         </Panel>
                     </Panel>
                     {/* HP数值 */}
@@ -535,10 +632,28 @@ const HeroHUD: FC = () => {
                                 height: '34px',
                                 marginTop: '2px',
                                 marginLeft: '2px',
+                                overflow: 'clip' as const,
                             }}
                         >
                             {/* 高光层 */}
                             <Panel className="MpBarShine" />
+                            {/* 流动粒子特效 */}
+                            <DOTAParticleScenePanel
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    opacity: '0.7',
+                                }}
+                                // @ts-ignore
+                                hittest={false}
+                                particleName="particles/healthbar_burner2.vpcf"
+                                particleonly={true}
+                                startActive={true}
+                                cameraOrigin="-700 -395 120"
+                                lookAt="0 -385 15"
+                                fov={60}
+                                squarePixels={true}
+                            />
                         </Panel>
                     </Panel>
                     {/* 灵力数值 - 金色 */}

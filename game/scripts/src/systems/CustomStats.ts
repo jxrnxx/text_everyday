@@ -40,13 +40,17 @@ interface HeroStats {
     main_stat: string;           // 主属性: 'Martial' 或 'Divinity'
     profession?: string;
     
-    // ===== 商人购买的加成 =====
-    purchased_attack_speed: number;  // 购买的攻速
-    purchased_mana_regen: number;    // 购买的回蓝
-    purchased_armor: number;         // 购买的护甲
-    purchased_max_mana: number;      // 购买的最大法力
-    purchased_move_speed: number;    // 购买的移速
-    purchased_base_damage: number;   // 购买的攻击力
+    // ===== 额外获得的属性 (商人/游戏奖励/装备等) =====
+    extra_constitution: number;      // 额外根骨
+    extra_martial: number;           // 额外武道
+    extra_divinity: number;          // 额外神念
+    extra_agility: number;           // 额外身法
+    extra_attack_speed: number;      // 额外攻速
+    extra_mana_regen: number;        // 额外回蓝
+    extra_armor: number;             // 额外护甲
+    extra_max_mana: number;          // 额外最大法力
+    extra_move_speed: number;        // 额外移速
+    extra_base_damage: number;       // 额外攻击力
     lifesteal: number;               // 吸血百分比
 }
 
@@ -62,9 +66,10 @@ const DEFAULT_STATS: HeroStats = {
     // 其他
     rank: 1, crit_chance: 0, crit_damage: 150,
     main_stat: 'Martial',
-    // 商人购买
-    purchased_attack_speed: 0, purchased_mana_regen: 0, purchased_armor: 0,
-    purchased_max_mana: 0, purchased_move_speed: 0, purchased_base_damage: 0,
+    // 额外属性
+    extra_constitution: 0, extra_martial: 0, extra_divinity: 0, extra_agility: 0,
+    extra_attack_speed: 0, extra_mana_regen: 0, extra_armor: 0,
+    extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0,
     lifesteal: 0,
 };
 
@@ -98,9 +103,26 @@ export class CustomStats {
                 const candidate = root[key];
                 if (candidate && candidate.override_hero === unitName) {
                     heroData = candidate;
+                    print(`[CustomStats DEBUG] Found heroData via override_hero lookup for ${unitName}`);
                     break;
                 }
             }
+        }
+        
+        // 调试输出：确认读取的值
+        print(`[CustomStats DEBUG] unitName: ${unitName}`);
+        print(`[CustomStats DEBUG] heroData found: ${heroData ? 'YES' : 'NO'}`);
+        
+        // 备用方案：如果仍未找到，直接使用 npc_dota_hero_juggernaut
+        if (!heroData) {
+            heroData = root['npc_dota_hero_juggernaut'];
+            print(`[CustomStats DEBUG] Fallback to npc_dota_hero_juggernaut: ${heroData ? 'YES' : 'NO'}`);
+        }
+        
+        if (heroData) {
+            print(`[CustomStats DEBUG] Raw AttributeBaseAgility: ${heroData.AttributeBaseAgility}`);
+            print(`[CustomStats DEBUG] Raw AttributeAgilityGain: ${heroData.AttributeAgilityGain}`);
+            print(`[CustomStats DEBUG] Raw AttributeBaseConstitution: ${heroData.AttributeBaseConstitution}`);
         }
 
         const mainStat = (heroData && heroData.CustomMainStat) ? heroData.CustomMainStat : 'Martial';
@@ -153,14 +175,18 @@ export class CustomStats {
             crit_chance: 0,
             crit_damage: 150,
             main_stat: mainStat,
-            profession: (heroData && heroData.CustomJob) ? heroData.CustomJob : "无名小卒",
-            // 商人购买
-            purchased_attack_speed: 0,
-            purchased_mana_regen: 0,
-            purchased_armor: 0,
-            purchased_max_mana: 0,
-            purchased_move_speed: 0,
-            purchased_base_damage: 0,
+            profession: (heroData && heroData.CustomJob) ? heroData.CustomJob : `#Job_${unitName}`,
+            // 额外属性
+            extra_constitution: 0,
+            extra_martial: 0,
+            extra_divinity: 0,
+            extra_agility: 0,
+            extra_attack_speed: 0,
+            extra_mana_regen: 0,
+            extra_armor: 0,
+            extra_max_mana: 0,
+            extra_move_speed: 0,
+            extra_base_damage: 0,
             lifesteal: 0,
         };        
         // 1. Write to Cache (Source of Truth)
@@ -304,16 +330,17 @@ export class CustomStats {
                 return;
             }
             
-            // 属性映射表 - 商人购买增加对应属性
+            // 属性映射表 - 增加额外属性
             const statMap: { [key: string]: { stat: keyof HeroStats; amount: number } } = {
-                'constitution': { stat: 'constitution_bonus', amount: 5 },
-                'martial': { stat: 'martial_bonus', amount: 5 },
-                'divinity': { stat: 'divinity_bonus', amount: 5 },
-                'armor': { stat: 'purchased_armor', amount: 2 },
-                'mana_regen': { stat: 'purchased_mana_regen', amount: 2 },
-                'attack_speed': { stat: 'purchased_attack_speed', amount: 15 },
-                'move_speed': { stat: 'purchased_move_speed', amount: 20 },
-                'base_damage': { stat: 'purchased_base_damage', amount: 15 },
+                'constitution': { stat: 'extra_constitution', amount: 5 },
+                'martial': { stat: 'extra_martial', amount: 5 },
+                'divinity': { stat: 'extra_divinity', amount: 5 },
+                'agility': { stat: 'extra_agility', amount: 5 },
+                'armor': { stat: 'extra_armor', amount: 2 },
+                'mana_regen': { stat: 'extra_mana_regen', amount: 2 },
+                'attack_speed': { stat: 'extra_attack_speed', amount: 15 },
+                'move_speed': { stat: 'extra_move_speed', amount: 20 },
+                'base_damage': { stat: 'extra_base_damage', amount: 15 },
             };
             
             const mapping = statMap[statType];

@@ -14,6 +14,7 @@ import RankUpButton from './RankUpButton';
 import MerchantShopPanel from './MerchantShopPanel';
 import BackToLobbyButton from './BackToLobbyButton';
 import HeroHUD from './HeroHUD';
+import EnemyPanel from './EnemyPanel';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
 const Root: FC = () => {
@@ -27,6 +28,7 @@ const Root: FC = () => {
             <RankUpButton />
             <MerchantShopPanel />
             <HeroHUD />
+            <EnemyPanel />
         </>
     );
 };

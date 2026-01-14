@@ -39,8 +39,7 @@
 		"VisionNighttimeRange" "800"
 		"HasInventory" "1"
 	}
-	"npc_hero_soldier_path" {
-		"override_hero" "npc_dota_hero_juggernaut"
+	"npc_dota_hero_juggernaut" {
 		"ModelScale" "1.1000"
 		"Ability1" "soldier_war_strike"
 		"Ability2" "generic_hidden"
@@ -73,8 +72,6 @@
 		"StatusHealthRegen" "0"
 		"StatusManaRegen" "2"
 		"HasInventory" "1"
-		"CustomMainStat" "Martial"
-		"CustomJob" "bing_shen_dao"
 		"AttributeBaseStrength" "0"
 		"AttributeStrengthGain" "0"
 		"AttributeBaseIntelligence" "0"

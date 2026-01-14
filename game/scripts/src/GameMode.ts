@@ -298,24 +298,12 @@ export class GameMode {
             const heroName = hero.GetUnitName();
             const playerId = hero.GetPlayerOwnerID();
             
-            // 如果是剑圣，替换成自定义英雄 npc_hero_soldier_path
+            // 如果是剑圣，直接添加自定义技能（不再替换英雄）
             if (heroName === 'npc_dota_hero_juggernaut' && playerId >= 0) {
-                const newHero = PlayerResource.ReplaceHeroWith(
-                    playerId,
-                    'npc_hero_soldier_path',
-                    0, // gold
-                    0  // xp
-                );
-                if (newHero) {
-                    // 新英雄会触发另一次 OnNpcSpawned，所以这里直接返回
-                    return;
-                } else {
-                    // 替换失败，手动添加技能
-                    hero.AddAbility('soldier_war_strike');
-                    const ability = hero.FindAbilityByName('soldier_war_strike');
-                    if (ability) {
-                        ability.SetLevel(1);
-                    }
+                hero.AddAbility('soldier_war_strike');
+                const ability = hero.FindAbilityByName('soldier_war_strike');
+                if (ability) {
+                    ability.SetLevel(1);
                 }
             }
             
@@ -408,6 +396,16 @@ export class GameMode {
                     CreateUnitByNameAsync('npc_enemy_zombie_lvl1', spawnerPos, true, undefined, undefined, DotaTeam.BADGUYS, unit => {
                         if (unit) {
                             unit.SetAcquisitionRange(700); // 仇恨范围 700
+
+                            // [EnemyPanel] 同步单位 KV 数据到 NetTable，供客户端读取
+                            const unitName = unit.GetUnitName();
+                            const kvData = GetUnitKeyValuesByName(unitName);
+                            const statLabel = kvData ? (kvData['StatLabel'] as number || 0) : 0;
+                            
+                            CustomNetTables.SetTableValue('entity_kv' as any, String(unit.entindex()), {
+                                StatLabel: statLabel,
+                                Profession: "妖兽",  // 可从 KV 读取
+                            });
 
                             // 强制赋予 AI 思考能力 (优化版：只在必要时干预)
                             unit.SetContextThink(

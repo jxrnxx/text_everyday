@@ -33,6 +33,13 @@
                 "cleave_angle"          "120"
             }
         }
+        
+        // 预缓存粒子资源
+        "Precache"
+        {
+            "particle"                  "particles/mars_shield_bash_crit_strike_text.vpcf"
+            "particle"                  "particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf"
+        }
     }
     
     // 通用隐藏技能 (占位符)

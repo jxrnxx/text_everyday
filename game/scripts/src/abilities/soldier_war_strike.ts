@@ -12,6 +12,7 @@ export class soldier_war_strike extends BaseAbility {
 
     Precache(context: CScriptPrecacheContext) {
         PrecacheResource('particle', 'particles/mars_shield_bash_crit_strike_text.vpcf', context);
+        PrecacheResource('particle', 'particles/units/heroes/hero_mars/mars_shield_bash_crit.vpcf', context);  // 原版 Mars
         PrecacheResource('particle', 'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf', context);
         PrecacheResource('particle', 'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf', context);
     }
@@ -131,7 +132,7 @@ export class modifier_soldier_war_strike extends BaseModifier {
             origin.z + 60 // 抬高高度
         ) as Vector;
 
-        // 4. 创建特效
+        // 4. 创建特效 (自定义扇形斩击)
         const pIndex = ParticleManager.CreateParticle(
             'particles/mars_shield_bash_crit_strike_text.vpcf',
             ParticleAttachment.ABSORIGIN_FOLLOW,
