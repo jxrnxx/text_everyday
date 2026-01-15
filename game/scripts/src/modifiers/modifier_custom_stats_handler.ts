@@ -72,7 +72,6 @@ export class modifier_custom_stats_handler extends BaseModifier {
                 // 设置满血满蓝
                 parent.SetHealth(parent.GetMaxHealth());
                 parent.SetMana(parent.GetMaxMana());
-                print(`[Stats Debug] Initial full health/mana: ${parent.GetHealth()}/${parent.GetMaxHealth()}, Damage: ${parent.GetBaseDamageMin()}`);
             }
         });
 
@@ -103,6 +102,17 @@ export class modifier_custom_stats_handler extends BaseModifier {
     // 外部调用：强制立即刷新属性
     ForceRefresh(): void {
         this.RecalculateStats();
+        
+        // 通过 StackCount 变化触发引擎刷新 modifier 属性
+        const currentStack = this.GetStackCount();
+        this.SetStackCount(currentStack + 1);
+        this.SetStackCount(currentStack);
+        
+        // 强制重新计算 modifier 声明的函数
+        const parent = this.GetParent();
+        if (parent && !parent.IsNull()) {
+            (parent as any).CalculateStatBonus?.(true);
+        }
     }
     
     // 重新计算所有属性
@@ -111,7 +121,8 @@ export class modifier_custom_stats_handler extends BaseModifier {
         if (!parent || parent.IsNull()) return;
         
         const stats = CustomStats.GetAllStats(parent);
-        const currentLevel = parent.GetLevel();
+        // 使用 display_level 而不是引擎等级，确保升级后属性正确更新
+        const currentLevel = stats.display_level ?? parent.GetLevel();
         
         // 计算目标生命值 = 根骨面板 × 30 + StatusHealth
         const panelConstitution = Math.floor((stats.constitution_base + (currentLevel - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
@@ -209,7 +220,7 @@ export class modifier_custom_stats_handler extends BaseModifier {
     GetModifierConstantHealthRegen(): number {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
-        const level = parent.GetLevel();
+        const level = stats.display_level ?? parent.GetLevel();
         const panelConstitution = Math.floor((stats.constitution_base + (level - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
         return panelConstitution * 0.2;
     }
@@ -218,7 +229,7 @@ export class modifier_custom_stats_handler extends BaseModifier {
     GetModifierAttackSpeedBonus_Constant(): number {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
-        const level = parent.GetLevel();
+        const level = stats.display_level ?? parent.GetLevel();
         const panelAgility = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
         return panelAgility + (stats.extra_attack_speed || 0);
     }
@@ -242,8 +253,10 @@ export class modifier_custom_stats_handler extends BaseModifier {
     GetModifierMoveSpeedBonus_Constant(): number {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
-        const level = parent.GetLevel();
+        const level = stats.display_level ?? parent.GetLevel();
         const panelAgility = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
-        return Math.floor(panelAgility * 0.4) + (stats.extra_move_speed || 0);
+        const bonusSpeed = Math.floor(panelAgility * 0.4) + (stats.extra_move_speed || 0);
+        return bonusSpeed;
     }
 }
+

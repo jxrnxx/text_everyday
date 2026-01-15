@@ -54,10 +54,12 @@ export class RankSystem {
 
     /**
      * Calculate the maximum level for a given rank
-     * Formula: MaxLevel = (Rank + 1) * 10
+     * Formula: MaxLevel = (Rank + 1) * 10, 但最高50级
+     * rank=0: 10, rank=1: 20, rank=2: 30, rank=3: 40, rank=4: 50, rank=5: 50
      */
     public static GetMaxLevelForRank(rank: number): number {
-        return (rank + 1) * 10;
+        const calculatedMax = (rank + 1) * 10;
+        return Math.min(calculatedMax, 50);  // 最高50级
     }
 
     /**
@@ -117,7 +119,7 @@ export class RankSystem {
             return;
         }
 
-        // Check 3: Max rank limit (optional safety)
+        // Check 3: Max rank limit (禁忌rank=5 是最高阶位)
         if (currentRank >= 5) {
             this.SendResult(player, false, currentRank, '已达最高境界');
             return;
@@ -164,17 +166,29 @@ export class RankSystem {
 
         const currentRank = CustomStats.GetStat(hero, 'rank') || 0;
         
+        // rank=5 是禁忌，最高阶位
         if (currentRank >= 5) {
             this.SendResult(player, false, currentRank, '已达最高境界');
             return;
         }
 
+        // 记录升阶前的阶位最大等级
+        const prevMaxLevel = RankSystem.GetMaxLevelForRank(currentRank);
+        
         // 直接升阶
         const newRank = currentRank + 1;
         CustomStats.AddStat(hero, 'rank', 1);
         
-        // 重置经验（设置到下一级的起点）
-        // 这里只是视觉提示，实际经验由引擎管理
+        // 根据新阶位处理显示等级和经验
+        if (newRank === 5) {
+            // 禁忌阶位：保持50级，经验条直接满
+            CustomStats.SetDisplayLevel(hero, 50);
+            CustomStats.SetCustomExpFull(hero);
+        } else {
+            // 其他阶位：等级保持在上一阶位最大等级，经验重置为0
+            CustomStats.SetDisplayLevel(hero, prevMaxLevel);
+            CustomStats.ResetCustomExp(hero);
+        }
         
         // 播放特效
         EmitSoundOn('Hero_Juggernaut.OmniSlash.Arcana', hero);
@@ -189,9 +203,8 @@ export class RankSystem {
             0: '凡胎', 1: '觉醒', 2: '宗师', 3: '半神', 4: '神话', 5: '禁忌'
         };
         const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
-        print(`[RankSystem] TEST: Player ${playerID} ranked up to ${rankName}`);
         
-        this.SendResult(player, true, newRank, `[测试] 晋升${rankName}`);
+        this.SendResult(player, true, newRank, `晋升${rankName}`);
         CustomStats.SendStatsToClient(hero);
     }
 

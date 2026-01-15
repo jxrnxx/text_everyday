@@ -568,3 +568,62 @@
     box-shadow: 0px 0px 6px 2px rgba(180, 80, 80, 0.4);
     border: 2px solid #aa4444 !important;
 }
+
+// ========================================
+// 经验条突破特效
+// ========================================
+
+// 脉冲透明度动画
+@keyframes 'exp-pulse-opacity' {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1.0;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+// 脉冲缩放动画
+@keyframes 'exp-pulse-scale' {
+    0% {
+        transform: scale3d(1.0, 1.0, 1.0);
+    }
+    50% {
+        transform: scale3d(1.03, 1.06, 1.0);
+    }
+    100% {
+        transform: scale3d(1.0, 1.0, 1.0);
+    }
+}
+
+// 经验条粒子脉冲容器
+.ExpParticlePulse {
+    animation-name: exp-pulse-opacity, exp-pulse-scale;
+    animation-duration: 1.5s, 1.5s;
+    animation-timing-function: ease-in-out, ease-in-out;
+    animation-iteration-count: infinite, infinite;
+    overflow: noclip;
+}
+
+// 金色光晕脉冲
+@keyframes 'exp-glow-pulse' {
+    0% {
+        box-shadow: 0px 0px 8px 2px rgba(255, 200, 80, 0.4);
+    }
+    50% {
+        box-shadow: 0px 0px 16px 6px rgba(255, 180, 60, 0.7);
+    }
+    100% {
+        box-shadow: 0px 0px 8px 2px rgba(255, 200, 80, 0.4);
+    }
+}
+
+.ExpBarGlowPulse {
+    animation-name: exp-glow-pulse;
+    animation-duration: 1.2s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}

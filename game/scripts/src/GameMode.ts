@@ -1,4 +1,3 @@
-print('[DEBUG] GameMode.ts MODULE LOADING...');
 import { EconomySystem } from './mechanics/EconomySystem';
 import { TrainingManager } from './systems/TrainingManager';
 import { CustomStats } from './systems/CustomStats';
@@ -7,6 +6,7 @@ import { UpgradeSystem } from './systems/UpgradeSystem';
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
 import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
+import * as json_heroes from './json/npc_heroes_custom.json';
 
 // 游戏模式类
 export class GameMode {
@@ -29,11 +29,12 @@ export class GameMode {
         GameRules.SetStrategyTime(0);
         GameRules.SetShowcaseTime(0);
         
-        // 完全禁用英雄选择界面
+        // 禁用英雄选择界面（使用默认英雄，验证码阶段会替换）
         const gameMode = GameRules.GetGameModeEntity();
+        // 先强制选择一个英雄跳过选择界面，验证码时会ReplaceHeroWith替换
         gameMode.SetCustomGameForceHero('npc_dota_hero_juggernaut');
         gameMode.SetFogOfWarDisabled(true);
-        gameMode.SetCameraDistanceOverride(1450); // 调整镜头高度
+        gameMode.SetCameraDistanceOverride(1450);
         
         // [Economy] Disable native gold & XP
         GameRules.SetGoldTickTime(99999);
@@ -41,6 +42,66 @@ export class GameMode {
         
         // [XP] 使用自定义经验值系统
         GameRules.SetUseCustomHeroXPValues(true);
+        
+        // [Level Cap] 解锁最高50级 (Dota2默认最高30级)
+        // 需要通过 GameMode 设置自定义等级表
+        gameMode.SetUseCustomHeroLevels(true);
+        gameMode.SetCustomHeroMaxLevel(50);
+        
+        // 设置自定义经验表 (每级所需经验)
+        // 索引从0开始，表示从1级升到2级所需的经验
+        const customXPPerLevel = [
+            230,    // 1 -> 2
+            370,    // 2 -> 3
+            480,    // 3 -> 4
+            580,    // 4 -> 5
+            600,    // 5 -> 6
+            720,    // 6 -> 7
+            750,    // 7 -> 8
+            890,    // 8 -> 9
+            930,    // 9 -> 10
+            970,    // 10 -> 11
+            1010,   // 11 -> 12
+            1050,   // 12 -> 13
+            1225,   // 13 -> 14
+            1250,   // 14 -> 15
+            1275,   // 15 -> 16
+            1300,   // 16 -> 17
+            1325,   // 17 -> 18
+            1500,   // 18 -> 19
+            1590,   // 19 -> 20
+            1600,   // 20 -> 21
+            1850,   // 21 -> 22
+            2100,   // 22 -> 23
+            2350,   // 23 -> 24
+            2600,   // 24 -> 25
+            3500,   // 25 -> 26
+            4500,   // 26 -> 27
+            5500,   // 27 -> 28
+            6500,   // 28 -> 29
+            7500,   // 29 -> 30
+            8000,   // 30 -> 31
+            8500,   // 31 -> 32
+            9000,   // 32 -> 33
+            9500,   // 33 -> 34
+            10000,  // 34 -> 35
+            10500,  // 35 -> 36
+            11000,  // 36 -> 37
+            11500,  // 37 -> 38
+            12000,  // 38 -> 39
+            12500,  // 39 -> 40
+            13000,  // 40 -> 41
+            13500,  // 41 -> 42
+            14000,  // 42 -> 43
+            14500,  // 43 -> 44
+            15000,  // 44 -> 45
+            15500,  // 45 -> 46
+            16000,  // 46 -> 47
+            16500,  // 47 -> 48
+            17000,  // 48 -> 49
+            17500,  // 49 -> 50
+        ];
+        gameMode.SetCustomXPRequiredToReachNextLevel(customXPPerLevel);
 
         // [Economy] Initialize Custom Economy System
         EconomySystem.GetInstance();
@@ -65,6 +126,25 @@ export class GameMode {
         } catch (e) {
             print(`[GameMode] FAILED TO INIT UPGRADE SYSTEM: ${e}`);
         }
+
+        // [Level] 监听英雄升级事件，更新显示等级
+        ListenToGameEvent('dota_player_gained_level', (event) => {
+            const playerId = event.player_id;
+            const player = PlayerResource.GetPlayer(playerId);
+            if (!player) return;
+            
+            const hero = player.GetAssignedHero();
+            if (!hero) return;
+            
+            const stats = CustomStats.GetAllStats(hero);
+            const rawLevel = hero.GetLevel();
+            const currentMaxLevel = (stats.rank + 1) * 10;
+            
+            // 只有当实际等级没超过当前阶位最大等级时，才更新显示等级
+            if (rawLevel <= currentMaxLevel && rawLevel > stats.display_level) {
+                CustomStats.SetDisplayLevel(hero, rawLevel);
+            }
+        }, undefined);
 
         // [XP Filter] Block XP gain if at level cap (Rule A)
         GameRules.GetGameModeEntity().SetModifyExperienceFilter(
@@ -190,14 +270,18 @@ export class GameMode {
         });
 
         // 监听前端验证码请求
+        // 注意：英雄已在 GameConfig 中通过 DEV_HERO 配置强制选择
+        // 开发者可以修改 config/DevConfig.ts 来切换测试英雄
         CustomGameEventManager.RegisterListener('to_server_verify_code', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
             const code = (event as any).code;
             const player = PlayerResource.GetPlayer(playerID);
 
             if (player) {
+                // 验证码：1 或 669571 通过
                 if (code === '1' || code === '669571') {
-                    // print(`[GameMode] 玩家 ${playerID} 验证通过`);
+                    print(`[GameMode] Player ${playerID} verified with code ${code}`);
+                    
                     CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                         success: true,
                         message: '验证成功',
@@ -318,17 +402,16 @@ export class GameMode {
                 }
             }
             
-            unit.SetBaseMoveSpeed(600); // 测试用：设置移速 600
-
+            // 从 json 配置读取并设置基础移速
+            // @ts-ignore
+            const heroData = json_heroes[heroName];
+            if (heroData && heroData.MovementSpeed) {
+                const configMoveSpeed = Number(heroData.MovementSpeed);
+                unit.SetBaseMoveSpeed(configMoveSpeed);
+            }
+            
             // [Stats] Initialize Custom Stats
             CustomStats.InitializeHeroStats(hero);
-            
-            // [Level Cap] 日志记录当前等级状态（暂不重置，仅依赖 XP Filter 和禁用击杀经验）
-            const rank = CustomStats.GetStat(hero, 'rank') ?? 0;
-            const maxLevel = RankSystem.GetMaxLevelForRank(rank);
-            const currentLevel = hero.GetLevel();
-            print(`[GameMode] Hero spawned: Level ${currentLevel}, Rank ${rank}, Max ${maxLevel}`);
-
 
             if (playerId >= 0 && playerId <= 3) {
                 // Initialize Economy for this player if not already
@@ -506,30 +589,28 @@ export class GameMode {
         });
     }
 
-    // ===== XP FILTER (Rule A: Level Lock) =====
+    // ===== XP FILTER =====
     /**
-     * Blocks XP gain if player is at level cap for their rank
-     * Formula: MaxLevel = (Rank + 1) * 10
+     * XP Filter - 此过滤器仅处理 Dota2 原生的经验系统
+     * 我们使用自定义经验系统 (CustomStats.AddCustomExp)，所以这里基本不做干预
      */
     private static XPFilter(event: ModifyExperienceFilterEvent): boolean {
         const heroIndex = event.hero_entindex_const;
         const hero = EntIndexToHScript(heroIndex) as CDOTA_BaseNPC_Hero;
 
         if (!hero || hero.IsNull() || !hero.IsRealHero()) {
-            return true; // Allow XP for non-heroes
+            return true;
         }
 
-        const currentLevel = hero.GetLevel();
-        const rank = CustomStats.GetStat(hero, 'rank') ?? 0;  // 使用 ?? 确保 rank=0 不会变成默认值
+        // 获取 display_level 和 rank
+        const stats = CustomStats.GetAllStats(hero);
+        const displayLevel = stats.display_level ?? hero.GetLevel();
+        const rank = stats.rank ?? 0;
         const maxLevel = RankSystem.GetMaxLevelForRank(rank);
 
-        // 调试日志
-        print(`[XP Filter] Level: ${currentLevel}, Rank: ${rank}, MaxLevel: ${maxLevel}, XP: ${event.experience}`);
-
-        if (currentLevel >= maxLevel) {
-            // Block XP gain when at level cap
-            print(`[XP Filter] BLOCKED! ${hero.GetUnitName()}: Level ${currentLevel} >= Max ${maxLevel}`);
-            event.experience = 0;  // 同时设置经验为 0
+        // 使用 display_level 判断是否达到等级上限
+        if (displayLevel >= maxLevel) {
+            event.experience = 0;
             return false;
         }
 

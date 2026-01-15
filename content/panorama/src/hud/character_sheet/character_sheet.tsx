@@ -103,13 +103,15 @@ function UpdateAllStats() {
     // 1. Custom Stats from NetTable
     const netTableKey = String(localHero);
     const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, netTableKey);
-    const level = Entities.GetLevel(localHero);
 
     if (netTableData) {
         const d = netTableData as any;
         
         // 基础信息 (0=凡胎, 1=觉醒...)
         const rankLevel = d.rank ?? 0;
+        // 使用服务端控制的 display_level（而不是引擎等级）
+        const level = d.display_level ?? Entities.GetLevel(localHero);
+        
         // @ts-ignore
         const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
         ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
@@ -219,9 +221,9 @@ function UpdateAllStats() {
         ($('#Debug_AtkSpeed') as LabelPanel).text = `攻速: 100 + 身法${agiPanel} + 额外${extraAtkSpeed} = ${panelAtkSpeed}`;
         ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×30 + 基础1 = ${conPanel * 30 + 1}`;
         
-        // 移速公式
+        // 移速公式 - 从 NetTable 读取基础移速
         const agiMoveBonus = Math.floor(agiPanel * 0.4);
-        const baseMoveSpeed = 300;
+        const baseMoveSpeed = d.base_move_speed || 300;
         const panelMoveSpeed = baseMoveSpeed + agiMoveBonus + extraMoveSpeed;
         ($('#Debug_MoveSpeed') as LabelPanel).text = `移速: ${baseMoveSpeed} + 身法${agiPanel}×0.4=${agiMoveBonus} + 额外${extraMoveSpeed} = ${panelMoveSpeed}`;
     }
@@ -326,7 +328,9 @@ function UpdateStatsFromEvent(stats: any) {
     if (!stats) return;
 
     const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
-    const level = Entities.GetLevel(localHero);
+    // 使用服务端控制的 display_level（而不是引擎等级）
+    const level = stats.display_level ?? Entities.GetLevel(localHero);
+    const rankLevel = stats.rank ?? 0;
 
     // 根骨面板值计算
     const conBase = stats.constitution_base || 0;
@@ -352,7 +356,7 @@ function UpdateStatsFromEvent(stats: any) {
     const divPanel = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
     safeSetText('#Val_Div_Panel', divPanel.toString());
 
-    const rankLevel = stats.rank || 1;
+    // rankLevel 已在函数开头定义
     // @ts-ignore
     const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
     safeSetText('#Val_Rank', rankInfo.title);

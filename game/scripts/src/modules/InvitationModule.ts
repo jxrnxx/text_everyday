@@ -14,35 +14,46 @@ export class InvitationModule {
     }
 
     private OnVerifyCode(playerID: PlayerID, code: string) {
-        const correctCode = '669571';
         const player = PlayerResource.GetPlayer(playerID);
 
         if (!player) return;
 
-        if (code === correctCode) {
+        // 验证码支持：1=剑圣, 2=玛西, 669571=剑圣（原始验证码）
+        let heroName: string | null = null;
+        if (code === '1' || code === '669571') {
+            heroName = 'npc_dota_hero_juggernaut';
+        } else if (code === '2') {
+            heroName = 'npc_dota_hero_marci';
+        }
+
+        if (heroName) {
             CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                 success: true,
-                message: 'Verification Successful',
+                message: `验证成功，选择英雄: ${heroName === 'npc_dota_hero_juggernaut' ? '剑圣' : '玛西'}`,
             });
-            print(`Player ${playerID} verified successfully.`);
+            print(`[InvitationModule] Player ${playerID} verified with code ${code}, target hero: ${heroName}`);
 
-            // Spawn Hero Logic: Force Pick Juggernaut
-            const heroName = 'npc_dota_hero_juggernaut';
+            // Spawn Hero Logic
             let hero = PlayerResource.GetSelectedHeroEntity(playerID);
+            print(`[InvitationModule] Current hero: ${hero ? hero.GetUnitName() : 'NONE'}`);
 
             if (hero) {
-                // If player has a hero (e.g. Wisp or previous one), replace it
-                print(`Replacing existing hero for player ${playerID}`);
-                // Verify if it is already Juggernaut
+                // If player has a hero, replace it if different
                 if (hero.GetUnitName() !== heroName) {
+                    print(`[InvitationModule] Replacing ${hero.GetUnitName()} with ${heroName}`);
                     const newHero = PlayerResource.ReplaceHeroWith(playerID, heroName, 0, 0);
                     if (newHero) {
                         hero = newHero;
+                        print(`[InvitationModule] Replaced successfully! New hero: ${hero.GetUnitName()}`);
+                    } else {
+                        print(`[InvitationModule] ReplaceHeroWith FAILED!`);
                     }
+                } else {
+                    print(`[InvitationModule] Hero already correct: ${heroName}`);
                 }
             } else {
                 // If no hero exists, create one
-                print(`Creating new hero for player ${playerID}`);
+                print(`[InvitationModule] No hero exists, creating ${heroName}`);
                 hero = CreateHeroForPlayer(heroName, player);
             }
 
@@ -72,7 +83,7 @@ export class InvitationModule {
         } else {
             CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                 success: false,
-                message: 'Invalid Invitation Code',
+                message: '验证码错误，请输入: 1(剑圣) 或 2(玛西)',
             });
             print(`Player ${playerID} verification failed with code: ${code}`);
         }

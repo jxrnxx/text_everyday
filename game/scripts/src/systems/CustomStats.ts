@@ -35,6 +35,9 @@ interface HeroStats {
     
     // ===== 其他属性 =====
     rank: number;
+    display_level: number;       // 显示等级 (由服务端控制)
+    custom_exp: number;          // 自定义经验值 (绕过Dota2的30级限制)
+    custom_exp_required: number; // 升级所需经验
     crit_chance: number;
     crit_damage: number;
     main_stat: string;           // 主属性: 'Martial' 或 'Divinity'
@@ -53,6 +56,7 @@ interface HeroStats {
     extra_base_damage: number;       // 额外攻击力
     lifesteal: number;               // 吸血百分比
     armor_pen: number;               // 护甲穿透(破势)
+    base_move_speed: number;         // 基础移速（从配置读取）
 }
 
 const DEFAULT_STATS: HeroStats = {
@@ -65,13 +69,13 @@ const DEFAULT_STATS: HeroStats = {
     // 面板属性
     constitution: 5, martial: 5, divinity: 5,
     // 其他
-    rank: 0, crit_chance: 0, crit_damage: 150,  // rank 0 = 凡胎
+    rank: 0, display_level: 1, custom_exp: 0, custom_exp_required: 230, crit_chance: 0, crit_damage: 150,
     main_stat: 'Martial',
     // 额外属性
     extra_constitution: 0, extra_martial: 0, extra_divinity: 0, extra_agility: 0,
     extra_attack_speed: 0, extra_mana_regen: 0, extra_armor: 0,
     extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0,
-    lifesteal: 0, armor_pen: 0,
+    lifesteal: 0, armor_pen: 0, base_move_speed: 300,
 };
 
 @reloadable
@@ -110,20 +114,9 @@ export class CustomStats {
             }
         }
         
-        // 调试输出：确认读取的值
-        print(`[CustomStats DEBUG] unitName: ${unitName}`);
-        print(`[CustomStats DEBUG] heroData found: ${heroData ? 'YES' : 'NO'}`);
-        
         // 备用方案：如果仍未找到，直接使用 npc_dota_hero_juggernaut
         if (!heroData) {
             heroData = root['npc_dota_hero_juggernaut'];
-            print(`[CustomStats DEBUG] Fallback to npc_dota_hero_juggernaut: ${heroData ? 'YES' : 'NO'}`);
-        }
-        
-        if (heroData) {
-            print(`[CustomStats DEBUG] Raw AttributeBaseAgility: ${heroData.AttributeBaseAgility}`);
-            print(`[CustomStats DEBUG] Raw AttributeAgilityGain: ${heroData.AttributeAgilityGain}`);
-            print(`[CustomStats DEBUG] Raw AttributeBaseConstitution: ${heroData.AttributeBaseConstitution}`);
         }
 
         const mainStat = (heroData && heroData.CustomMainStat) ? heroData.CustomMainStat : 'Martial';
@@ -149,6 +142,8 @@ export class CustomStats {
         const damageBase = (heroData && heroData.AttributeBaseDamage) ? Number(heroData.AttributeBaseDamage) : 1;
         const damageGain = (heroData && heroData.AttributeDamageGain) ? Number(heroData.AttributeDamageGain) : 0;
         const damageBonus = (heroData && heroData.AttributeDamageBonus) ? Number(heroData.AttributeDamageBonus) : 0;
+        // 基础移速
+        const baseMoveSpeed = (heroData && heroData.MovementSpeed) ? Number(heroData.MovementSpeed) : 300;
 
         const initialStats: HeroStats = {
             // 基础属性
@@ -173,6 +168,9 @@ export class CustomStats {
             divinity: divinityBase,
             // 其他
             rank: 0,  // 初始阶位为凡胎
+            display_level: 1,  // 初始显示等级
+            custom_exp: 0,  // 初始自定义经验
+            custom_exp_required: 230,  // 1级升2级所需经验
             crit_chance: 0,
             crit_damage: 150,
             main_stat: mainStat,
@@ -190,6 +188,7 @@ export class CustomStats {
             extra_base_damage: 0,
             lifesteal: 0,
             armor_pen: 0,
+            base_move_speed: baseMoveSpeed,
         };        
         // 1. Write to Cache (Source of Truth)
         this.cache[unitIndex] = initialStats;
@@ -282,6 +281,166 @@ export class CustomStats {
         const totalAgility = Math.floor(baseAgility * (1 + stats.agility_bonus));
         
         return totalAgility;
+    }
+    
+    /**
+     * 更新显示等级 - 根据实际等级和阶位计算
+     * 当有经验溢出时，会限制显示等级在当前阶位的合理范围内
+     */
+    public static UpdateDisplayLevel(hero: CDOTA_BaseNPC_Hero) {
+        if (!hero || hero.IsNull()) return;
+        
+        const stats = this.GetAllStats(hero);
+        const rawLevel = hero.GetLevel();
+        const rank = stats.rank;
+        
+        // 计算当前阶位允许的最大等级: (rank + 1) * 10
+        const currentMaxLevel = (rank + 1) * 10;
+        // 计算上一阶位的最大等级 (用于判断溢出)
+        const prevMaxLevel = rank > 0 ? rank * 10 : 0;
+        
+        let displayLevel = rawLevel;
+        
+        // 如果实际等级超过了当前阶位的最大等级，限制显示
+        if (rawLevel > currentMaxLevel) {
+            displayLevel = currentMaxLevel;
+        }
+        // 如果有阶位但实际等级还没超过上一阶位最大等级+1，说明刚进阶
+        else if (rank > 0 && rawLevel <= prevMaxLevel + 1 && stats.display_level <= prevMaxLevel) {
+            // 保持在上一阶位最大等级，直到真正升级
+            displayLevel = Math.max(stats.display_level, prevMaxLevel);
+        }
+        
+        // 只有等级变化时才更新
+        if (displayLevel !== stats.display_level) {
+            this.SetDisplayLevel(hero, displayLevel);
+        }
+    }
+    
+    /**
+     * 直接设置显示等级
+     */
+    public static SetDisplayLevel(unit: CDOTA_BaseNPC, level: number) {
+        if (!unit || unit.IsNull()) return;
+        
+        const unitIndex = tostring(unit.GetEntityIndex());
+        
+        // 使用 GetAllStats 获取完整的 stats 对象（不会丢失其他属性）
+        const stats = this.GetAllStats(unit);
+        
+        stats.display_level = level;
+        this.cache[unitIndex] = stats;
+        CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
+    }
+    
+    /**
+     * 获取指定等级升级所需经验
+     * 使用公式：100 + level * 30 + (level * level * 5)
+     */
+    public static GetExpRequiredForLevel(level: number): number {
+        // 简单的经验公式
+        return 100 + level * 30 + Math.floor(level * level * 5);
+    }
+    
+    /**
+     * 添加自定义经验（完全绕过Dota2的经验系统）
+     * 返回是否升级
+     */
+    public static AddCustomExp(hero: CDOTA_BaseNPC_Hero, expAmount: number): boolean {
+        if (!hero || hero.IsNull()) return false;
+        
+        const unitIndex = tostring(hero.GetEntityIndex());
+        const stats = this.GetAllStats(hero);
+        
+        const currentLevel = stats.display_level;
+        const rank = stats.rank;
+        
+        // 禁忌阶位(rank=5)是最高阶位，不再获取经验
+        if (rank >= 5) {
+            return false;
+        }
+        
+        const maxLevel = Math.min((rank + 1) * 10, 50);  // 最高50级
+        
+        // 如果已经达到当前阶位的等级上限，不添加经验
+        if (currentLevel >= maxLevel) {
+            return false;
+        }
+        
+        // 添加经验
+        stats.custom_exp += expAmount;
+        
+        // 检测是否升级
+        let leveledUp = false;
+        while (stats.custom_exp >= stats.custom_exp_required && stats.display_level < maxLevel) {
+            // 升级！
+            stats.custom_exp -= stats.custom_exp_required;
+            stats.display_level += 1;
+            stats.custom_exp_required = this.GetExpRequiredForLevel(stats.display_level);
+            leveledUp = true;
+        }
+        
+        // 如果升级后达到上限，清空多余经验
+        if (stats.display_level >= maxLevel) {
+            stats.custom_exp = stats.custom_exp_required; // 满经验显示
+        }
+        
+        // 更新缓存和 NetTable
+        this.cache[unitIndex] = stats;
+        CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
+        
+        // 如果升级了，强制刷新 modifier 以更新血量等属性
+        if (leveledUp) {
+            // 延迟一帧执行，确保 display_level 已更新
+            Timers.CreateTimer(0.03, () => {
+                if (!hero || hero.IsNull()) return;
+                const modifier = hero.FindModifierByName('modifier_custom_stats_handler');
+                if (modifier) {
+                    (modifier as any).ForceRefresh?.();
+                }
+            });
+        }
+        
+        // 通知客户端
+        this.SendStatsToClient(hero);
+        
+        return leveledUp;
+    }
+    
+    /**
+     * 重置自定义经验（进阶后调用）
+     */
+    public static ResetCustomExp(hero: CDOTA_BaseNPC_Hero) {
+        if (!hero || hero.IsNull()) return;
+        
+        const unitIndex = tostring(hero.GetEntityIndex());
+        const stats = this.GetAllStats(hero);
+        
+        // 重置经验为 0
+        stats.custom_exp = 0;
+        // 计算当前等级的升级所需经验
+        stats.custom_exp_required = this.GetExpRequiredForLevel(stats.display_level);
+        
+        // 更新缓存和 NetTable
+        this.cache[unitIndex] = stats;
+        CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
+    }
+    
+    /**
+     * 设置经验条满（用于禁忌阶位）
+     */
+    public static SetCustomExpFull(hero: CDOTA_BaseNPC_Hero) {
+        if (!hero || hero.IsNull()) return;
+        
+        const unitIndex = tostring(hero.GetEntityIndex());
+        const stats = this.GetAllStats(hero);
+        
+        // 设置经验等于所需经验（100%）
+        stats.custom_exp = stats.custom_exp_required;
+        
+        // 更新缓存和 NetTable
+        this.cache[unitIndex] = stats;
+        CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
     }
     
     /**

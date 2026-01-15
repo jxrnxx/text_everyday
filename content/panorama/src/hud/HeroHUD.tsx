@@ -69,18 +69,52 @@ interface HeroStats {
     maxMp: number;       // 最大灵力
     rank: number;        // 阶位
     combatPower: number; // 战斗力
-    exp: number;         // 当前经验
-    expRequired: number; // 升级所需经验
-    level: number;       // 当前等级
+    exp: number;         // 当前经验 (引擎)
+    expRequired: number; // 升级所需经验 (引擎)
+    level: number;       // 当前等级 (引擎)
+    displayLevel: number; // 显示等级 (服务端控制)
+    customExp: number;    // 自定义经验 (服务端控制)
+    customExpRequired: number; // 自定义升级所需经验
 }
 
-// 突破等级点 - 每10级需要突破阶位
-const BREAKTHROUGH_LEVELS = [10, 20, 30, 40, 50];
+// 计算当前阶位的最大等级
+// 公式: MaxLevel = (Rank + 1) * 10, 但最高50级
+const getMaxLevelForRank = (rank: number): number => {
+    return Math.min((rank + 1) * 10, 50);
+};
+
+// 计算显示等级和经验百分比
+// 使用服务端控制的 display_level 和 custom_exp
+const getDisplayLevelAndExp = (
+    rank: number, 
+    displayLevelFromServer: number, 
+    customExp: number, 
+    customExpRequired: number
+): { displayLevel: number; displayExpPercent: number } => {
+    const currentMaxLevel = getMaxLevelForRank(rank);
+    
+    // 使用服务端提供的 display_level
+    let displayLevel = Math.min(displayLevelFromServer, currentMaxLevel);
+    
+    // 计算经验百分比（使用自定义经验）
+    let displayExpPercent: number;
+    
+    // 如果显示等级达到当前阶位最大等级，显示满经验
+    if (displayLevel >= currentMaxLevel) {
+        displayExpPercent = 100;
+    } else {
+        // 正常计算经验百分比
+        displayExpPercent = Math.min((customExp / Math.max(customExpRequired, 1)) * 100, 100);
+    }
+    
+    return { displayLevel, displayExpPercent };
+};
 
 // 检查是否在突破等级（需要突破才能继续升级）
-// 条件：等级到达突破点即可触发（不需要经验满）
-const isAtBreakthrough = (level: number, _exp: number, _expRequired: number): boolean => {
-    return BREAKTHROUGH_LEVELS.includes(level);
+// 条件：等级达到当前阶位的最大等级
+const isAtBreakthrough = (level: number, rank: number): boolean => {
+    const maxLevel = getMaxLevelForRank(rank);
+    return level >= maxLevel;
 };
 
 // 阶位配置 - 名称和颜色
@@ -126,6 +160,9 @@ const HeroHUD: FC = () => {
         exp: 0,
         expRequired: 610,
         level: 1,
+        displayLevel: 1,
+        customExp: 0,
+        customExpRequired: 230,
     });
     
     // 血条状态追踪
@@ -226,7 +263,9 @@ const HeroHUD: FC = () => {
 
             if (netTableData) {
                 const d = netTableData as any;
-                const level = Entities.GetLevel(localHero);
+                
+                // 使用 display_level 来计算属性（而不是引擎等级，因为引擎等级可能固定在30）
+                const displayLevel = d.display_level ?? Entities.GetLevel(localHero);
                 
                 // 职业 - 使用本地化函数获取显示名称
                 const professionKey = d.profession;
@@ -238,26 +277,26 @@ const HeroHUD: FC = () => {
                 const conGain = d.constitution_gain || 0;
                 const conBonus = d.constitution_bonus || 0;
                 const conExtra = d.extra_constitution || 0;
-                const constitution = Math.floor((conBase + (level - 1) * conGain + conExtra) * (1 + conBonus));
+                const constitution = Math.floor((conBase + (displayLevel - 1) * conGain + conExtra) * (1 + conBonus));
                 
                 const marBase = d.martial_base || 0;
                 const marGain = d.martial_gain || 0;
                 const marBonus = d.martial_bonus || 0;
                 const marExtra = d.extra_martial || 0;
-                const martial = Math.floor((marBase + (level - 1) * marGain + marExtra) * (1 + marBonus));
+                const martial = Math.floor((marBase + (displayLevel - 1) * marGain + marExtra) * (1 + marBonus));
                 
                 const divBase = d.divinity_base || 0;
                 const divGain = d.divinity_gain || 0;
                 const divBonus = d.divinity_bonus || 0;
                 const divExtra = d.extra_divinity || 0;
-                const divinity = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
+                const divinity = Math.floor((divBase + (displayLevel - 1) * divGain + divExtra) * (1 + divBonus));
                 
                 // 攻击力计算 = (基础攻击 + 额外攻击) + 主属性*1.5
                 const dmgBase = d.damage_base || 0;
                 const dmgGain = d.damage_gain || 0;
                 const dmgBonus = d.damage_bonus || 0;
                 const dmgExtra = d.extra_base_damage || 0;
-                const dmgPanel = Math.floor((dmgBase + (level - 1) * dmgGain + dmgExtra) * (1 + dmgBonus));
+                const dmgPanel = Math.floor((dmgBase + (displayLevel - 1) * dmgGain + dmgExtra) * (1 + dmgBonus));
                 const mainStat = d.main_stat || 'Martial';
                 const mainPanel = mainStat === 'Martial' ? martial : divinity;
                 const totalAttack = dmgPanel + Math.floor(mainPanel * 1.5);
@@ -267,6 +306,10 @@ const HeroHUD: FC = () => {
                 
                 // 境界等级 (0=凡胎, 1=觉醒...)
                 const rank = d.rank ?? 0;
+                
+                // 自定义经验 (服务端控制)
+                const customExp = d.custom_exp ?? 0;
+                const customExpRequired = d.custom_exp_required ?? 230;
                 
                 // 战斗力计算 = 攻击*1 + 防御*5 + 根骨*10 + 武道*8 + 神念*8 + 生命/10
                 const maxHp = Entities.GetMaxHealth(localHero) || 1;
@@ -288,6 +331,9 @@ const HeroHUD: FC = () => {
                     defense: defense,
                     rank: rank,
                     combatPower: combatPower,
+                    displayLevel: displayLevel,
+                    customExp: customExp,
+                    customExpRequired: customExpRequired,
                 }));
             }
         };
@@ -566,13 +612,13 @@ const HeroHUD: FC = () => {
                             }}
                         />
                     </Panel>
-                    {/* 等级 - 固定宽度 */}
+                    {/* 等级 - 直接使用服务端控制的displayLevel */}
                     <Panel style={{
                         width: '40px',
                         height: '24px',
                     }}>
                         <Label 
-                            text={`Lv.${Entities.GetLevel(Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer()))}`}
+                            text={`Lv.${stats.displayLevel}`}
                             style={{
                                 fontSize: '17px',
                                 fontWeight: 'bold' as const,
@@ -585,23 +631,38 @@ const HeroHUD: FC = () => {
                 
                 {/* 经验条 - 绝对定位固定在右边 */}
                 {(() => {
-                    // 预计算经验条相关值
-                    const atBreakthrough = isAtBreakthrough(stats.level, stats.exp, stats.expRequired);
-                    const expPercent = Math.min((stats.exp / Math.max(stats.expRequired, 1)) * 100, 100);
-                    const expWidth = atBreakthrough ? '100%' : (expPercent + '%');
+                    // 使用服务端控制的显示等级和自定义经验
+                    const { displayLevel, displayExpPercent } = getDisplayLevelAndExp(
+                        stats.rank,
+                        stats.displayLevel,
+                        stats.customExp,
+                        stats.customExpRequired
+                    );
+                    
+                    // 判断是否在突破状态（使用显示等级）
+                    // 禁忌阶位(rank=5)时不显示突破特效，因为已经是最高阶位
+                    const atBreakthrough = stats.rank < 5 && isAtBreakthrough(displayLevel, stats.rank);
+                    
+                    // 禁忌阶位：满经验条，但使用普通颜色
+                    const isForbiddenRank = stats.rank === 5;
+                    
+                    // 经验条宽度
+                    const expWidth = (atBreakthrough || isForbiddenRank) ? '100%' : (displayExpPercent + '%');
                     
                     return (
-                        <Panel style={{
+                        <Panel 
+                            className={atBreakthrough ? 'ExpBarGlowPulse' : ''}
+                            style={{
                             width: '785px',
                             height: '14px',
                             position: '205px 4px 0px' as const,
                             backgroundColor: 'rgba(10, 12, 8, 0.85)',
-                            // 突破时金色边框
+                            // 突破时金色边框（禁忌阶位用普通边框）
                             border: atBreakthrough 
                                 ? '1px solid #ddaa55'
                                 : '1px solid #4a5530',
                             borderRadius: '7px',
-                            // 突破时简单的金色光晕
+                            // 突破时简单的金色光晕 (动画由CSS类控制)
                             boxShadow: atBreakthrough
                                 ? '0px 0px 8px rgba(255, 180, 80, 0.5), inset 0px 1px 2px rgba(0, 0, 0, 0.5)'
                                 : 'inset 0px 1px 2px rgba(0, 0, 0, 0.5)',
@@ -639,11 +700,70 @@ const HeroHUD: FC = () => {
                                     borderRadius: '2px',
                                 }} />
                             </Panel>
-                            {/* 突破状态简单提醒 - 只用金边，不用粒子 */}
+                            {/* 突破状态粒子特效 - 在经验条满时显示 (带脉冲) */}
+                            {atBreakthrough && (
+                                <Panel 
+                                    className="ExpParticlePulse"
+                                    style={{
+                                        width: '100%',
+                                        height: '40px',
+                                        position: '-5px -13px 0px' as const,
+                                    }}
+                                >
+                                    <DOTAParticleScenePanel
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                        }}
+                                        // @ts-ignore
+                                        hittest={false}
+                                        particleName="particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_v2_ambient.vpcf"
+                                        particleonly={true}
+                                        startActive={true}
+                                        cameraOrigin="0 0 100"
+                                        lookAt="0 0 0"
+                                        fov={60}
+                                        squarePixels={true}
+                                    />
+                                </Panel>
+                            )}
                         </Panel>
                     );
                 })()}
             </Panel>
+
+            {/* 测试进阶按钮 - 在经验条满时显示 (最高到禁忌rank=5) */}
+            {isAtBreakthrough(stats.displayLevel, stats.rank) && stats.rank < 5 && (
+                <Button
+                    onactivate={() => {
+                        Game.EmitSound('ui_menu_activate');
+                        GameEvents.SendCustomGameEventToServer('cmd_test_rank_up', {});
+                    }}
+                    style={{
+                        width: '80px',
+                        height: '24px',
+                        position: '1000px 482px 0px' as const,
+                        backgroundColor: 'gradient(linear, 0% 0%, 0% 100%, from(#ffd700), to(#cc8800))',
+                        borderRadius: '4px',
+                        border: '1px solid #ffdd55',
+                        boxShadow: '0px 0px 8px rgba(255, 200, 80, 0.5)',
+                    }}
+                    className="ExpBarGlowPulse"
+                >
+                    <Label 
+                        text="进阶"
+                        style={{
+                            color: '#1a1a00',
+                            fontSize: '14px',
+                            fontWeight: 'bold' as const,
+                            textAlign: 'center' as const,
+                            horizontalAlign: 'center' as const,
+                            verticalAlign: 'center' as const,
+                            textShadow: '0px 0px 2px #ffffff88',
+                        }}
+                    />
+                </Button>
+            )}
 
             {/* 属性面板 - 在头像框右边 */}
             <Panel style={{

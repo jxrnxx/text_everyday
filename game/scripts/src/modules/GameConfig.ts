@@ -1,3 +1,5 @@
+import { DEV_HERO } from '../config/DevConfig';
+
 export class GameConfig {
     constructor() {
         SendToServerConsole('dota_max_physical_items_purchase_limit 9999'); // 用来解决物品数量限制问题
@@ -29,7 +31,10 @@ export class GameConfig {
         game.SetDaynightCycleDisabled(true); // 是否禁用白天黑夜循环
         game.SetForceRightClickAttackDisabled(true); // 是否禁用右键攻击
         game.SetHudCombatEventsDisabled(true); // 是否禁用战斗事件（左下角的战斗消息）
-        game.SetCustomGameForceHero(`npc_dota_hero_wisp`); // 设置强制英雄（会直接跳过英雄选择阶段并直接为所有玩家选择这个英雄）
+        
+        // 从 DevConfig 读取默认英雄
+        game.SetCustomGameForceHero(DEV_HERO);
+        print(`[GameConfig] Default hero set to: ${DEV_HERO}`);
         game.SetUseCustomHeroLevels(true); // 是否启用自定义英雄等级
         game.SetCustomHeroMaxLevel(100); // 设置自定义英雄最大等级
         game.SetCustomXPRequiredToReachNextLevel({

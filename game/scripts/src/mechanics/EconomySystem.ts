@@ -161,28 +161,13 @@ export class EconomySystem {
             this.ShowOverheadMsg(attackerUnit, info.faith, 'OVERHEAD_ALERT_DAMAGE');
         }
 
-        // 添加经验值 - 检查等级上限
+        // 添加经验值 - 使用自定义经验系统（完全绕过Dota2的30级限制）
         if (info.exp > 0) {
             const hero = PlayerResource.GetSelectedHeroEntity(playerId);
             if (hero && !hero.IsNull()) {
-                const currentLevel = hero.GetLevel();
-                
-                // 突破等级点: 10, 20, 30, 40, 50
-                // 阶位 1 = 上限 10, 阶位 2 = 上限 20, 阶位 3 = 上限 30...
-                const heroIndex = hero.GetEntityIndex();
-                const statsData = CustomNetTables.GetTableValue('custom_stats' as any, tostring(heroIndex));
-                // 默认阶位 0（凡胎），上限 10 级
-                const rank = (statsData as any)?.rank ?? 0;
-                const levelCap = (rank + 1) * 10; // 凡胎(0) = 10级上限, 觉醒(1) = 20级上限
-                
-                // 如果当前等级已经到达上限，不再添加经验
-                if (currentLevel >= levelCap) {
-                    // 可选：显示提示消息
-                    // print(`[EconomySystem] Level cap reached: ${currentLevel}/${levelCap}, need breakthrough`);
-                    return;
-                }
-                
-                hero.AddExperience(info.exp, ModifyXpReason.UNSPECIFIED, false, true);
+                // 导入 CustomStats（如果需要）
+                const { CustomStats } = require('../systems/CustomStats');
+                CustomStats.AddCustomExp(hero, info.exp);
             }
         }
     }

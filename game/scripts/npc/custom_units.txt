@@ -68,7 +68,7 @@
 		"CustomDrop_Coin" "15"
 		"CustomDrop_Faith" "1"
 		"StatLabel" "0"
-		"HaveLevel" "8000"
+		"HaveLevel" "30"
 	}
 	"npc_enemy_zombie_lvl2" {
 		"BaseClass" "npc_dota_creature"
