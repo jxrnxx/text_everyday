@@ -34,10 +34,13 @@ export class GameMode {
         gameMode.SetCustomGameForceHero('npc_dota_hero_juggernaut');
         gameMode.SetFogOfWarDisabled(true);
         gameMode.SetCameraDistanceOverride(1450); // 调整镜头高度
-
-        // [Economy] Disable native gold
+        
+        // [Economy] Disable native gold & XP
         GameRules.SetGoldTickTime(99999);
         GameRules.SetGoldPerTick(0);
+        
+        // [XP] 使用自定义经验值系统
+        GameRules.SetUseCustomHeroXPValues(true);
 
         // [Economy] Initialize Custom Economy System
         EconomySystem.GetInstance();
@@ -68,6 +71,13 @@ export class GameMode {
             (event: ModifyExperienceFilterEvent) => this.XPFilter(event),
             this
         );
+
+        // [Damage Filter] Apply armor penetration (破势)
+        GameRules.GetGameModeEntity().SetDamageFilter(
+            (event: DamageFilterEvent) => this.DamageFilter(event),
+            this
+        );
+
 
         // [Merchant] Listen for NPC interactions (Interaction Security)
         ListenToGameEvent('dota_player_used_ability', () => {}, undefined); // Placeholder
@@ -288,9 +298,10 @@ export class GameMode {
         // ... (保持原有逻辑不变，只展示部分)
         const unit = EntIndexToHScript(event.entindex) as CDOTA_BaseNPC;
         if (unit) {
-            // [Economy] Disable native gold bounty for all units
+            // [Economy] Disable native gold & XP bounty for all units
             unit.SetMaximumGoldBounty(0);
             unit.SetMinimumGoldBounty(0);
+            unit.SetDeathXP(0);  // 禁用击杀经验奖励
         }
 
         if (unit.IsRealHero()) {
@@ -310,7 +321,13 @@ export class GameMode {
             unit.SetBaseMoveSpeed(600); // 测试用：设置移速 600
 
             // [Stats] Initialize Custom Stats
-            CustomStats.InitializeHeroStats(unit as CDOTA_BaseNPC_Hero);
+            CustomStats.InitializeHeroStats(hero);
+            
+            // [Level Cap] 日志记录当前等级状态（暂不重置，仅依赖 XP Filter 和禁用击杀经验）
+            const rank = CustomStats.GetStat(hero, 'rank') ?? 0;
+            const maxLevel = RankSystem.GetMaxLevelForRank(rank);
+            const currentLevel = hero.GetLevel();
+            print(`[GameMode] Hero spawned: Level ${currentLevel}, Rank ${rank}, Max ${maxLevel}`);
 
 
             if (playerId >= 0 && playerId <= 3) {
@@ -503,15 +520,91 @@ export class GameMode {
         }
 
         const currentLevel = hero.GetLevel();
-        const rank = CustomStats.GetStat(hero, 'rank') || 0;
+        const rank = CustomStats.GetStat(hero, 'rank') ?? 0;  // 使用 ?? 确保 rank=0 不会变成默认值
         const maxLevel = RankSystem.GetMaxLevelForRank(rank);
+
+        // 调试日志
+        print(`[XP Filter] Level: ${currentLevel}, Rank: ${rank}, MaxLevel: ${maxLevel}, XP: ${event.experience}`);
 
         if (currentLevel >= maxLevel) {
             // Block XP gain when at level cap
-            print(`[XP Filter] Blocking XP for ${hero.GetUnitName()}: Level ${currentLevel} >= Max ${maxLevel} (Rank ${rank})`);
+            print(`[XP Filter] BLOCKED! ${hero.GetUnitName()}: Level ${currentLevel} >= Max ${maxLevel}`);
+            event.experience = 0;  // 同时设置经验为 0
             return false;
         }
 
+        return true;
+    }
+
+    // ===== DAMAGE FILTER (护甲穿透/破势) =====
+    /**
+     * Applies armor penetration to physical damage
+     * Formula: Effective Armor = Target Armor - Attacker Armor Pen
+     * Dota2 Armor Formula: Damage Reduction = (armor * 0.052) / (1 + armor * 0.052)
+     */
+    private static DamageFilter(event: DamageFilterEvent): boolean {
+        if (event.damage <= 0) return true;
+        
+        // 只处理物理伤害
+        if (event.damagetype_const !== DamageTypes.PHYSICAL) {
+            return true;
+        }
+
+        const attackerIndex = event.entindex_attacker_const;
+        const victimIndex = event.entindex_victim_const;
+        
+        if (!attackerIndex || !victimIndex) return true;
+        
+        const attacker = EntIndexToHScript(attackerIndex) as CDOTA_BaseNPC;
+        const victim = EntIndexToHScript(victimIndex) as CDOTA_BaseNPC;
+        
+        if (!attacker || attacker.IsNull() || !victim || victim.IsNull()) {
+            return true;
+        }
+        
+        // 仅处理玩家英雄或其召唤物的攻击
+        const playerOwner = attacker.GetPlayerOwnerID();
+        if (playerOwner < 0) return true;
+        
+        // 获取攻击者的破势值
+        let armorPen = 0;
+        
+        // 如果是英雄，直接获取属性
+        if (attacker.IsRealHero()) {
+            armorPen = CustomStats.GetStat(attacker as CDOTA_BaseNPC_Hero, 'armor_pen') || 0;
+        } else {
+            // 如果是召唤物，从主人获取
+            const ownerHero = PlayerResource.GetSelectedHeroEntity(playerOwner);
+            if (ownerHero && !ownerHero.IsNull()) {
+                armorPen = CustomStats.GetStat(ownerHero, 'armor_pen') || 0;
+            }
+        }
+        
+        if (armorPen <= 0) return true;
+        
+        // 获取目标当前护甲
+        const victimArmor = victim.GetPhysicalArmorValue(false);
+        
+        // 计算有效护甲 (最低为0)
+        const effectiveArmor = Math.max(0, victimArmor - armorPen);
+        
+        // Dota2护甲公式: Damage Reduction = (armor * 0.052) / (1 + armor * 0.052)
+        // 我们需要计算伤害乘数来模拟护甲差异
+        
+        // 原护甲的伤害乘数
+        const originalMultiplier = 1 - (victimArmor * 0.052) / (1 + Math.abs(victimArmor) * 0.052);
+        // 有效护甲的伤害乘数
+        const newMultiplier = 1 - (effectiveArmor * 0.052) / (1 + Math.abs(effectiveArmor) * 0.052);
+        
+        // 计算需要调整的伤害比例
+        if (originalMultiplier > 0) {
+            const damageBonus = newMultiplier / originalMultiplier;
+            event.damage = event.damage * damageBonus;
+            
+            // Debug log (可选)
+            // print(`[Damage Filter] Armor Pen: ${armorPen}, Armor: ${victimArmor}->${effectiveArmor}, Damage x${damageBonus.toFixed(2)}`);
+        }
+        
         return true;
     }
 

@@ -3,12 +3,12 @@ import { CustomStats } from '../systems/CustomStats';
 import * as json_heroes from '../json/npc_heroes_custom.json';
 
 /**
- * 自定义属性处理器 - 简化版
+ * 自定义属性处理器 - 修复版
  * 
  * 设计理念（参考 zhanshen）：
- * 1. 不使用"补偿法" - 太脆弱且依赖硬编码值
- * 2. 使用 OnIntervalThink 定期直接设置 MaxHealth/MaxMana
- * 3. 其他属性（攻击、攻速等）通过 modifier 加成实现
+ * 1. 使用 EXTRA_HEALTH_BONUS 和 MANA_BONUS 通过 modifier 增加血量/蓝量上限
+ *    这样就不会触发引擎的自动回血逻辑
+ * 2. 其他属性（攻击、攻速等）通过 modifier 加成实现
  */
 
 // 目标配置值
@@ -18,11 +18,11 @@ const CONFIGURED_STATUS_HEALTH = 1;   // npc_heroes_custom.txt 中配置的 Stat
 @registerModifier('modifier_custom_stats_handler')
 export class modifier_custom_stats_handler extends BaseModifier {
     mainStat: string = '';
-    originalBaseDamage: number = 0;
     
-    // 上次设置的目标值（用于检测变化，避免重复设置）
-    lastTargetHealth: number = 0;
-    lastTargetMana: number = 0;
+    // 缓存计算后的额外血量、蓝量和攻击力（用于 modifier 返回值）
+    cachedExtraHealth: number = 0;
+    cachedExtraMana: number = 0;
+    cachedBonusDamage: number = 0;
 
     IsHidden(): boolean {
         return true;
@@ -41,17 +41,9 @@ export class modifier_custom_stats_handler extends BaseModifier {
 
         const parent = this.GetParent();
         const unitName = parent.GetUnitName();
-
-        // 攻击力偏移配置（原版英雄有自己的基础攻击力）
-        const OVERRIDE_HERO_DAMAGE_OFFSET: { [key: string]: number } = {
-            'npc_dota_hero_juggernaut': 22,
-            'npc_dota_hero_kunkka': 56,
-        };
         
         // @ts-ignore
         const heroData = json_heroes[unitName];
-        const overrideHero = heroData?.override_hero || 'npc_dota_hero_juggernaut';
-        this.originalBaseDamage = OVERRIDE_HERO_DAMAGE_OFFSET[overrideHero] || 22;
 
         // 读取主属性
         if (heroData && heroData.CustomMainStat) {
@@ -68,8 +60,21 @@ export class modifier_custom_stats_handler extends BaseModifier {
             hero.SetBaseIntellect(0);
         }
 
-        // 立即应用一次属性
-        this.ApplyCustomStats();
+        // 立即计算一次属性
+        this.RecalculateStats();
+        
+        // 延迟一帧后设置满血满蓝（确保 modifier bonus 已生效）
+        // 同时再次计算属性，确保攻击力等正确显示
+        Timers.CreateTimer(0.03, () => {
+            if (parent && !parent.IsNull()) {
+                // 再次计算属性（确保攻击力等正确）
+                this.RecalculateStats();
+                // 设置满血满蓝
+                parent.SetHealth(parent.GetMaxHealth());
+                parent.SetMana(parent.GetMaxMana());
+                print(`[Stats Debug] Initial full health/mana: ${parent.GetHealth()}/${parent.GetMaxHealth()}, Damage: ${parent.GetBaseDamageMin()}`);
+            }
+        });
 
         // 每 0.5 秒更新一次
         this.StartIntervalThink(0.5);
@@ -91,105 +96,122 @@ export class modifier_custom_stats_handler extends BaseModifier {
             }
         }
         
-        // 定期应用自定义属性
-        this.ApplyCustomStats();
+        // 定期重算属性
+        this.RecalculateStats();
     }
     
-    // 核心方法：直接设置 MaxHealth 和 MaxMana
-    ApplyCustomStats(): void {
+    // 外部调用：强制立即刷新属性
+    ForceRefresh(): void {
+        this.RecalculateStats();
+    }
+    
+    // 重新计算所有属性
+    RecalculateStats(): void {
         const parent = this.GetParent();
         if (!parent || parent.IsNull()) return;
         
         const stats = CustomStats.GetAllStats(parent);
-        const level = parent.GetLevel();
+        const currentLevel = parent.GetLevel();
         
-        // 计算目标生命值 = 根骨面板 × 50 + StatusHealth
-        const panelConstitution = Math.floor((stats.constitution_base + (level - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
-        const targetHealth = panelConstitution * 50 + CONFIGURED_STATUS_HEALTH;
+        // 计算目标生命值 = 根骨面板 × 30 + StatusHealth
+        const panelConstitution = Math.floor((stats.constitution_base + (currentLevel - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
+        const targetHealth = panelConstitution * 30 + CONFIGURED_STATUS_HEALTH;
+        
+        // 获取引擎当前的基础最大血量（不含 modifier bonus）
+        // 注意：GetBaseMaxHealth() 返回不含 modifier 加成的基础值
+        const engineBaseHealth = parent.GetBaseMaxHealth();
+        
+        // 计算需要通过 modifier 增加的额外血量
+        // 额外血量 = 目标血量 - 引擎基础血量
+        this.cachedExtraHealth = targetHealth - engineBaseHealth;
         
         // 计算目标法力值 = StatusMana + extra_max_mana
         const extraMana = stats.extra_max_mana || 0;
-        const targetMana = CONFIGURED_STATUS_MANA + extraMana;
+        this.cachedExtraMana = extraMana;
         
-        // 只在值变化时设置（避免闪烁）
-        const currentMaxHealth = parent.GetMaxHealth();
-        const currentMaxMana = parent.GetMaxMana();
-        
-        if (targetHealth !== this.lastTargetHealth || currentMaxHealth !== targetHealth) {
-            // 保存当前生命百分比
-            const healthPercent = currentMaxHealth > 0 ? parent.GetHealth() / currentMaxHealth : 1;
-            
-            // 设置新的最大生命值
-            parent.SetMaxHealth(targetHealth);
-            
-            // 按比例恢复当前生命
-            parent.SetHealth(Math.floor(targetHealth * healthPercent));
-            
-            this.lastTargetHealth = targetHealth;
+        // 计算攻击力 = (基础攻击 + (等级-1) * 攻击成长) * (1 + 攻击加成) + 主属性面板*1.5 + 额外攻击
+        let mainStatValue = 0;
+        switch (this.mainStat) {
+            case 'Martial':
+                mainStatValue = Math.floor((stats.martial_base + (currentLevel - 1) * stats.martial_gain + stats.extra_martial) * (1 + stats.martial_bonus));
+                break;
+            case 'Divinity':
+                mainStatValue = Math.floor((stats.divinity_base + (currentLevel - 1) * stats.divinity_gain + stats.extra_divinity) * (1 + stats.divinity_bonus));
+                break;
+            case 'Agility':
+                mainStatValue = Math.floor((stats.agility_base + (currentLevel - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
+                break;
         }
         
-        if (targetMana !== this.lastTargetMana || currentMaxMana !== targetMana) {
-            // 保存当前法力百分比
-            const manaPercent = currentMaxMana > 0 ? parent.GetMana() / currentMaxMana : 1;
-            
-            // 设置新的最大法力值
-            parent.SetMaxMana(targetMana);
-            
-            // 按比例恢复当前法力
-            parent.SetMana(Math.floor(targetMana * manaPercent));
-            
-            this.lastTargetMana = targetMana;
-        }
+        const baseDamage = Math.floor((stats.damage_base + (currentLevel - 1) * stats.damage_gain) * (1 + stats.damage_bonus));
+        const totalDamage = baseDamage + Math.floor(mainStatValue * 1.5) + (stats.extra_base_damage || 0);
+        
+        // 获取引擎当前的基础攻击力（不含 modifier bonus）
+        const engineBaseDamage = parent.GetBaseDamageMin();
+        
+        // 计算需要通过 modifier 增加的额外攻击力
+        // 这样原生 HUD 会正确显示总攻击力
+        this.cachedBonusDamage = totalDamage - engineBaseDamage;
     }
 
     DeclareFunctions(): ModifierFunction[] {
         return [
-            // 不再使用 HEALTH_BONUS 和 MANA_BONUS - 直接用 SetMaxHealth/SetMaxMana
-            ModifierFunction.HEALTH_REGEN_CONSTANT,
+            // 使用 EXTRA_HEALTH_BONUS 增加血量上限，不会触发回血！
+            ModifierFunction.EXTRA_HEALTH_BONUS,
+            // 使用 MANA_BONUS 增加蓝量上限
+            ModifierFunction.MANA_BONUS,
+            // 使用 BASEATTACK_BONUSDAMAGE 增加攻击力，原生 HUD 会正确显示
             ModifierFunction.BASEATTACK_BONUSDAMAGE,
+            // 其他属性
+            ModifierFunction.HEALTH_REGEN_CONSTANT,
             ModifierFunction.ATTACKSPEED_BONUS_CONSTANT,
             ModifierFunction.MANA_REGEN_CONSTANT,
             ModifierFunction.PHYSICAL_ARMOR_BONUS,
             ModifierFunction.LIFESTEAL_AMPLIFY_PERCENTAGE,
             ModifierFunction.MOVESPEED_BONUS_CONSTANT,
-            ModifierFunction.PREATTACK_BONUS_DAMAGE,
+            // [暂时禁用] 经验获取控制
+            // ModifierFunction.EXP_RATE_BOOST,
         ];
     }
+    
+    // [暂时禁用] 经验获取控制 - 可能导致性能问题
+    // GetModifierPercentageExpRateBonus(): number {
+    //     const parent = this.GetParent();
+    //     if (!parent || parent.IsNull()) return 0;
+    //     
+    //     const currentLevel = parent.GetLevel();
+    //     const stats = CustomStats.GetAllStats(parent);
+    //     const rank = stats.rank ?? 0;
+    //     const levelCap = (rank + 1) * 10;
+    //     
+    //     if (currentLevel >= levelCap) {
+    //         return -100;
+    //     }
+    //     return 0;
+    // }
+    
+    // 通过 modifier 增加额外血量上限（不会触发回血！）
+    GetModifierExtraHealthBonus(): number {
+        return this.cachedExtraHealth;
+    }
+    
+    // 通过 modifier 增加额外蓝量上限
+    GetModifierManaBonus(): number {
+        return this.cachedExtraMana;
+    }
+    
+    // 通过 modifier 增加额外攻击力（原生 HUD 会显示为绿字）
+    GetModifierBaseAttack_BonusDamage(): number {
+        return this.cachedBonusDamage;
+    }
 
-    // 根骨 → 生命回复 (面板根骨 * 0.5)
+    // 根骨 → 生命回复 (面板根骨 * 0.2)
     GetModifierConstantHealthRegen(): number {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
         const level = parent.GetLevel();
         const panelConstitution = Math.floor((stats.constitution_base + (level - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
-        return panelConstitution * 0.5;
-    }
-
-    // 攻击力 = (基础攻击 + (等级-1) * 攻击成长 + 额外攻击) * (1 + 攻击加成) + 主属性面板*2
-    GetModifierBaseAttack_BonusDamage(): number {
-        const parent = this.GetParent();
-        const stats = CustomStats.GetAllStats(parent);
-        const level = parent.GetLevel();
-        
-        // 计算主属性面板值
-        let mainStatValue = 0;
-        switch (this.mainStat) {
-            case 'Martial':
-                mainStatValue = Math.floor((stats.martial_base + (level - 1) * stats.martial_gain + stats.extra_martial) * (1 + stats.martial_bonus));
-                break;
-            case 'Divinity':
-                mainStatValue = Math.floor((stats.divinity_base + (level - 1) * stats.divinity_gain + stats.extra_divinity) * (1 + stats.divinity_bonus));
-                break;
-            case 'Agility':
-                mainStatValue = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
-                break;
-        }
-        
-        // 计算基础攻击力
-        const baseDamage = Math.floor((stats.damage_base + (level - 1) * stats.damage_gain + stats.extra_base_damage) * (1 + stats.damage_bonus));
-        
-        // 总攻击力 = 基础攻击 + 主属性*2 - 原版英雄攻击偏移
-        return baseDamage + mainStatValue * 2 - this.originalBaseDamage;
+        return panelConstitution * 0.2;
     }
 
     // 身法 → 攻速
@@ -223,10 +245,5 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const level = parent.GetLevel();
         const panelAgility = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
         return Math.floor(panelAgility * 0.4) + (stats.extra_move_speed || 0);
-    }
-
-    // 额外攻击力（来自商店购买等）
-    GetModifierPreAttack_BonusDamage(): number {
-        return CustomStats.GetStat(this.GetParent(), 'extra_base_damage');
     }
 }

@@ -18,7 +18,7 @@ export class TrainingManager {
 
     private readonly MONSTER_UNIT_NAME = 'npc_enemy_zombie_lvl1';
     private readonly MERCHANT_UNIT_NAME = 'npc_cultivation_merchant';
-    private readonly MAX_MONSTERS_DEFAULT = 9;
+    private readonly MAX_MONSTERS_DEFAULT = 5;
 
     public static GetInstance(): TrainingManager {
         if (!this.instance) {

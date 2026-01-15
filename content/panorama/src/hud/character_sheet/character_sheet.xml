@@ -173,6 +173,10 @@
                             <Label class="StatLabel" text="爆伤" />
                             <Label id="Val_CritDamage" class="StatValue" text="150%" />
                         </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="破势" />
+                            <Label id="Val_ArmorPen" class="StatValue Gold" text="0" />
+                        </Panel>
                         <Panel class="Divider" />
                         
                         <Label class="ColumnTitle Small" text="商店购买" />

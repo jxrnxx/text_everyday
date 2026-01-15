@@ -42,6 +42,12 @@ export class RankSystem {
             const playerID = (event as any).PlayerID as PlayerID;
             this.AttemptRankUp(playerID);
         });
+        
+        // 测试用：快速升阶（绕过信仰和等级检查）
+        CustomGameEventManager.RegisterListener('cmd_test_rank_up', (_, event) => {
+            const playerID = (event as any).PlayerID as PlayerID;
+            this.TestRankUp(playerID);
+        });
 
         print('[RankSystem] Initialized');
     }
@@ -143,6 +149,49 @@ export class RankSystem {
         this.SendResult(player, true, newRank, `突破成功！晋升${rankName}`);
 
         // 6. Notify all clients for UI updates (NetTable already updated by CustomStats)
+        CustomStats.SendStatsToClient(hero);
+    }
+
+    /**
+     * 测试用快速升阶 - 绕过所有检查
+     */
+    private TestRankUp(playerID: PlayerID) {
+        const player = PlayerResource.GetPlayer(playerID);
+        if (!player) return;
+
+        const hero = player.GetAssignedHero();
+        if (!hero) return;
+
+        const currentRank = CustomStats.GetStat(hero, 'rank') || 0;
+        
+        if (currentRank >= 5) {
+            this.SendResult(player, false, currentRank, '已达最高境界');
+            return;
+        }
+
+        // 直接升阶
+        const newRank = currentRank + 1;
+        CustomStats.AddStat(hero, 'rank', 1);
+        
+        // 重置经验（设置到下一级的起点）
+        // 这里只是视觉提示，实际经验由引擎管理
+        
+        // 播放特效
+        EmitSoundOn('Hero_Juggernaut.OmniSlash.Arcana', hero);
+        const particle = ParticleManager.CreateParticle(
+            'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_v2_trigger.vpcf',
+            ParticleAttachment.ABSORIGIN_FOLLOW,
+            hero
+        );
+        ParticleManager.ReleaseParticleIndex(particle);
+
+        const RANK_NAMES: { [key: number]: string } = {
+            0: '凡胎', 1: '觉醒', 2: '宗师', 3: '半神', 4: '神话', 5: '禁忌'
+        };
+        const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
+        print(`[RankSystem] TEST: Player ${playerID} ranked up to ${rankName}`);
+        
+        this.SendResult(player, true, newRank, `[测试] 晋升${rankName}`);
         CustomStats.SendStatsToClient(hero);
     }
 

@@ -168,11 +168,12 @@ export class EconomySystem {
                 const currentLevel = hero.GetLevel();
                 
                 // 突破等级点: 10, 20, 30, 40, 50
-                // 阶位 0 = 上限 10, 阶位 1 = 上限 20, 阶位 2 = 上限 30...
+                // 阶位 1 = 上限 10, 阶位 2 = 上限 20, 阶位 3 = 上限 30...
                 const heroIndex = hero.GetEntityIndex();
                 const statsData = CustomNetTables.GetTableValue('custom_stats' as any, tostring(heroIndex));
-                const rank = (statsData as any)?.rank || 0;
-                const levelCap = (rank + 1) * 10;
+                // 默认阶位 0（凡胎），上限 10 级
+                const rank = (statsData as any)?.rank ?? 0;
+                const levelCap = (rank + 1) * 10; // 凡胎(0) = 10级上限, 觉醒(1) = 20级上限
                 
                 // 如果当前等级已经到达上限，不再添加经验
                 if (currentLevel >= levelCap) {

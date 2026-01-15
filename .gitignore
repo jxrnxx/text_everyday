@@ -1,4 +1,5 @@
 node_modules
+zhanshen
 publish
 custom_game_whitelist.txt
 panorama_debugger.cfg
@@ -15,7 +16,7 @@ game/resource/word_filter_cache_1.dat
 *.vmesh_c
 *.vsndevts_c
 *.vsnd_c
-zhanshen-master-4a96831b4c8031fc28eea3e5d4e44bb8759f87a0
+
 # excel temp files
 ~$*.xls*
 

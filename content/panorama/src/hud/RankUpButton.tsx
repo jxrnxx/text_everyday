@@ -95,9 +95,20 @@ const RankUpButton: React.FC = () => {
         GameEvents.SendCustomGameEventToServer('cmd_attempt_rank_up', {});
     };
 
-    if (!isVisible) return null;
+    // 暂时禁用境界突破按钮，只用经验条金色提醒
+    // TODO: 后续可以用其他方式触发升阶
+    return null;
+    
+    // 原来的显示逻辑
+    // if (!isVisible) return null;
 
     const nextRankName = RANK_DATA[currentRank + 1]?.title || '???';
+    
+    // 测试升阶按钮 - 绕过检查
+    const handleTestRankUp = () => {
+        Game.EmitSound('ui_menu_activate');
+        GameEvents.SendCustomGameEventToServer('cmd_test_rank_up', {});
+    };
 
     return (
         <Panel style={styles.container}>
@@ -119,6 +130,26 @@ const RankUpButton: React.FC = () => {
                 text={`等级 ${currentLevel}/${maxLevel} (已达上限)`} 
                 style={styles.levelInfo} 
             />
+            
+            {/* 测试按钮 - 绕过检查 */}
+            <Button
+                onactivate={handleTestRankUp}
+                style={{
+                    width: '120px',
+                    height: '30px',
+                    marginTop: '10px',
+                    backgroundColor: '#444466',
+                    borderRadius: '4px',
+                }}
+            >
+                <Label text="[测试升阶]" style={{
+                    color: '#aaaaff',
+                    fontSize: '14px',
+                    textAlign: 'center' as const,
+                    horizontalAlign: 'center' as const,
+                    verticalAlign: 'center' as const,
+                }} />
+            </Button>
 
             {/* Feedback Message */}
             {feedbackMessage && (

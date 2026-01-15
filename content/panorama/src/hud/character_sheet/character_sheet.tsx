@@ -1,13 +1,13 @@
 import { openPanel, markPanelClosed, registerPanel, closeCurrentPanel } from '../PanelManager';
 
-// Rank Data Structure
-const RANK_DATA = {
-    1: { title: "凡胎", desc: "肉眼凡胎，受困于世。" },
-    2: { title: "觉醒", desc: "窥见真实，打破枷锁。" },
-    3: { title: "宗师", desc: "技近乎道，登峰造极。" },
-    4: { title: "半神", desc: "神性初显，超脱凡俗。" },
-    5: { title: "神话", desc: "传颂之名，永恒不朽。" },
-    6: { title: "禁忌", desc: "不可直视，不可名状。" }
+// Rank Data Structure (0-indexed: 0=凡胎, 1=觉醒...)
+const RANK_DATA: { [key: number]: { title: string; desc: string } } = {
+    0: { title: "凡胎", desc: "肉眼凡胎，受困于世。" },
+    1: { title: "觉醒", desc: "窥见真实，打破枷锁。" },
+    2: { title: "宗师", desc: "技近乎道，登峰造极。" },
+    3: { title: "半神", desc: "神性初显，超脱凡俗。" },
+    4: { title: "神话", desc: "传颂之名，永恒不朽。" },
+    5: { title: "禁忌", desc: "不可直视，不可名状。" }
 };
 
 const DEFAULT_RANK = { title: "凡胎", desc: "肉眼凡胎，受困于世。" };
@@ -108,8 +108,8 @@ function UpdateAllStats() {
     if (netTableData) {
         const d = netTableData as any;
         
-        // 基础信息
-        const rankLevel = d.rank || 1;
+        // 基础信息 (0=凡胎, 1=觉醒...)
+        const rankLevel = d.rank ?? 0;
         // @ts-ignore
         const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
         ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
@@ -165,7 +165,7 @@ function UpdateAllStats() {
         ($('#Val_Agi_Bonus') as LabelPanel).text = agiBonus.toString();
         ($('#Val_Agi_Panel') as LabelPanel).text = agiPanel.toString();
         
-        // 攻击力 (Damage) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成) + 主属性*2
+        // 攻击力 (Damage) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成) + 主属性*1.5
         const dmgBase = d.damage_base || 0;
         const dmgGain = d.damage_gain || 0;
         const dmgBonus = d.damage_bonus || 0;
@@ -175,10 +175,10 @@ function UpdateAllStats() {
         ($('#Val_Dmg_Gain') as LabelPanel).text = dmgGain.toString();
         ($('#Val_Dmg_Bonus') as LabelPanel).text = dmgBonus.toString();
         
-        // 主属性计算
+        // 主属性计算 (主属性*1.5)
         const mainStat = d.main_stat || 'Martial';
         const mainPanel = mainStat === 'Martial' ? marPanel : divPanel;
-        const totalDmg = dmgPanel + mainPanel * 2;
+        const totalDmg = dmgPanel + Math.floor(mainPanel * 1.5);
         ($('#Val_Dmg_Panel') as LabelPanel).text = totalDmg.toString();
         ($('#Val_Attack_Display') as LabelPanel).text = totalDmg.toString();
         
@@ -187,6 +187,10 @@ function UpdateAllStats() {
         const critDmg = d.crit_damage || 150;
         ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
         ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
+        
+        // 破势 (护甲穿透)
+        const armorPen = d.armor_pen || 0;
+        ($('#Val_ArmorPen') as LabelPanel).text = armorPen.toString();
         
         // 游戏获取 (原商店购买 - 改用 extra_ 字段)
         const extraAtkSpeed = d.extra_attack_speed || 0;
@@ -211,9 +215,9 @@ function UpdateAllStats() {
         ($('#Debug_Mar') as LabelPanel).text = `武道: (${marBase}+(${level}-1)×${marGain}+${marExtra})×(1+${marBonus}) = ${marPanel}`;
         ($('#Debug_Div') as LabelPanel).text = `神念: (${divBase}+(${level}-1)×${divGain}+${divExtra})×(1+${divBonus}) = ${divPanel}`;
         ($('#Debug_Agi') as LabelPanel).text = `身法: (${agiBase}+(${level}-1)×${agiGain}+${agiExtra})×(1+${agiBonus}) = ${agiPanel}`;
-        ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×2 = ${totalDmg}`;
+        ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×1.5 = ${totalDmg}`;
         ($('#Debug_AtkSpeed') as LabelPanel).text = `攻速: 100 + 身法${agiPanel} + 额外${extraAtkSpeed} = ${panelAtkSpeed}`;
-        ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×50 + 基础1 = ${conPanel * 50 + 1}`;
+        ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×30 + 基础1 = ${conPanel * 30 + 1}`;
         
         // 移速公式
         const agiMoveBonus = Math.floor(agiPanel * 0.4);
@@ -309,35 +313,61 @@ function Init() {
     }
 }
 
+// Helper function to safely set label text
+function safeSetText(selector: string, text: string) {
+    const panel = $(selector) as LabelPanel;
+    if (panel) {
+        panel.text = text;
+    }
+}
+
 // Helper to update from direct object
 function UpdateStatsFromEvent(stats: any) {
     if (!stats) return;
 
-    ($('#Val_Constitution') as LabelPanel).text = stats.constitution.toString();
-    ($('#Val_Martial') as LabelPanel).text = stats.martial.toString();
-    ($('#Val_Divinity') as LabelPanel).text = stats.divinity.toString();
+    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+    const level = Entities.GetLevel(localHero);
+
+    // 根骨面板值计算
+    const conBase = stats.constitution_base || 0;
+    const conGain = stats.constitution_gain || 0;
+    const conBonus = stats.constitution_bonus || 0;
+    const conExtra = stats.extra_constitution || 0;
+    const conPanel = Math.floor((conBase + (level - 1) * conGain + conExtra) * (1 + conBonus));
+    safeSetText('#Val_Con_Panel', conPanel.toString());
+
+    // 武道面板值计算
+    const marBase = stats.martial_base || 0;
+    const marGain = stats.martial_gain || 0;
+    const marBonus = stats.martial_bonus || 0;
+    const marExtra = stats.extra_martial || 0;
+    const marPanel = Math.floor((marBase + (level - 1) * marGain + marExtra) * (1 + marBonus));
+    safeSetText('#Val_Mar_Panel', marPanel.toString());
+
+    // 神念面板值计算
+    const divBase = stats.divinity_base || 0;
+    const divGain = stats.divinity_gain || 0;
+    const divBonus = stats.divinity_bonus || 0;
+    const divExtra = stats.extra_divinity || 0;
+    const divPanel = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
+    safeSetText('#Val_Div_Panel', divPanel.toString());
 
     const rankLevel = stats.rank || 1;
     // @ts-ignore
     const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
-    ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
+    safeSetText('#Val_Rank', rankInfo.title);
 
     // Profession
-    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
-    const unitName = Entities.GetUnitName(localHero);
     let professionName = "无名小卒";
-
-    // Use Profession from Server
     if (stats.profession) {
-        professionName = JOB_NAME_MAP[stats.profession] || stats.profession;
+        professionName = getLocalizedText(stats.profession, "无名小卒");
     }
-    
-    ($('#Val_Profession') as LabelPanel).text = professionName;
+    safeSetText('#Val_Profession', professionName);
 
     const critChance = stats.crit_chance || 0;
     const critDmg = stats.crit_damage || 150;
-    ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
-    ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
+    safeSetText('#Val_CritChance', `${critChance}%`);
+    safeSetText('#Val_CritDamage', `${critDmg}%`);
 }
 
 (function () {

@@ -78,11 +78,9 @@ interface HeroStats {
 const BREAKTHROUGH_LEVELS = [10, 20, 30, 40, 50];
 
 // 检查是否在突破等级（需要突破才能继续升级）
-// 条件：等级是突破点 且 (经验满 或 expRequired为0表示已满级)
-const isAtBreakthrough = (level: number, exp: number, expRequired: number): boolean => {
-    if (!BREAKTHROUGH_LEVELS.includes(level)) return false;
-    // expRequired 为 0 或 exp >= expRequired 都表示经验已满
-    return expRequired <= 0 || exp >= expRequired;
+// 条件：等级到达突破点即可触发（不需要经验满）
+const isAtBreakthrough = (level: number, _exp: number, _expRequired: number): boolean => {
+    return BREAKTHROUGH_LEVELS.includes(level);
 };
 
 // 阶位配置 - 名称和颜色
@@ -254,7 +252,7 @@ const HeroHUD: FC = () => {
                 const divExtra = d.extra_divinity || 0;
                 const divinity = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
                 
-                // 攻击力计算 = (基础攻击 + 额外攻击) + 主属性*2
+                // 攻击力计算 = (基础攻击 + 额外攻击) + 主属性*1.5
                 const dmgBase = d.damage_base || 0;
                 const dmgGain = d.damage_gain || 0;
                 const dmgBonus = d.damage_bonus || 0;
@@ -262,13 +260,13 @@ const HeroHUD: FC = () => {
                 const dmgPanel = Math.floor((dmgBase + (level - 1) * dmgGain + dmgExtra) * (1 + dmgBonus));
                 const mainStat = d.main_stat || 'Martial';
                 const mainPanel = mainStat === 'Martial' ? martial : divinity;
-                const totalAttack = dmgPanel + mainPanel * 2;
+                const totalAttack = dmgPanel + Math.floor(mainPanel * 1.5);
                 
                 // 防御从 Entities API 获取
                 const defense = Math.floor(Entities.GetPhysicalArmorValue(localHero) || 0);
                 
-                // 境界等级
-                const rank = d.rank || 1;
+                // 境界等级 (0=凡胎, 1=觉醒...)
+                const rank = d.rank ?? 0;
                 
                 // 战斗力计算 = 攻击*1 + 防御*5 + 根骨*10 + 武道*8 + 神念*8 + 生命/10
                 const maxHp = Entities.GetMaxHealth(localHero) || 1;
@@ -598,10 +596,14 @@ const HeroHUD: FC = () => {
                             height: '14px',
                             position: '205px 4px 0px' as const,
                             backgroundColor: 'rgba(10, 12, 8, 0.85)',
-                            border: atBreakthrough ? '1px solid #ffaa33' : '1px solid #4a5530',
+                            // 突破时金色边框
+                            border: atBreakthrough 
+                                ? '1px solid #ddaa55'
+                                : '1px solid #4a5530',
                             borderRadius: '7px',
+                            // 突破时简单的金色光晕
                             boxShadow: atBreakthrough
-                                ? '0px 0px 8px rgba(255, 150, 50, 0.6), inset 0px 1px 2px rgba(0, 0, 0, 0.5)'
+                                ? '0px 0px 8px rgba(255, 180, 80, 0.5), inset 0px 1px 2px rgba(0, 0, 0, 0.5)'
                                 : 'inset 0px 1px 2px rgba(0, 0, 0, 0.5)',
                         }}>
                             {/* 经验条填充 */}
@@ -610,8 +612,9 @@ const HeroHUD: FC = () => {
                                 height: '12px',
                                 marginTop: '1px',
                                 marginLeft: '1px',
+                                // 柔和的金色/琥珀色
                                 backgroundColor: atBreakthrough
-                                    ? 'gradient(linear, 0% 0%, 0% 100%, from(#ffcc44), to(#cc6622))'
+                                    ? 'gradient(linear, 0% 0%, 0% 100%, from(#e8b855), to(#bb7733))'
                                     : 'gradient(linear, 0% 0%, 0% 100%, from(#7ac855), to(#4a8833))',
                                 borderRadius: '6px',
                             }}>
@@ -636,26 +639,7 @@ const HeroHUD: FC = () => {
                                     borderRadius: '2px',
                                 }} />
                             </Panel>
-                            {/* 突破状态粒子特效 */}
-                            {atBreakthrough && (
-                                <DOTAParticleScenePanel
-                                    style={{
-                                        width: '100%',
-                                        height: '20px',
-                                        opacity: '0.8',
-                                        position: '0px -4px 0px' as const,
-                                    }}
-                                    // @ts-ignore
-                                    hittest={false}
-                                    particleName="particles/econ/events/ti6/hero_levelup_ti6.vpcf"
-                                    particleonly={true}
-                                    startActive={true}
-                                    cameraOrigin="0 0 60"
-                                    lookAt="0 0 0"
-                                    fov={40}
-                                    squarePixels={true}
-                                />
-                            )}
+                            {/* 突破状态简单提醒 - 只用金边，不用粒子 */}
                         </Panel>
                     );
                 })()}

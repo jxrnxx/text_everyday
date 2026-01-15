@@ -60,6 +60,9 @@ declare interface CustomGameEventDeclarations {
     // ===== Progression Constraints System Events =====
     /** Request rank up (Client -> Server) */
     cmd_attempt_rank_up: {};
+    
+    /** Test rank up - bypass checks (Client -> Server) */
+    cmd_test_rank_up: {};
 
     /** Rank up result (Server -> Client) */
     rank_up_result: {

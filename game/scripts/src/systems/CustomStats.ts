@@ -52,6 +52,7 @@ interface HeroStats {
     extra_move_speed: number;        // 额外移速
     extra_base_damage: number;       // 额外攻击力
     lifesteal: number;               // 吸血百分比
+    armor_pen: number;               // 护甲穿透(破势)
 }
 
 const DEFAULT_STATS: HeroStats = {
@@ -64,13 +65,13 @@ const DEFAULT_STATS: HeroStats = {
     // 面板属性
     constitution: 5, martial: 5, divinity: 5,
     // 其他
-    rank: 1, crit_chance: 0, crit_damage: 150,
+    rank: 0, crit_chance: 0, crit_damage: 150,  // rank 0 = 凡胎
     main_stat: 'Martial',
     // 额外属性
     extra_constitution: 0, extra_martial: 0, extra_divinity: 0, extra_agility: 0,
     extra_attack_speed: 0, extra_mana_regen: 0, extra_armor: 0,
     extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0,
-    lifesteal: 0,
+    lifesteal: 0, armor_pen: 0,
 };
 
 @reloadable
@@ -171,7 +172,7 @@ export class CustomStats {
             martial: martialBase,
             divinity: divinityBase,
             // 其他
-            rank: 1,
+            rank: 0,  // 初始阶位为凡胎
             crit_chance: 0,
             crit_damage: 150,
             main_stat: mainStat,
@@ -188,6 +189,7 @@ export class CustomStats {
             extra_move_speed: 0,
             extra_base_damage: 0,
             lifesteal: 0,
+            armor_pen: 0,
         };        
         // 1. Write to Cache (Source of Truth)
         this.cache[unitIndex] = initialStats;
@@ -221,11 +223,16 @@ export class CustomStats {
             this.cache[unitIndex] = currentStats;
             CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, currentStats);
             
-            // 刷新 Modifier 使属性生效
-            // 方法: 移除并重新添加 modifier
-            if (unit.HasModifier('modifier_custom_stats_handler')) {
-                unit.RemoveModifierByName('modifier_custom_stats_handler');
-                unit.AddNewModifier(unit, undefined, 'modifier_custom_stats_handler', {});
+            // 强制刷新 modifier 属性
+            // 找到 modifier 并触发重新计算
+            const modifier = unit.FindModifierByName('modifier_custom_stats_handler');
+            if (modifier) {
+                // 触发 modifier 的 OnIntervalThink 来立即重新计算
+                (modifier as any).ForceRefresh && (modifier as any).ForceRefresh();
+                // 如果 ForceRefresh 不存在，至少调用 CalculateStatBonus
+                if (unit.IsRealHero()) {
+                    (unit as CDOTA_BaseNPC_Hero).CalculateStatBonus(true);
+                }
             }
             
             // 通知客户端属性已更新
@@ -339,8 +346,9 @@ export class CustomStats {
                 'armor': { stat: 'extra_armor', amount: 2 },
                 'mana_regen': { stat: 'extra_mana_regen', amount: 2 },
                 'attack_speed': { stat: 'extra_attack_speed', amount: 15 },
-                'move_speed': { stat: 'extra_move_speed', amount: 20 },
+                'move_speed': { stat: 'extra_agility', amount: 5 },  // 移速改为身法（身法影响移速）
                 'base_damage': { stat: 'extra_base_damage', amount: 15 },
+                'armor_pen': { stat: 'armor_pen', amount: 10 },  // 护甲穿透(破势)
             };
             
             const mapping = statMap[statType];

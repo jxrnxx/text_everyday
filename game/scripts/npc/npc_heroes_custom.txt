@@ -76,5 +76,6 @@
 		"AttributeStrengthGain" "0"
 		"AttributeBaseIntelligence" "0"
 		"AttributeIntelligenceGain" "0"
+		"Armor Penetration" "0"
 	}
 }

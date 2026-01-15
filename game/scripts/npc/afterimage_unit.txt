@@ -1,0 +1,44 @@
+// 瞬移残影假人单位
+// 一个没有任何游戏功能的纯模型单位
+"DOTAUnits"
+{
+    "npc_blink_afterimage"
+    {
+        "BaseClass"                     "npc_dota_creature"
+        "Model"                         "models/development/invisiblebox.vmdl"
+        "ModelScale"                    "1"
+        "Level"                         "1"
+        
+        // 无移动、无攻击
+        "MovementCapabilities"          "DOTA_UNIT_CAP_MOVE_NONE"
+        "AttackCapabilities"            "DOTA_UNIT_CAP_NO_ATTACK"
+        
+        // 最小属性
+        "StatusHealth"                  "1"
+        "StatusHealthRegen"             "0"
+        "StatusMana"                    "0"
+        "ArmorPhysical"                 "0"
+        
+        // 隐藏血条和小地图图标
+        "HealthBarOffset"               "-1"
+        "SelectionGroup"                ""
+        "SelectOnSpawn"                 "0"
+        
+        // 无碰撞
+        "BoundsHullName"                "DOTA_HULL_SIZE_SMALL"
+        
+        // 无掉落
+        "BountyGoldMin"                 "0"
+        "BountyGoldMax"                 "0"
+        "BountyXP"                      "0"
+        
+        // 无库存
+        "HasInventory"                  "0"
+        
+        // 团队设置
+        "TeamName"                      "DOTA_TEAM_NEUTRALS"
+        "CombatClassAttack"             "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+        "CombatClassDefend"             "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+        "UnitRelationshipClass"         "DOTA_NPC_UNIT_RELATIONSHIP_TYPE_DEFAULT"
+    }
+}
