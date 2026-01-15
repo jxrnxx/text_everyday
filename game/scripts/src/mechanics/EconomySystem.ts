@@ -24,7 +24,7 @@ export class EconomySystem {
     }
 
     // Simplified KV cache for relevant keys
-    private unitKVCache: { [unitName: string]: { coin: number; faith: number } } = {};
+    private unitKVCache: { [unitName: string]: { coin: number; faith: number; exp: number } } = {};
 
     private Initialize() {
         // Load Unit KVs
@@ -55,11 +55,12 @@ export class EconomySystem {
                     if (data && typeof data === 'object') {
                         const coin = data[this.KV_DROP_COIN] ? Number(data[this.KV_DROP_COIN]) : 0;
                         const faith = data[this.KV_DROP_FAITH] ? Number(data[this.KV_DROP_FAITH]) : 0;
+                        const exp = data['HaveLevel'] ? Number(data['HaveLevel']) : 0;
 
-                        // print(`[EconomySystem] Checking Unit: ${unitName} -> Coin: ${coin}, Faith: ${faith}`);
+                        // print(`[EconomySystem] Checking Unit: ${unitName} -> Coin: ${coin}, Faith: ${faith}`, Exp: ${exp});
 
-                        if (coin > 0 || faith > 0) {
-                            this.unitKVCache[unitName] = { coin, faith };
+                        if (coin > 0 || faith > 0 || exp > 0) {
+                            this.unitKVCache[unitName] = { coin, faith, exp };
                         }
                     }
                 }
@@ -70,7 +71,7 @@ export class EconomySystem {
         }
     }
 
-    private GetUnitDropInfo(unitName: string): { coin: number; faith: number } {
+    private GetUnitDropInfo(unitName: string): { coin: number; faith: number; exp: number } {
         // Check cache first
         if (this.unitKVCache[unitName]) {
             return this.unitKVCache[unitName];
@@ -79,7 +80,7 @@ export class EconomySystem {
         // Default Fallback logic
         // 1. If it's a hero? Maybe drops nothing by default or huge bounty.
         // 2. If it is a generic creep (has 'npc_dota_creature' class but no custom KV?), give 10 coins.
-        return { coin: 10, faith: 0 };
+        return { coin: 10, faith: 0, exp: 0 };
     }
 
     // ... (rest of methods)
@@ -158,6 +159,30 @@ export class EconomySystem {
             this.AddFaith(playerId, info.faith);
             // Use damage alert (red numbers) for Faith to differentiate
             this.ShowOverheadMsg(attackerUnit, info.faith, 'OVERHEAD_ALERT_DAMAGE');
+        }
+
+        // 添加经验值 - 检查等级上限
+        if (info.exp > 0) {
+            const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+            if (hero && !hero.IsNull()) {
+                const currentLevel = hero.GetLevel();
+                
+                // 突破等级点: 10, 20, 30, 40, 50
+                // 阶位 0 = 上限 10, 阶位 1 = 上限 20, 阶位 2 = 上限 30...
+                const heroIndex = hero.GetEntityIndex();
+                const statsData = CustomNetTables.GetTableValue('custom_stats' as any, tostring(heroIndex));
+                const rank = (statsData as any)?.rank || 0;
+                const levelCap = (rank + 1) * 10;
+                
+                // 如果当前等级已经到达上限，不再添加经验
+                if (currentLevel >= levelCap) {
+                    // 可选：显示提示消息
+                    // print(`[EconomySystem] Level cap reached: ${currentLevel}/${levelCap}, need breakthrough`);
+                    return;
+                }
+                
+                hero.AddExperience(info.exp, ModifyXpReason.UNSPECIFIED, false, true);
+            }
         }
     }
 

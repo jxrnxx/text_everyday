@@ -4,12 +4,11 @@ import { useGameEvent } from '../hooks/useGameEvent';
 
 const GameTimer: FC = () => {
     const [time, setTime] = useState(0);
-    const [isActive, setIsActive] = useState(false);
+    const [isActive, setIsActive] = useState(true);  // 默认激活
     const [startTimeOffset, setStartTimeOffset] = useState(0);
 
-    // 监听游戏开始
+    // 监听游戏开始（可选，用于重置偏移）
     useGameEvent('update_game_timer_start', (event: { startTime: number }) => {
-        // 使用客户端当前时间作为基准，确保立刻开始计时
         setStartTimeOffset(Game.GetDOTATime(false, false));
         setIsActive(true);
     });
@@ -22,18 +21,16 @@ const GameTimer: FC = () => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (isActive) {
-                // 计算显示时间: 当前DOTA时间 - 开始时间
-                const dotaTime = Game.GetDOTATime(false, false);
+            // 直接使用 DOTA 游戏时间
+            const dotaTime = Game.GetDOTATime(false, false);
+            if (dotaTime > 0) {
                 const elapsed = dotaTime - startTimeOffset;
-                setTime(Math.floor(elapsed));
-            } else {
-                setTime(0);
+                setTime(Math.max(0, Math.floor(elapsed)));
             }
-        }, 300); // 提高刷新率
+        }, 300);
 
         return () => clearInterval(interval);
-    }, [isActive, startTimeOffset]);
+    }, [startTimeOffset]);
 
     const formatTime = (seconds: number) => {
         if (seconds < 0) seconds = 0;

@@ -67,7 +67,42 @@ interface HeroStats {
     maxHp: number;       // 最大生命
     mp: number;          // 当前灵力
     maxMp: number;       // 最大灵力
+    rank: number;        // 阶位
+    combatPower: number; // 战斗力
+    exp: number;         // 当前经验
+    expRequired: number; // 升级所需经验
+    level: number;       // 当前等级
 }
+
+// 突破等级点 - 每10级需要突破阶位
+const BREAKTHROUGH_LEVELS = [10, 20, 30, 40, 50];
+
+// 检查是否在突破等级（需要突破才能继续升级）
+// 条件：等级是突破点 且 (经验满 或 expRequired为0表示已满级)
+const isAtBreakthrough = (level: number, exp: number, expRequired: number): boolean => {
+    if (!BREAKTHROUGH_LEVELS.includes(level)) return false;
+    // expRequired 为 0 或 exp >= expRequired 都表示经验已满
+    return expRequired <= 0 || exp >= expRequired;
+};
+
+// 阶位配置 - 名称和颜色
+const RANK_CONFIG: { [key: number]: { name: string; color: string } } = {
+    0: { name: '凡胎', color: '#aaaaaa' },
+    1: { name: '觉醒', color: '#7accaa' },
+    2: { name: '宗师', color: '#66bbff' },
+    3: { name: '半神', color: '#aa88ff' },
+    4: { name: '神话', color: '#ffaa66' },
+    5: { name: '禁忌', color: '#ff4466' },
+};
+
+// 格式化战力 - 超过1万显示为 X.XX万
+const formatCombatPower = (power: number): string => {
+    if (power >= 10000) {
+        const wan = Math.floor(power / 100) / 100;
+        return wan + '万';
+    }
+    return String(power);
+};
 
 /**
  * 英雄HUD组件 - 底部信息栏
@@ -88,6 +123,11 @@ const HeroHUD: FC = () => {
         maxHp: 1,
         mp: 0,
         maxMp: 1,
+        rank: 0,
+        combatPower: 0,
+        exp: 0,
+        expRequired: 610,
+        level: 1,
     });
     
     // 血条状态追踪
@@ -172,6 +212,9 @@ const HeroHUD: FC = () => {
                 maxHp: maxHp || 1,
                 mp: mp,
                 maxMp: maxMp || 1,
+                exp: (Entities as any).GetCurrentXP ? (Entities as any).GetCurrentXP(localHero) || 0 : 0,
+                expRequired: (Entities as any).GetNeededXPToLevel ? (Entities as any).GetNeededXPToLevel(localHero) || 610 : 610,
+                level: Entities.GetLevel(localHero) || 1,
             }));
         };
 
@@ -224,6 +267,20 @@ const HeroHUD: FC = () => {
                 // 防御从 Entities API 获取
                 const defense = Math.floor(Entities.GetPhysicalArmorValue(localHero) || 0);
                 
+                // 境界等级
+                const rank = d.rank || 1;
+                
+                // 战斗力计算 = 攻击*1 + 防御*5 + 根骨*10 + 武道*8 + 神念*8 + 生命/10
+                const maxHp = Entities.GetMaxHealth(localHero) || 1;
+                const combatPower = Math.floor(
+                    totalAttack * 1 + 
+                    defense * 5 + 
+                    constitution * 10 + 
+                    martial * 8 + 
+                    divinity * 8 + 
+                    maxHp / 10
+                );
+                
                 setStats(prev => ({
                     ...prev,
                     constitution: constitution,
@@ -231,6 +288,8 @@ const HeroHUD: FC = () => {
                     divinity: divinity,
                     attack: totalAttack,
                     defense: defense,
+                    rank: rank,
+                    combatPower: combatPower,
                 }));
             }
         };
@@ -327,7 +386,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '300px',
                 height: '48px',
-                position: '565px 275px 0px' as const,
+                position: '565px 262px 0px' as const,
             }}>
                 {/* 内部容器 - 用于居中显示buff图标 */}
                 <Panel style={{
@@ -384,13 +443,13 @@ const HeroHUD: FC = () => {
                 </Panel>
             </Panel>
 
-            {/* 主HUD背景横条 - 使用加宽版 */}
+            {/* 主HUD背景横条 */}
             <Image 
                 src="file://{resources}/images/hud_bar_extended.png"
                 style={{
                     width: '1200px',
                     height: '500px',
-                    position: '0px 160px 0px' as const,
+                    position: '0px 145px 0px' as const,
                 }}
             />
             
@@ -398,7 +457,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '210px',
                 height: '250px',
-                position: '60px 295px 0px' as const,
+                position: '60px 280px 0px' as const,
             }}>
                 {/* 头像框内部发光粒子特效 - 底层 */}
                 <DOTAParticleScenePanel
@@ -454,11 +513,159 @@ const HeroHUD: FC = () => {
                 />
             </Panel>
 
+            {/* 等级/阶位/战力/经验条区域 - 在HUD底部 */}
+            <Panel style={{
+                width: '1020px',
+                height: '28px',
+                position: '105px 480px 0px' as const,
+            }}>
+                {/* 左侧信息区域 - 固定宽度布局 */}
+                <Panel style={{
+                    width: '240px',
+                    height: '28px',
+                    position: '0px 0px 0px' as const,
+                    flowChildren: 'right' as const,
+                }}>
+                    {/* 境界 - 固定宽度 */}
+                    <Panel style={{
+                        width: '55px',
+                        height: '24px',
+                    }}>
+                        <Label 
+                            text={(RANK_CONFIG[stats.rank] || RANK_CONFIG[0]).name}
+                            style={{
+                                fontSize: '14px',
+                                fontWeight: 'bold' as const,
+                                color: (RANK_CONFIG[stats.rank] || RANK_CONFIG[0]).color,
+                                textShadow: '0px 0px 4px rgba(100, 200, 150, 0.6), 1px 1px 1px #000000',
+                                marginTop: '2px',
+                            }}
+                        />
+                    </Panel>
+                    {/* 战力 - 固定宽度 */}
+                    <Panel style={{
+                        width: '110px',
+                        height: '24px',
+                        flowChildren: 'right' as const,
+                    }}>
+                        <Label 
+                            text="战力"
+                            style={{
+                                fontSize: '14px',
+                                color: '#cdb46b',
+                                marginRight: '4px',
+                                marginTop: '3px',
+                            }}
+                        />
+                        <Label 
+                            text={formatCombatPower(stats.combatPower)}
+                            style={{
+                                width: '70px',
+                                fontSize: '15px',
+                                fontWeight: 'bold' as const,
+                                color: '#ffcc66',
+                                textAlign: 'left' as const,
+                            }}
+                        />
+                    </Panel>
+                    {/* 等级 - 固定宽度 */}
+                    <Panel style={{
+                        width: '40px',
+                        height: '24px',
+                    }}>
+                        <Label 
+                            text={`Lv.${Entities.GetLevel(Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer()))}`}
+                            style={{
+                                fontSize: '17px',
+                                fontWeight: 'bold' as const,
+                                color: '#ffd866',
+                                textShadow: '0px 0px 4px #aa7700, 1px 1px 1px #000000',
+                            }}
+                        />
+                    </Panel>
+                </Panel>
+                
+                {/* 经验条 - 绝对定位固定在右边 */}
+                {(() => {
+                    // 预计算经验条相关值
+                    const atBreakthrough = isAtBreakthrough(stats.level, stats.exp, stats.expRequired);
+                    const expPercent = Math.min((stats.exp / Math.max(stats.expRequired, 1)) * 100, 100);
+                    const expWidth = atBreakthrough ? '100%' : (expPercent + '%');
+                    
+                    return (
+                        <Panel style={{
+                            width: '785px',
+                            height: '14px',
+                            position: '205px 4px 0px' as const,
+                            backgroundColor: 'rgba(10, 12, 8, 0.85)',
+                            border: atBreakthrough ? '1px solid #ffaa33' : '1px solid #4a5530',
+                            borderRadius: '7px',
+                            boxShadow: atBreakthrough
+                                ? '0px 0px 8px rgba(255, 150, 50, 0.6), inset 0px 1px 2px rgba(0, 0, 0, 0.5)'
+                                : 'inset 0px 1px 2px rgba(0, 0, 0, 0.5)',
+                        }}>
+                            {/* 经验条填充 */}
+                            <Panel style={{
+                                width: expWidth,
+                                height: '12px',
+                                marginTop: '1px',
+                                marginLeft: '1px',
+                                backgroundColor: atBreakthrough
+                                    ? 'gradient(linear, 0% 0%, 0% 100%, from(#ffcc44), to(#cc6622))'
+                                    : 'gradient(linear, 0% 0%, 0% 100%, from(#7ac855), to(#4a8833))',
+                                borderRadius: '6px',
+                            }}>
+                                {/* 顶部高光 */}
+                                <Panel style={{
+                                    width: '100%',
+                                    height: '4px',
+                                    backgroundColor: atBreakthrough
+                                        ? 'gradient(linear, 0% 0%, 0% 100%, from(rgba(255, 255, 200, 0.6)), to(rgba(255, 255, 200, 0)))'
+                                        : 'gradient(linear, 0% 0%, 0% 100%, from(rgba(255, 255, 220, 0.4)), to(rgba(255, 255, 220, 0)))',
+                                    borderRadius: '6px 6px 0px 0px',
+                                }} />
+                                {/* 右端发光点 */}
+                                <Panel style={{
+                                    width: '4px',
+                                    height: '10px',
+                                    horizontalAlign: 'right' as const,
+                                    marginTop: '-3px',
+                                    backgroundColor: atBreakthrough
+                                        ? 'gradient(linear, 100% 0%, 0% 0%, from(rgba(255, 200, 100, 0.9)), to(rgba(255, 200, 100, 0)))'
+                                        : 'gradient(linear, 100% 0%, 0% 0%, from(rgba(200, 255, 150, 0.9)), to(rgba(200, 255, 150, 0)))',
+                                    borderRadius: '2px',
+                                }} />
+                            </Panel>
+                            {/* 突破状态粒子特效 */}
+                            {atBreakthrough && (
+                                <DOTAParticleScenePanel
+                                    style={{
+                                        width: '100%',
+                                        height: '20px',
+                                        opacity: '0.8',
+                                        position: '0px -4px 0px' as const,
+                                    }}
+                                    // @ts-ignore
+                                    hittest={false}
+                                    particleName="particles/econ/events/ti6/hero_levelup_ti6.vpcf"
+                                    particleonly={true}
+                                    startActive={true}
+                                    cameraOrigin="0 0 60"
+                                    lookAt="0 0 0"
+                                    fov={40}
+                                    squarePixels={true}
+                                />
+                            )}
+                        </Panel>
+                    );
+                })()}
+            </Panel>
+
             {/* 属性面板 - 在头像框右边 */}
             <Panel style={{
                 width: '200px',
                 height: '200px',
-                position: '280px 330px 0px' as const,
+                position: '280px 315px 0px' as const,
             }}>
                 {/* 透明边框 */}
                 <Image 
@@ -466,7 +673,7 @@ const HeroHUD: FC = () => {
                     style={{
                         width: '180px',
                         height: '200px',
-                        position: '-30px -10px 0px' as const,
+                        position: '-30px -25px 0px' as const,
                     }}
                 />
                 
@@ -535,7 +742,7 @@ const HeroHUD: FC = () => {
                 style={{
                     width: '40px',
                     height: '180px',
-                    position: '415px 325px 0px' as const,
+                    position: '415px 310px 0px' as const,
                 }}
             />
 
@@ -543,7 +750,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '480px',
                 height: '220px',
-                position: '450px 340px 0px' as const,
+                position: '450px 325px 0px' as const,
                 flowChildren: 'down' as const,
             }}>
                 {/* 血条 HP */}
@@ -717,7 +924,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '200px',
                 height: '150px',
-                position: '884px 345px 0px' as const,
+                position: '884px 330px 0px' as const,
             }}>
                 {/* 装备栏 - 6个槽位 (2行3列) */}
                 <Panel style={{
