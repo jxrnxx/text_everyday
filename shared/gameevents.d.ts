@@ -93,4 +93,34 @@ declare interface CustomGameEventDeclarations {
         stat_type: string;
         amount: number;
     };
+
+    /** End game (Client -> Server) */
+    cmd_end_game: {};
+
+    /** Hero changed (Server -> Client) */
+    hero_changed: {
+        newHeroIndex: number;
+    };
+
+    /** Wave state changed (Server -> Client) */
+    wave_state_changed: {
+        currentWave: number;
+        totalWaves: number;
+        state: string;
+        nextWaveTime: number;
+        isSpawning: boolean;
+        canPause: boolean;
+    };
+
+    /** Wave started (Server -> Client) */
+    wave_started: {
+        waveNumber: number;
+        waveType: string;
+        isBossWave: boolean;
+    };
+
+    /** Wave completed (Server -> Client) */
+    wave_completed: {
+        waveNumber: number;
+    };
 }

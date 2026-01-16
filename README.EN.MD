@@ -72,3 +72,11 @@ English translated with [DeepSeek](https://www.deepseek.com/)
 ### Others
 - For issues, visit [GitHub Issues](https://github.com/XavierCHN/x-template/issues)
 - Launch normal Dota 2 with `yarn launch do` or `yarn launch dop` for Perfect World servers
+
+命令  说明  示例
+-skip   跳过当前计时器，立即开始下一波 -skip
+-wave <N>   跳转到指定波次 -wave 19
+-killall    杀死所有敌方单位    -killall
+-lvlup <N>  升级 N 级  -lvlup 30
+-gold <N>   添加灵石    -gold 9999
+-faith <N>  添加信仰值   -faith 9999

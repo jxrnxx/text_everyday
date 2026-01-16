@@ -180,6 +180,8 @@ export class modifier_custom_stats_handler extends BaseModifier {
             ModifierFunction.PHYSICAL_ARMOR_BONUS,
             ModifierFunction.LIFESTEAL_AMPLIFY_PERCENTAGE,
             ModifierFunction.MOVESPEED_BONUS_CONSTANT,
+            // 攻击回血事件
+            ModifierFunction.ON_ATTACK_LANDED,
             // [暂时禁用] 经验获取控制
             // ModifierFunction.EXP_RATE_BOOST,
         ];
@@ -257,6 +259,23 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const panelAgility = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
         const bonusSpeed = Math.floor(panelAgility * 0.4) + (stats.extra_move_speed || 0);
         return bonusSpeed;
+    }
+    
+    // 攻击回血 - 攻击命中时回复生命
+    OnAttackLanded(event: ModifierAttackEvent): void {
+        // 只处理自己发起的攻击
+        if (event.attacker !== this.GetParent()) return;
+        
+        const parent = this.GetParent();
+        if (!parent || parent.IsNull()) return;
+        
+        const stats = CustomStats.GetAllStats(parent);
+        const lifeOnHit = stats.life_on_hit || 0;
+        
+        if (lifeOnHit > 0) {
+            // 回复生命
+            parent.Heal(lifeOnHit, undefined);
+        }
     }
 }
 

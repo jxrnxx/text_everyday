@@ -61,7 +61,7 @@ const EnemyPanel: FC = () => {
                     // 获取单位信息
                     // @ts-ignore
                     const unitName = Entities.GetUnitName(selectedUnit);
-                    const displayName = $.Localize(`#${unitName}`) || unitName || "未知敌人";
+                    const displayName = $.Localize(`#UnitNameCn_${unitName}`) || unitName || "未知敌人";
                     
                     // 从 CustomNetTables 获取单位的 KV 数据 (包括 StatLabel)
                     // 单位的 KV 数据通常需要从服务器同步，这里使用 entity_kv 表

@@ -106,6 +106,7 @@
 		"AttributeDamageGain" "6"
 		"AttributeDamageBonus" "0"
 		"MovementSpeed" "500"
+		"LifeOnHit" "0"
 		"StatusHealth" "1"
 		"StatusMana" "100"
 		"StatusHealthRegen" "0"

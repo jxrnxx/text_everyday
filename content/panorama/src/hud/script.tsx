@@ -7,6 +7,7 @@ import '../utils/hide-default-hud';
 import { type FC, useEffect } from 'react';
 import { render } from 'react-panorama-x';
 import GameTimer from './GameTimer';
+import WaveTimer from './WaveTimer';
 import InvitationCode from './InvitationCode';
 import EconomyDisplay from './EconomyDisplay';
 import TrainingButtons from './TrainingButtons';
@@ -22,6 +23,7 @@ const Root: FC = () => {
         <>
             <BackToLobbyButton />
             <GameTimer />
+            <WaveTimer />
             <InvitationCode />
             <EconomyDisplay />
             <TrainingButtons />

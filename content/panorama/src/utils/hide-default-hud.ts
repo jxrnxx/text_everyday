@@ -13,6 +13,20 @@ function HideHudElements(name: string) {
     }
 }
 
+function ShowHudElement(name: string) {
+    if (hud == null) {
+        hud = $.GetContextPanel();
+        while (hud?.GetParent() != null) {
+            hud = hud?.GetParent()!;
+        }
+    }
+    const panel = hud.FindChildTraverse(name);
+    if (panel) {
+        panel.style.visibility = `visible`;
+        panel.style.opacity = '1';
+    }
+}
+
 function HideDefaultHud() {
     // 隐藏小地图
     GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_ACTION_MINIMAP, false);
@@ -46,6 +60,11 @@ function HideDefaultHud() {
     HideHudElements('selected_container');
     HideHudElements('selected');
     HideHudElements('SelectedEntityHealth');
+    // 隐藏魔方计时器（Tormentor Timer）
+    HideHudElements('TormentorTimerContainer');
+    HideHudElements('TormentorTimer');
+    // 隐藏肉山计时器
+    HideHudElements('RoshanTimerContainer');
 }
 
 HideDefaultHud();
@@ -54,9 +73,9 @@ HideDefaultHud();
 $.Schedule(1.0, () => {
     HideHudElements('selected_container');
     HideHudElements('selected');
-    // 隐藏底部动作面板的各个部分
-    HideHudElements('HUDElements');
-    HideHudElements('lower_hud');
+    // 隐藏底部动作面板的各个部分 - 但保留聊天框
+    // HideHudElements('HUDElements'); // 不再隐藏，这会隐藏聊天框
+    // HideHudElements('lower_hud'); // 不再隐藏，这会隐藏聊天框
     HideHudElements('center_block');
     HideHudElements('center_with_stats');
     HideHudElements('unitPortrait');
@@ -64,6 +83,10 @@ $.Schedule(1.0, () => {
     HideHudElements('inventory_items');
     HideHudElements('AbilitiesAndStatBranch');
     HideHudElements('HeroInventory');
+    
+    // 确保聊天框可见
+    ShowHudElement('HudChat');
+    ShowHudElement('ChatInputLine');
 });
 
 // 每秒持续检查并隐藏（某些面板会动态加载）
@@ -71,5 +94,12 @@ $.Schedule(0.5, function hideLoop() {
     HideHudElements('center_block');
     HideHudElements('center_with_stats');
     HideHudElements('PortraitGroup');
+    // 隐藏设置/快捷键按钮（左上角的加号）
+    HideHudElements('SettingsButton');
+    HideHudElements('GameSettingsButton');
+    HideHudElements('MenuButtons');
+    // 确保聊天框始终可见
+    ShowHudElement('HudChat');
+    ShowHudElement('ChatInputLine');
     $.Schedule(2.0, hideLoop);
 });

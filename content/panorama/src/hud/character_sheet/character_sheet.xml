@@ -177,6 +177,10 @@
                             <Label class="StatLabel" text="破势" />
                             <Label id="Val_ArmorPen" class="StatValue Gold" text="0" />
                         </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="回血" />
+                            <Label id="Val_LifeOnHit" class="StatValue Green" text="0" />
+                        </Panel>
                         <Panel class="Divider" />
                         
                         <Label class="ColumnTitle Small" text="商店购买" />
@@ -193,8 +197,8 @@
                             <Label id="Val_Shop_Armor" class="StatValue Green" text="0" />
                         </Panel>
                         <Panel class="StatRow Small">
-                            <Label class="StatLabel" text="移速+" />
-                            <Label id="Val_Shop_MoveSpeed" class="StatValue Green" text="0" />
+                            <Label class="StatLabel" text="回血+" />
+                            <Label id="Val_Shop_LifeOnHit" class="StatValue Green" text="0" />
                         </Panel>
                         <Panel class="StatRow Small">
                             <Label class="StatLabel" text="攻击+" />

@@ -57,6 +57,8 @@ interface HeroStats {
     lifesteal: number;               // 吸血百分比
     armor_pen: number;               // 护甲穿透(破势)
     base_move_speed: number;         // 基础移速（从配置读取）
+    life_on_hit_base: number;        // 基础攻击回血（从配置读取）
+    life_on_hit: number;             // 攻击回血面板值 = 基础 + 额外
 }
 
 const DEFAULT_STATS: HeroStats = {
@@ -76,6 +78,7 @@ const DEFAULT_STATS: HeroStats = {
     extra_attack_speed: 0, extra_mana_regen: 0, extra_armor: 0,
     extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0,
     lifesteal: 0, armor_pen: 0, base_move_speed: 300,
+    life_on_hit_base: 0, life_on_hit: 0,
 };
 
 @reloadable
@@ -85,6 +88,7 @@ export class CustomStats {
 
     /**
      * 初始化英雄的自定义属性
+     * 使用 HeroConfigManager 从 Excel/JSON 配置读取
      */
     public static InitializeHeroStats(hero: CDOTA_BaseNPC_Hero) {
         if (!hero || hero.IsNull()) return;
@@ -93,57 +97,42 @@ export class CustomStats {
         const unitIndex = tostring(hero.GetEntityIndex());
         if (this.cache[unitIndex]) return;
 
-        // ... (Keep existing JSON lookup logic) ...
         const unitName = hero.GetUnitName();
-        // @ts-ignore
-        const jsonImport = json_heroes;
-        // @ts-ignore
-        const root = jsonImport.DOTAHeroes || jsonImport.XLSXContent || (jsonImport.default && jsonImport.default.XLSXContent) || jsonImport;
+        print(`[CustomStats] Initializing hero: ${unitName}`);
         
-        let heroData = root[unitName];
+        // 使用 HeroConfigManager 获取配置（规范化的入口）
+        const { HeroConfigManager } = require('./HeroConfigManager');
+        const heroConfig = HeroConfigManager.GetHeroConfigWithFallback(unitName);
         
-        if (!heroData) {
-            // Reverse lookup logic
-            for (const key in root) {
-                const candidate = root[key];
-                if (candidate && candidate.override_hero === unitName) {
-                    heroData = candidate;
-                    print(`[CustomStats DEBUG] Found heroData via override_hero lookup for ${unitName}`);
-                    break;
-                }
-            }
-        }
+        // 从配置读取属性（使用类型安全的方法）
+        const mainStat = heroConfig.CustomMainStat || 'Martial';
         
-        // 备用方案：如果仍未找到，直接使用 npc_dota_hero_juggernaut
-        if (!heroData) {
-            heroData = root['npc_dota_hero_juggernaut'];
-        }
-
-        const mainStat = (heroData && heroData.CustomMainStat) ? heroData.CustomMainStat : 'Martial';
-        
-        // 从英雄配置读取所有基础/成长/加成属性
         // 根骨
-        const constitutionBase = (heroData && heroData.AttributeBaseConstitution) ? Number(heroData.AttributeBaseConstitution) : 5;
-        const constitutionGain = (heroData && heroData.AttributeConstitutionGain) ? Number(heroData.AttributeConstitutionGain) : 0;
-        const constitutionBonus = (heroData && heroData.AttributeConstitutionBonus) ? Number(heroData.AttributeConstitutionBonus) : 0;
+        const constitutionBase = Number(heroConfig.AttributeBaseConstitution) || 5;
+        const constitutionGain = Number(heroConfig.AttributeConstitutionGain) || 0;
+        const constitutionBonus = Number(heroConfig.AttributeConstitutionBonus) || 0;
         // 武道
-        const martialBase = (heroData && heroData.AttributeBaseMartial) ? Number(heroData.AttributeBaseMartial) : 5;
-        const martialGain = (heroData && heroData.AttributeMartialGain) ? Number(heroData.AttributeMartialGain) : 0;
-        const martialBonus = (heroData && heroData.AttributeMartialBonus) ? Number(heroData.AttributeMartialBonus) : 0;
+        const martialBase = Number(heroConfig.AttributeBaseMartial) || 5;
+        const martialGain = Number(heroConfig.AttributeMartialGain) || 0;
+        const martialBonus = Number(heroConfig.AttributeMartialBonus) || 0;
         // 神念
-        const divinityBase = (heroData && heroData.AttributeBaseDivinity) ? Number(heroData.AttributeBaseDivinity) : 5;
-        const divinityGain = (heroData && heroData.AttributeDivinityGain) ? Number(heroData.AttributeDivinityGain) : 0;
-        const divinityBonus = (heroData && heroData.AttributeDivinityBonus) ? Number(heroData.AttributeDivinityBonus) : 0;
+        const divinityBase = Number(heroConfig.AttributeBaseDivinity) || 5;
+        const divinityGain = Number(heroConfig.AttributeDivinityGain) || 0;
+        const divinityBonus = Number(heroConfig.AttributeDivinityBonus) || 0;
         // 身法
-        const agilityBase = (heroData && heroData.AttributeBaseAgility) ? Number(heroData.AttributeBaseAgility) : 0;
-        const agilityGain = (heroData && heroData.AttributeAgilityGain) ? Number(heroData.AttributeAgilityGain) : 0;
-        const agilityBonus = (heroData && heroData.AttributeAgilityBonus) ? Number(heroData.AttributeAgilityBonus) : 0;
+        const agilityBase = Number(heroConfig.AttributeBaseAgility) || 0;
+        const agilityGain = Number(heroConfig.AttributeAgilityGain) || 0;
+        const agilityBonus = Number(heroConfig.AttributeAgilityBonus) || 0;
         // 攻击力
-        const damageBase = (heroData && heroData.AttributeBaseDamage) ? Number(heroData.AttributeBaseDamage) : 1;
-        const damageGain = (heroData && heroData.AttributeDamageGain) ? Number(heroData.AttributeDamageGain) : 0;
-        const damageBonus = (heroData && heroData.AttributeDamageBonus) ? Number(heroData.AttributeDamageBonus) : 0;
+        const damageBase = Number(heroConfig.AttributeBaseDamage) || 1;
+        const damageGain = Number(heroConfig.AttributeDamageGain) || 0;
+        const damageBonus = Number(heroConfig.AttributeDamageBonus) || 0;
         // 基础移速
-        const baseMoveSpeed = (heroData && heroData.MovementSpeed) ? Number(heroData.MovementSpeed) : 300;
+        const baseMoveSpeed = Number(heroConfig.MovementSpeed) || 300;
+        // 基础攻击回血
+        const lifeOnHitBase = Number(heroConfig.LifeOnHit) || 0;
+        
+        print(`[CustomStats] Loaded from Excel: Constitution=${constitutionBase}, Martial=${martialBase}, Divinity=${divinityBase}`);
 
         const initialStats: HeroStats = {
             // 基础属性
@@ -174,7 +163,7 @@ export class CustomStats {
             crit_chance: 0,
             crit_damage: 150,
             main_stat: mainStat,
-            profession: (heroData && heroData.CustomJob) ? heroData.CustomJob : `#Job_${unitName}`,
+            profession: heroConfig.CustomJob || `#Job_${unitName}`,
             // 额外属性
             extra_constitution: 0,
             extra_martial: 0,
@@ -189,6 +178,8 @@ export class CustomStats {
             lifesteal: 0,
             armor_pen: 0,
             base_move_speed: baseMoveSpeed,
+            life_on_hit_base: lifeOnHitBase,
+            life_on_hit: lifeOnHitBase,  // 初始面板值 = 基础值
         };        
         // 1. Write to Cache (Source of Truth)
         this.cache[unitIndex] = initialStats;
@@ -505,7 +496,7 @@ export class CustomStats {
                 'armor': { stat: 'extra_armor', amount: 2 },
                 'mana_regen': { stat: 'extra_mana_regen', amount: 2 },
                 'attack_speed': { stat: 'extra_attack_speed', amount: 15 },
-                'move_speed': { stat: 'extra_agility', amount: 5 },  // 移速改为身法（身法影响移速）
+                'life_on_hit': { stat: 'life_on_hit', amount: 10 },  // 攻击回血
                 'base_damage': { stat: 'extra_base_damage', amount: 15 },
                 'armor_pen': { stat: 'armor_pen', amount: 10 },  // 护甲穿透(破势)
             };

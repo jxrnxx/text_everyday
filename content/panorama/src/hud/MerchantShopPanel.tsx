@@ -28,7 +28,7 @@ const SKILL_CONFIG: SkillSlot[] = [
     { id: 4, name: '护甲', stat: '+2', bonus: '护甲', purchased: false },
     { id: 5, name: '回蓝', stat: '+2', bonus: '回蓝', purchased: false },
     { id: 6, name: '攻速', stat: '+15', bonus: '攻速', purchased: false },
-    { id: 7, name: '移速', stat: '+20', bonus: '移速', purchased: false },
+    { id: 7, name: '回血', stat: '+10', bonus: '攻击回血', purchased: false },
     { id: 8, name: '攻击', stat: '+15', bonus: '攻击', purchased: false },
 ];
 
@@ -40,7 +40,7 @@ const SKILL_DESC: Record<string, string> = {
     '护甲': '金刚不坏，刀枪不入',
     '回蓝': '内息运转，灵力回复',
     '攻速': '出手如电，迅捷无双',
-    '移速': '身法如风，来去自如',
+    '回血': '以战养战，攻击回血',
     '攻击': '力量增幅，攻击提升',
 };
 
@@ -179,7 +179,7 @@ const MerchantShopPanel: React.FC = () => {
         '护甲': 'armor',
         '回蓝': 'mana_regen',
         '攻速': 'attack_speed',
-        '移速': 'move_speed',
+        '回血': 'life_on_hit',
         '攻击': 'base_damage',
     };
 

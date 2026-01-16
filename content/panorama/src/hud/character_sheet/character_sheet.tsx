@@ -1,65 +1,18 @@
 import { openPanel, markPanelClosed, registerPanel, closeCurrentPanel } from '../PanelManager';
 
-// Rank Data Structure (0-indexed: 0=凡胎, 1=觉醒...)
-const RANK_DATA: { [key: number]: { title: string; desc: string } } = {
-    0: { title: "凡胎", desc: "肉眼凡胎，受困于世。" },
-    1: { title: "觉醒", desc: "窥见真实，打破枷锁。" },
-    2: { title: "宗师", desc: "技近乎道，登峰造极。" },
-    3: { title: "半神", desc: "神性初显，超脱凡俗。" },
-    4: { title: "神话", desc: "传颂之名，永恒不朽。" },
-    5: { title: "禁忌", desc: "不可直视，不可名状。" }
-};
+// ===== 使用统一的属性工具 =====
+import {
+    RANK_CONFIG,
+    getLocalizedJobName,
+    getRawStats,
+    getHeroStats,
+    calculatePanelStat,
+    type RawStatsData,
+    type PanelStats,
+} from '../../utils/StatsUtils';
 
-const DEFAULT_RANK = { title: "凡胎", desc: "肉眼凡胎，受困于世。" };
-
-const JOB_NAME_MAP: { [key: string]: string } = {
-    "bing_shen_dao": "兵神道",
-    // Add other mappings here as needed
-};
-
-// 获取本地化文本：支持多种格式
-// 1. #Loc{token} 格式：提取 token 后使用 $.Localize("#token")
-// 2. #token 格式：直接使用 $.Localize()
-// 3. 映射表查找
-// 4. 返回原始值
-function getLocalizedText(value: string | undefined, fallback: string = "-"): string {
-    if (!value || value === "undefined") return fallback;
-    
-    // 清理可能的换行符
-    value = value.trim();
-    
-    // 处理 #Loc{token} 格式 - 提取 {} 中的 token
-    const locMatch = value.match(/^#Loc\{(.+)\}$/);
-    if (locMatch) {
-        const token = locMatch[1];
-        // 先尝试直接使用 token 作为本地化键
-        const localized = $.Localize("#" + token);
-        if (localized && localized !== "#" + token) {
-            return localized;
-        }
-        // 否则尝试映射表
-        if (JOB_NAME_MAP[token]) {
-            return JOB_NAME_MAP[token];
-        }
-        return token; // 返回提取的 token
-    }
-    
-    // 如果是标准本地化 token（以 # 开头），使用 $.Localize()
-    if (value.startsWith("#")) {
-        const localized = $.Localize(value);
-        if (localized && localized !== value) {
-            return localized;
-        }
-    }
-    
-    // 否则尝试从映射表获取
-    if (JOB_NAME_MAP[value]) {
-        return JOB_NAME_MAP[value];
-    }
-    
-    // 返回原始值
-    return value;
-}
+// 默认阶位
+const DEFAULT_RANK = { name: '凡胎', color: '#aaaaaa', desc: '肉眼凡胎，受困于世。' };
 
 let isOpen = false;
 
@@ -113,11 +66,11 @@ function UpdateAllStats() {
         const level = d.display_level ?? Entities.GetLevel(localHero);
         
         // @ts-ignore
-        const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
-        ($('#Val_Rank') as LabelPanel).text = rankInfo.title;
+        const rankInfo = RANK_CONFIG[rankLevel] || DEFAULT_RANK;
+        ($('#Val_Rank') as LabelPanel).text = rankInfo.name;
         
         let professionKey = d.profession;
-        const professionName = getLocalizedText(professionKey, "-");
+        const professionName = getLocalizedJobName(professionKey, "-");
         ($('#Val_Profession') as LabelPanel).text = professionName;
         ($('#Val_Level') as LabelPanel).text = level.toString();
         
@@ -194,17 +147,22 @@ function UpdateAllStats() {
         const armorPen = d.armor_pen || 0;
         ($('#Val_ArmorPen') as LabelPanel).text = armorPen.toString();
         
-        // 游戏获取 (原商店购买 - 改用 extra_ 字段)
+        // 攻击回血
+        const lifeOnHit = d.life_on_hit || 0;
+        const lifeOnHitBase = d.life_on_hit_base || 0;
+        ($('#Val_LifeOnHit') as LabelPanel).text = lifeOnHit.toString();
+        
+        // 游戏获取 (商店/技能/装备获得的额外属性)
         const extraAtkSpeed = d.extra_attack_speed || 0;
         const extraManaRegen = d.extra_mana_regen || 0;
         const extraArmor = d.extra_armor || 0;
-        const extraMoveSpeed = d.extra_move_speed || 0;
+        const extraLifeOnHit = lifeOnHit - lifeOnHitBase;  // 额外回血 = 面板 - 基础
         const extraDamage = d.extra_base_damage || 0;
         
         ($('#Val_Shop_AtkSpeed') as LabelPanel).text = extraAtkSpeed.toString();
         ($('#Val_Shop_ManaRegen') as LabelPanel).text = extraManaRegen.toString();
         ($('#Val_Shop_Armor') as LabelPanel).text = extraArmor.toString();
-        ($('#Val_Shop_MoveSpeed') as LabelPanel).text = extraMoveSpeed.toString();
+        ($('#Val_Shop_LifeOnHit') as LabelPanel).text = extraLifeOnHit.toString();
         ($('#Val_Shop_Damage') as LabelPanel).text = extraDamage.toString();
         
         // 计算攻速面板值
@@ -224,6 +182,7 @@ function UpdateAllStats() {
         // 移速公式 - 从 NetTable 读取基础移速
         const agiMoveBonus = Math.floor(agiPanel * 0.4);
         const baseMoveSpeed = d.base_move_speed || 300;
+        const extraMoveSpeed = d.extra_move_speed || 0;
         const panelMoveSpeed = baseMoveSpeed + agiMoveBonus + extraMoveSpeed;
         ($('#Debug_MoveSpeed') as LabelPanel).text = `移速: ${baseMoveSpeed} + 身法${agiPanel}×0.4=${agiMoveBonus} + 额外${extraMoveSpeed} = ${panelMoveSpeed}`;
     }
@@ -358,13 +317,13 @@ function UpdateStatsFromEvent(stats: any) {
 
     // rankLevel 已在函数开头定义
     // @ts-ignore
-    const rankInfo = RANK_DATA[rankLevel] || DEFAULT_RANK;
-    safeSetText('#Val_Rank', rankInfo.title);
+    const rankInfo = RANK_CONFIG[rankLevel] || DEFAULT_RANK;
+    safeSetText('#Val_Rank', rankInfo.name);
 
     // Profession
     let professionName = "无名小卒";
     if (stats.profession) {
-        professionName = getLocalizedText(stats.profession, "无名小卒");
+        professionName = getLocalizedJobName(stats.profession, "无名小卒");
     }
     safeSetText('#Val_Profession', professionName);
 

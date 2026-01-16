@@ -4,10 +4,14 @@ export class GameConfig {
     constructor() {
         SendToServerConsole('dota_max_physical_items_purchase_limit 9999'); // 用来解决物品数量限制问题
 
-        GameRules.SetCustomGameSetupAutoLaunchDelay(0); // 游戏设置时间（默认的游戏设置是最开始的队伍分配）
-        GameRules.SetCustomGameSetupRemainingTime(0); // 游戏设置剩余时间
-        GameRules.SetCustomGameSetupTimeout(1); // 游戏设置阶段超时 (设置为0秒后无法正常创建英雄)
+        // 队伍设置 - 按照 zhanshen 配置
+        GameRules.SetCustomGameSetupAutoLaunchDelay(0); // 自动启动延迟
+        GameRules.SetCustomGameSetupRemainingTime(0); // 剩余时间
+        GameRules.SetCustomGameSetupTimeout(1); // 超时1秒后自动启动 (设为0会导致问题)
+        GameRules.EnableCustomGameSetupAutoLaunch(true); // 启用自动启动
+        
         GameRules.SetHeroSelectionTime(0); // 选择英雄阶段的持续时间
+        GameRules.SetHeroSelectPenaltyTime(0); // 选择英雄超时惩罚
         GameRules.SetStrategyTime(0); // 策略阶段时间
         GameRules.SetShowcaseTime(0); // 选完英雄的展示时间
         GameRules.SetPreGameTime(0); // 进入游戏后号角吹响前的准备时间

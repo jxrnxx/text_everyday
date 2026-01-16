@@ -23,4 +23,12 @@ declare interface CustomNetTableDeclarations {
         key_1: number;
         key_2: string;
     };
+    wave_state: {
+        current: {
+            wave: number;
+            total: number;
+            state: string;
+            nextWaveTime: number;
+        };
+    };
 }

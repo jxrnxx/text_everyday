@@ -1,43 +1,16 @@
 import { type FC, useState, useEffect } from 'react';
 import { isAnyPanelOpen as checkPanelOpen } from './PanelManager';
 
-// 职业名称映射
-const JOB_NAME_MAP: { [key: string]: string } = {
-    "bing_shen_dao": "兵神道",
-    // 其他职业映射
-};
-
-// 获取本地化文本：支持 #Token 格式 和 映射表
-function getLocalizedJobName(value: string | undefined, fallback: string = "..."): string {
-    if (!value || value === "undefined") return fallback;
-    
-    value = value.trim();
-    
-    // 如果是本地化 token（以 # 开头），使用 $.Localize()
-    if (value.startsWith("#")) {
-        const localized = $.Localize(value);
-        if (localized && localized !== value) {
-            return localized;
-        }
-        // 去掉 # 尝试
-        const tokenWithoutHash = value.substring(1);
-        if (JOB_NAME_MAP[tokenWithoutHash]) {
-            return JOB_NAME_MAP[tokenWithoutHash];
-        }
-    }
-    
-    // 尝试从映射表获取
-    if (JOB_NAME_MAP[value]) {
-        return JOB_NAME_MAP[value];
-    }
-    
-    // 返回原始值（如果是英文ID则返回fallback）
-    if (value.startsWith("npc_") || value.includes("_hero_")) {
-        return fallback;
-    }
-    
-    return value;
-}
+// ===== 使用统一的属性工具 =====
+import {
+    getHeroStats,
+    getLocalizedJobName,
+    RANK_CONFIG,
+    getMaxLevelForRank,
+    isAtBreakthrough,
+    formatCombatPower,
+    type PanelStats,
+} from '../utils/StatsUtils';
 
 // 属性文字样式
 const statLabelStyle = {
@@ -56,35 +29,28 @@ const statValueStyle = {
     width: '80px',
 };
 
-// 属性数据接口
+// 属性数据接口（内部使用，与 PanelStats 兼容）
 interface HeroStats {
-    attack: number;      // 攻击 (来自 Entities API)
-    defense: number;     // 防御 (来自 Entities API)
-    constitution: number; // 根骨 (来自 NetTable)
-    martial: number;     // 武道 (来自 NetTable)
-    divinity: number;    // 神念 (来自 NetTable)
-    hp: number;          // 当前生命
-    maxHp: number;       // 最大生命
-    mp: number;          // 当前灵力
-    maxMp: number;       // 最大灵力
-    rank: number;        // 阶位
-    combatPower: number; // 战斗力
-    exp: number;         // 当前经验 (引擎)
-    expRequired: number; // 升级所需经验 (引擎)
-    level: number;       // 当前等级 (引擎)
-    displayLevel: number; // 显示等级 (服务端控制)
-    customExp: number;    // 自定义经验 (服务端控制)
-    customExpRequired: number; // 自定义升级所需经验
+    attack: number;
+    defense: number;
+    constitution: number;
+    martial: number;
+    divinity: number;
+    hp: number;
+    maxHp: number;
+    mp: number;
+    maxMp: number;
+    rank: number;
+    combatPower: number;
+    exp: number;
+    expRequired: number;
+    level: number;
+    displayLevel: number;
+    customExp: number;
+    customExpRequired: number;
 }
 
-// 计算当前阶位的最大等级
-// 公式: MaxLevel = (Rank + 1) * 10, 但最高50级
-const getMaxLevelForRank = (rank: number): number => {
-    return Math.min((rank + 1) * 10, 50);
-};
-
 // 计算显示等级和经验百分比
-// 使用服务端控制的 display_level 和 custom_exp
 const getDisplayLevelAndExp = (
     rank: number, 
     displayLevelFromServer: number, 
@@ -92,48 +58,16 @@ const getDisplayLevelAndExp = (
     customExpRequired: number
 ): { displayLevel: number; displayExpPercent: number } => {
     const currentMaxLevel = getMaxLevelForRank(rank);
-    
-    // 使用服务端提供的 display_level
     let displayLevel = Math.min(displayLevelFromServer, currentMaxLevel);
-    
-    // 计算经验百分比（使用自定义经验）
     let displayExpPercent: number;
     
-    // 如果显示等级达到当前阶位最大等级，显示满经验
     if (displayLevel >= currentMaxLevel) {
         displayExpPercent = 100;
     } else {
-        // 正常计算经验百分比
         displayExpPercent = Math.min((customExp / Math.max(customExpRequired, 1)) * 100, 100);
     }
     
     return { displayLevel, displayExpPercent };
-};
-
-// 检查是否在突破等级（需要突破才能继续升级）
-// 条件：等级达到当前阶位的最大等级
-const isAtBreakthrough = (level: number, rank: number): boolean => {
-    const maxLevel = getMaxLevelForRank(rank);
-    return level >= maxLevel;
-};
-
-// 阶位配置 - 名称和颜色
-const RANK_CONFIG: { [key: number]: { name: string; color: string } } = {
-    0: { name: '凡胎', color: '#aaaaaa' },
-    1: { name: '觉醒', color: '#7accaa' },
-    2: { name: '宗师', color: '#66bbff' },
-    3: { name: '半神', color: '#aa88ff' },
-    4: { name: '神话', color: '#ffaa66' },
-    5: { name: '禁忌', color: '#ff4466' },
-};
-
-// 格式化战力 - 超过1万显示为 X.XX万
-const formatCombatPower = (power: number): string => {
-    if (power >= 10000) {
-        const wan = Math.floor(power / 100) / 100;
-        return wan + '万';
-    }
-    return String(power);
 };
 
 /**
@@ -253,89 +187,35 @@ const HeroHUD: FC = () => {
             }));
         };
 
-        // 获取职业和自定义属性 (来自 NetTable)
+        // 获取职业和自定义属性 (使用统一工具 StatsUtils)
         const updateNetTableStats = () => {
             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
             if (localHero === -1) return;
 
-            const netTableKey = String(localHero);
-            const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, netTableKey);
+            // 使用统一的属性计算工具
+            const heroStats = getHeroStats(localHero);
+            if (!heroStats) return;
 
-            if (netTableData) {
-                const d = netTableData as any;
-                
-                // 使用 display_level 来计算属性（而不是引擎等级，因为引擎等级可能固定在30）
-                const displayLevel = d.display_level ?? Entities.GetLevel(localHero);
-                
-                // 职业 - 使用本地化函数获取显示名称
-                const professionKey = d.profession;
-                setProfessionName(getLocalizedJobName(professionKey, "..."));
+            // 职业名称
+            setProfessionName(getLocalizedJobName(heroStats.profession, "..."));
 
-                // 根骨、武道、神念 - 使用正确公式计算面板值
-                // 公式: (基础 + (等级-1) * 成长 + 额外获得值) * (1 + 加成)
-                const conBase = d.constitution_base || 0;
-                const conGain = d.constitution_gain || 0;
-                const conBonus = d.constitution_bonus || 0;
-                const conExtra = d.extra_constitution || 0;
-                const constitution = Math.floor((conBase + (displayLevel - 1) * conGain + conExtra) * (1 + conBonus));
-                
-                const marBase = d.martial_base || 0;
-                const marGain = d.martial_gain || 0;
-                const marBonus = d.martial_bonus || 0;
-                const marExtra = d.extra_martial || 0;
-                const martial = Math.floor((marBase + (displayLevel - 1) * marGain + marExtra) * (1 + marBonus));
-                
-                const divBase = d.divinity_base || 0;
-                const divGain = d.divinity_gain || 0;
-                const divBonus = d.divinity_bonus || 0;
-                const divExtra = d.extra_divinity || 0;
-                const divinity = Math.floor((divBase + (displayLevel - 1) * divGain + divExtra) * (1 + divBonus));
-                
-                // 攻击力计算 = (基础攻击 + 额外攻击) + 主属性*1.5
-                const dmgBase = d.damage_base || 0;
-                const dmgGain = d.damage_gain || 0;
-                const dmgBonus = d.damage_bonus || 0;
-                const dmgExtra = d.extra_base_damage || 0;
-                const dmgPanel = Math.floor((dmgBase + (displayLevel - 1) * dmgGain + dmgExtra) * (1 + dmgBonus));
-                const mainStat = d.main_stat || 'Martial';
-                const mainPanel = mainStat === 'Martial' ? martial : divinity;
-                const totalAttack = dmgPanel + Math.floor(mainPanel * 1.5);
-                
-                // 防御从 Entities API 获取
-                const defense = Math.floor(Entities.GetPhysicalArmorValue(localHero) || 0);
-                
-                // 境界等级 (0=凡胎, 1=觉醒...)
-                const rank = d.rank ?? 0;
-                
-                // 自定义经验 (服务端控制)
-                const customExp = d.custom_exp ?? 0;
-                const customExpRequired = d.custom_exp_required ?? 230;
-                
-                // 战斗力计算 = 攻击*1 + 防御*5 + 根骨*10 + 武道*8 + 神念*8 + 生命/10
-                const maxHp = Entities.GetMaxHealth(localHero) || 1;
-                const combatPower = Math.floor(
-                    totalAttack * 1 + 
-                    defense * 5 + 
-                    constitution * 10 + 
-                    martial * 8 + 
-                    divinity * 8 + 
-                    maxHp / 10
-                );
-                
-                setStats(prev => ({
-                    ...prev,
-                    constitution: constitution,
-                    martial: martial,
-                    divinity: divinity,
-                    attack: totalAttack,
-                    defense: defense,
-                    rank: rank,
-                    combatPower: combatPower,
-                    displayLevel: displayLevel,
-                    customExp: customExp,
-                    customExpRequired: customExpRequired,
-                }));
-            }
+            setStats(prev => ({
+                ...prev,
+                constitution: heroStats.constitution,
+                martial: heroStats.martial,
+                divinity: heroStats.divinity,
+                attack: heroStats.attack,
+                defense: heroStats.defense,
+                rank: heroStats.rank,
+                combatPower: heroStats.combatPower,
+                displayLevel: heroStats.level,
+                customExp: heroStats.customExp,
+                customExpRequired: heroStats.customExpRequired,
+                hp: heroStats.hp,
+                maxHp: heroStats.maxHp,
+                mp: heroStats.mp,
+                maxMp: heroStats.maxMp,
+            }));
         };
 
         // 延迟初始化，确保英雄实体准备好 (增加到1秒)
@@ -501,7 +381,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '210px',
                 height: '250px',
-                position: '60px 280px 0px' as const,
+                position: '77px 280px 0px' as const,
             }}>
                 {/* 头像框内部发光粒子特效 - 底层 */}
                 <DOTAParticleScenePanel
@@ -769,7 +649,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '200px',
                 height: '200px',
-                position: '280px 315px 0px' as const,
+                position: '292px 315px 0px' as const,
             }}>
                 {/* 透明边框 */}
                 <Image 
@@ -794,7 +674,7 @@ const HeroHUD: FC = () => {
                             src="file://{resources}/images/icon_attack.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
-                        <Label text="攻击:" style={statLabelStyle} />
+                        <Label text="攻击1:" style={statLabelStyle} />
                         <Label text={String(stats.attack)} style={statValueStyle} />
                     </Panel>
                     
@@ -846,7 +726,7 @@ const HeroHUD: FC = () => {
                 style={{
                     width: '40px',
                     height: '180px',
-                    position: '415px 310px 0px' as const,
+                    position: '427px 310px 0px' as const,
                 }}
             />
 
@@ -854,7 +734,7 @@ const HeroHUD: FC = () => {
             <Panel style={{
                 width: '480px',
                 height: '220px',
-                position: '450px 325px 0px' as const,
+                position: '462px 325px 0px' as const,
                 flowChildren: 'down' as const,
             }}>
                 {/* 血条 HP */}
@@ -981,9 +861,9 @@ const HeroHUD: FC = () => {
                     />
                 </Panel>
 
-                {/* 技能栏 - 4个 + 空隙 + 2个 */}
+                {/* 技能栏 - 3个职业技能 + 空隙 + 3个公共技能 */}
                 <Panel style={{ flowChildren: 'right' as const }}>
-                    {/* 第1个技能 - 兵伐·裂空 (使用DOTAAbilityImage显示带Tooltip) */}
+                    {/* 第1个技能 - 职业技能1 (兵伐·裂空) */}
                     <Panel className="SkillSlot">
                         <Panel className="SkillSlotFrame">
                             <DOTAAbilityImage 
@@ -1001,8 +881,8 @@ const HeroHUD: FC = () => {
                         </Panel>
                     </Panel>
                     
-                    {/* 后3个技能槽 - 空槽 */}
-                    {[2, 3, 4].map((skillNum) => (
+                    {/* 第2-3个技能槽 - 职业技能2、3 (空槽) */}
+                    {[2, 3].map((skillNum) => (
                         <Panel key={skillNum} className="SkillSlot">
                             <Panel className="SkillSlotFrame">
                                 <Panel className="SkillSlotInner" />
@@ -1010,11 +890,11 @@ const HeroHUD: FC = () => {
                         </Panel>
                     ))}
                     
-                    {/* 空隙 - 加大间距 */}
-                    <Panel style={{ width: '53px', height: '54px' }} />
+                    {/* 空隙 - 分隔职业技能和公共技能 */}
+                    <Panel style={{ width: '58px', height: '54px' }} />
                     
-                    {/* 后2个技能 */}
-                    {[5, 6].map((skillNum) => (
+                    {/* 第4-6个技能 - 公共技能 (空槽) */}
+                    {[4, 5, 6].map((skillNum) => (
                         <Panel key={skillNum} className="SkillSlot">
                             <Panel className="SkillSlotFrame">
                                 <Panel className="SkillSlotInner" />
@@ -1023,12 +903,20 @@ const HeroHUD: FC = () => {
                     ))}
                 </Panel>
             </Panel>
-
+            {/* 流光分隔线 - 在属性面板右边 */}
+            <Image 
+                src="file://{resources}/images/divider_glow_vertical.png"
+                style={{
+                    width: '40px',
+                    height: '180px',
+                    position: '857px 310px 0px' as const,
+                }}
+            />
             {/* 装备栏区域 - 右侧 */}
             <Panel style={{
                 width: '200px',
                 height: '150px',
-                position: '884px 330px 0px' as const,
+                position: '894px 330px 0px' as const,
             }}>
                 {/* 装备栏 - 6个槽位 (2行3列) */}
                 <Panel style={{

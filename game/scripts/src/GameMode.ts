@@ -3,6 +3,7 @@ import { TrainingManager } from './systems/TrainingManager';
 import { CustomStats } from './systems/CustomStats';
 import { RankSystem } from './systems/RankSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
+import { WaveManager } from './systems/WaveManager';
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
 import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
@@ -11,6 +12,7 @@ import * as json_heroes from './json/npc_heroes_custom.json';
 // 游戏模式类
 export class GameMode {
     private static isGameStarted = false;
+    private static selectedHeroes: { [playerID: number]: string } = {};  // 玩家选择的英雄
     private static get currentWaveTimer(): string | null {
         return (GameRules as any)._CurrentWaveTimer || null;
     }
@@ -24,14 +26,38 @@ export class GameMode {
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.BADGUYS, 0);
         SendToConsole('sv_cheats 1'); // 确保 restart 指令可用
 
+        // 监听游戏状态变化，自动分配玩家到队伍
+        ListenToGameEvent('game_rules_state_change', () => {
+            const state = GameRules.State_Get();
+            // 在队伍选择阶段自动分配玩家
+            if (state === GameState.CUSTOM_GAME_SETUP) {
+                // 自动将所有玩家分配到天辉队伍
+                for (let i = 0; i < 4; i++) {
+                    const playerId = i as PlayerID;
+                    if (PlayerResource.IsValidPlayer(playerId)) {
+                        PlayerResource.SetCustomTeamAssignment(playerId, DotaTeam.GOODGUYS);
+                    }
+                }
+                // 锁定队伍并开始游戏
+                Timers.CreateTimer(0.1, () => {
+                    GameRules.LockCustomGameSetupTeamAssignment(true);
+                    GameRules.FinishCustomGameSetup();
+                    return undefined;
+                });
+            }
+        }, undefined);
+
         GameRules.SetPreGameTime(0);
-        GameRules.SetHeroSelectionTime(0);
+        GameRules.SetHeroSelectionTime(0);  // 跳过原生英雄选择界面
         GameRules.SetStrategyTime(0);
         GameRules.SetShowcaseTime(0);
         
-        // 禁用英雄选择界面（使用默认英雄，验证码阶段会替换）
+        // 英雄选择流程说明：
+        // 1. ForceHero 设置默认英雄（剑圣），跳过原生选择界面
+        // 2. 验证码界面输入 1=剑圣, 2=玛西
+        // 3. 如果选择不同英雄，RestartGame 后生成正确英雄
+        
         const gameMode = GameRules.GetGameModeEntity();
-        // 先强制选择一个英雄跳过选择界面，验证码时会ReplaceHeroWith替换
         gameMode.SetCustomGameForceHero('npc_dota_hero_juggernaut');
         gameMode.SetFogOfWarDisabled(true);
         gameMode.SetCameraDistanceOverride(1450);
@@ -208,6 +234,164 @@ export class GameMode {
             undefined
         );
 
+        // [Debug] 调试命令监听器
+        ListenToGameEvent(
+            'player_chat',
+            event => {
+                const text = event.text.toLowerCase().trim();
+                const playerId = event.playerid as PlayerID;
+                const player = PlayerResource.GetPlayer(playerId);
+                const hero = player?.GetAssignedHero();
+
+                // -skip: 跳过当前计时器，立即开始下一波
+                if (text === '-skip') {
+                    WaveManager.GetInstance().SkipToNextWave();
+                    print(`[Debug] Player ${playerId} skipped wave timer`);
+                    return;
+                }
+
+                // -wave <number>: 跳转到指定波次
+                if (text.startsWith('-wave ')) {
+                    const waveNum = parseInt(text.substring(6));
+                    if (!isNaN(waveNum) && waveNum >= 1 && waveNum <= 20) {
+                        WaveManager.GetInstance().JumpToWave(waveNum);
+                        print(`[Debug] Jumping to Wave ${waveNum}...`);
+                    }
+                    return;
+                }
+
+                // -killall: 杀死所有敌方单位
+                if (text === '-killall') {
+                    const enemies = Entities.FindAllByClassname('npc_dota_creature');
+                    let killCount = 0;
+                    for (const enemy of enemies) {
+                        if (enemy && !enemy.IsNull()) {
+                            const unit = enemy as CDOTA_BaseNPC;
+                            if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
+                                unit.ForceKill(false);
+                                killCount++;
+                            }
+                        }
+                    }
+                    print(`[Debug] Killed ${killCount} enemy units`);
+                    return;
+                }
+
+                // -lvlup <number>: 升级指定等级
+                if (text.startsWith('-lvlup')) {
+                    if (!hero) return;
+                    const parts = text.split(' ');
+                    const levels = parts.length > 1 ? parseInt(parts[1]) : 1;
+                    if (!isNaN(levels) && levels > 0) {
+                        for (let i = 0; i < levels; i++) {
+                            hero.HeroLevelUp(false);
+                        }
+                        print(`[Debug] Hero leveled up ${levels} times, now level ${hero.GetLevel()}`);
+                    }
+                    return;
+                }
+
+                // -gold <number>: 添加灵石
+                if (text.startsWith('-gold ')) {
+                    const amount = parseInt(text.substring(6));
+                    if (!isNaN(amount) && amount > 0) {
+                        EconomySystem.GetInstance().AddSpiritCoin(playerId, amount);
+                        print(`[Debug] Added ${amount} Spirit Coins to player ${playerId}`);
+                    }
+                    return;
+                }
+
+                // -faith <number>: 添加信仰值
+                if (text.startsWith('-faith ')) {
+                    const amount = parseInt(text.substring(7));
+                    if (!isNaN(amount) && amount > 0) {
+                        EconomySystem.GetInstance().AddFaith(playerId, amount);
+                        print(`[Debug] Added ${amount} Faith to player ${playerId}`);
+                    }
+                    return;
+                }
+            },
+            undefined
+        );
+
+        // [CustomChat] 处理自定义聊天消息（F5 聊天框）
+        CustomGameEventManager.RegisterListener('to_server_chat_message' as any, (_, event) => {
+            const playerId = (event as any).PlayerID as PlayerID;
+            const message = (event as any).message as string;
+            
+            if (!message) return;
+            
+            const text = message.toLowerCase().trim();
+            const player = PlayerResource.GetPlayer(playerId);
+            const hero = player?.GetAssignedHero();
+            
+            // 处理调试命令
+            if (text === '-skip') {
+                WaveManager.GetInstance().SkipToNextWave();
+                print(`[Debug] Player ${playerId} skipped wave timer`);
+                return;
+            }
+            
+            if (text.startsWith('-wave ')) {
+                const waveNum = parseInt(text.substring(6));
+                if (!isNaN(waveNum) && waveNum >= 1 && waveNum <= 20) {
+                    WaveManager.GetInstance().JumpToWave(waveNum);
+                    print(`[Debug] Jumping to Wave ${waveNum}...`);
+                }
+                return;
+            }
+            
+            if (text === '-killall') {
+                const enemies = Entities.FindAllByClassname('npc_dota_creature');
+                let killCount = 0;
+                for (const enemy of enemies) {
+                    if (enemy && !enemy.IsNull()) {
+                        const unit = enemy as CDOTA_BaseNPC;
+                        if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
+                            unit.ForceKill(false);
+                            killCount++;
+                        }
+                    }
+                }
+                print(`[Debug] Killed ${killCount} enemies`);
+                return;
+            }
+            
+            if (text.startsWith('-lvlup')) {
+                if (!hero) return;
+                const parts = text.split(' ');
+                const levels = parts.length > 1 ? parseInt(parts[1]) : 1;
+                if (!isNaN(levels) && levels > 0) {
+                    for (let i = 0; i < levels; i++) {
+                        hero.HeroLevelUp(false);
+                    }
+                    print(`[Debug] Hero leveled up ${levels} times`);
+                }
+                return;
+            }
+            
+            if (text.startsWith('-gold ')) {
+                const amount = parseInt(text.substring(6));
+                if (!isNaN(amount) && amount > 0) {
+                    EconomySystem.GetInstance().AddSpiritCoin(playerId, amount);
+                    print(`[Debug] Added ${amount} Spirit Coins`);
+                }
+                return;
+            }
+            
+            if (text.startsWith('-faith ')) {
+                const amount = parseInt(text.substring(7));
+                if (!isNaN(amount) && amount > 0) {
+                    EconomySystem.GetInstance().AddFaith(playerId, amount);
+                    print(`[Debug] Added ${amount} Faith`);
+                }
+                return;
+            }
+            
+            // 普通聊天消息 - 广播给所有玩家
+            print(`[Chat] Player ${playerId}: ${message}`);
+        });
+
         // Register Console Commands for Keybinding (Cross-Layer Solution)
         Convars.RegisterCommand(
             'cmd_train_enter',
@@ -246,6 +430,57 @@ export class GameMode {
             0
         );
 
+        // [Debug] 调试控制台命令 - 用 ~ 键打开控制台执行
+        Convars.RegisterCommand('debug_skip', () => {
+            WaveManager.GetInstance().SkipToNextWave();
+            print('[Debug] Skipping to next wave...');
+        }, 'Skip to next wave', 0);
+
+        Convars.RegisterCommand('debug_wave', (_, waveNum) => {
+            const num = parseInt(waveNum);
+            if (!isNaN(num) && num >= 1 && num <= 20) {
+                WaveManager.GetInstance().JumpToWave(num);
+                print(`[Debug] Jumping to wave ${num}...`);
+            }
+        }, 'Jump to specific wave', 0);
+
+        Convars.RegisterCommand('debug_killall', () => {
+            const enemies = Entities.FindAllByClassname('npc_dota_creature');
+            let killCount = 0;
+            for (const enemy of enemies) {
+                if (enemy && !enemy.IsNull()) {
+                    const unit = enemy as CDOTA_BaseNPC;
+                    if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
+                        unit.ForceKill(false);
+                        killCount++;
+                    }
+                }
+            }
+            print(`[Debug] Killed ${killCount} enemies`);
+        }, 'Kill all enemy units', 0);
+
+        Convars.RegisterCommand('debug_lvlup', (_, levels) => {
+            const hero = PlayerResource.GetSelectedHeroEntity(0 as PlayerID);
+            if (!hero) return;
+            const num = parseInt(levels) || 1;
+            for (let i = 0; i < num; i++) {
+                hero.HeroLevelUp(false);
+            }
+            print(`[Debug] Hero leveled up ${num} times, now level ${hero.GetLevel()}`);
+        }, 'Level up hero', 0);
+
+        Convars.RegisterCommand('debug_gold', (_, amount) => {
+            const num = parseInt(amount) || 9999;
+            EconomySystem.GetInstance().AddSpiritCoin(0 as PlayerID, num);
+            print(`[Debug] Added ${num} Spirit Coins`);
+        }, 'Add spirit coins', 0);
+
+        Convars.RegisterCommand('debug_faith', (_, amount) => {
+            const num = parseInt(amount) || 9999;
+            EconomySystem.GetInstance().AddFaith(0 as PlayerID, num);
+            print(`[Debug] Added ${num} Faith`);
+        }, 'Add faith', 0);
+
         // [Training] Listen for F3/F4 Key Events from Panorama
         CustomGameEventManager.RegisterListener('cmd_c2s_train_enter', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
@@ -269,22 +504,51 @@ export class GameMode {
             ExecuteDash(playerID, targetPos);
         });
 
+        // [EndGame] 监听结束游戏事件
+        CustomGameEventManager.RegisterListener('cmd_end_game', (_, event) => {
+            // 设置游戏结束 - 玩家胜利
+            GameRules.SetGameWinner(DotaTeam.GOODGUYS);
+        });
+
         // 监听前端验证码请求
-        // 注意：英雄已在 GameConfig 中通过 DEV_HERO 配置强制选择
-        // 开发者可以修改 config/DevConfig.ts 来切换测试英雄
+        // 验证码同时作为英雄选择：1=剑圣，2=玛西
         CustomGameEventManager.RegisterListener('to_server_verify_code', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
             const code = (event as any).code;
             const player = PlayerResource.GetPlayer(playerID);
 
             if (player) {
-                // 验证码：1 或 669571 通过
-                if (code === '1' || code === '669571') {
-                    print(`[GameMode] Player ${playerID} verified with code ${code}`);
+                // 英雄选择映射
+                const heroMap: { [key: string]: string } = {
+                    '1': 'npc_dota_hero_juggernaut',  // 剑圣
+                    '2': 'npc_dota_hero_marci',        // 玛西
+                    '669571': 'npc_dota_hero_juggernaut',  // 旧验证码兼容
+                };
+                
+                const selectedHero = heroMap[code];
+                
+                if (selectedHero) {
+                    // 保存玩家选择的英雄
+                    this.selectedHeroes[playerID] = selectedHero;
+                    
+                    // 设置 ForceHero（游戏尚未开始时有效）
+                    const game = GameRules.GetGameModeEntity();
+                    game.SetCustomGameForceHero(selectedHero);
+                    
+                    // 检查玩家是否已有英雄
+                    const existingHero = player.GetAssignedHero();
+                    
+                    if (!existingHero) {
+                        // 没有英雄，创建新英雄
+                        CreateHeroForPlayer(selectedHero, player);
+                    } else if (existingHero.GetUnitName() !== selectedHero) {
+                        // 英雄不匹配，需要替换
+                        this.RestartGame();
+                    }
                     
                     CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                         success: true,
-                        message: '验证成功',
+                        message: '验证成功，正在加载...',
                     });
 
                     // 验证通过后，如果游戏还没开始，则开始游戏
@@ -294,7 +558,7 @@ export class GameMode {
                 } else {
                     CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                         success: false,
-                        message: '验证码错误，请输入: 1',
+                        message: '请输入: 1=剑圣, 2=玛西',
                     });
                 }
             }
@@ -316,16 +580,13 @@ export class GameMode {
         this.isGameStarted = true;
         // print("[GameMode] 游戏正式开始！启动刷怪和计时...");
 
-        // 通知前端开始计时 (修正时间显示)
+        // 通知前端开始计时
         CustomGameEventManager.Send_ServerToAllClients('update_game_timer_start', {
             startTime: GameRules.GetGameTime(),
         });
 
-        // 延迟3秒后开始第一波 (给玩家一点准备时间)
-        this.currentWaveTimer = Timers.CreateTimer(3, () => {
-            this.StartWave(1);
-            return undefined;
-        });
+        // 初始化波次管理器
+        WaveManager.GetInstance().Initialize();
     }
 
     // 重置游戏 (软重启)
@@ -333,38 +594,88 @@ export class GameMode {
         print('[GameMode] 执行软重启...');
         this.isGameStarted = false;
 
-        // 1. 停止当前刷怪计时器
-        if (this.currentWaveTimer) {
-            Timers.RemoveTimer(this.currentWaveTimer);
-            this.currentWaveTimer = null;
-        }
+        // 1. 重置波次管理器（停止计时器并清理怪物）
+        WaveManager.GetInstance().Reset();
 
-        // 2. 清理所有怪物
+        // 2. 清理残留怪物
         const enemies = Entities.FindAllByClassname('npc_dota_creature');
         for (const enemy of enemies) {
             if (enemy && !enemy.IsNull() && enemy.IsAlive()) {
-                const npc = enemy as CDOTA_BaseNPC; // 显式转换
+                const npc = enemy as CDOTA_BaseNPC;
                 npc.ForceKill(false);
-                npc.AddNoDraw(); // 立即隐藏尸体
+                npc.AddNoDraw();
             }
         }
 
         // 3. 重置玩家英雄状态和位置
         for (let i = 0; i <= 3; i++) {
             const playerID = i as PlayerID; // 显式转换
+            const player = PlayerResource.GetPlayer(playerID);
             const hero = PlayerResource.GetSelectedHeroEntity(playerID);
-            if (hero) {
-                hero.RespawnHero(false, false);
-                hero.SetHealth(hero.GetMaxHealth());
-                hero.SetMana(hero.GetMaxMana());
+            
+            // 检查是否需要替换英雄
+            const selectedHero = this.selectedHeroes[playerID];
+            
+            if (hero && player) {
+                const currentHeroName = hero.GetUnitName();
+                
+                // 如果选择的英雄与当前英雄不同，需要创建新英雄
+                if (selectedHero && currentHeroName !== selectedHero) {
+                    
+                    // 保存位置
+                    const spawnPointName = `start_player_${i + 1}`;
+                    const spawnPoint = Entities.FindByName(undefined, spawnPointName);
+                    
+                    // 清除旧英雄的 NetTable 数据
+                    const oldIndex = tostring(hero.GetEntityIndex());
+                    CustomNetTables.SetTableValue('custom_stats' as any, oldIndex, null as any);
+                    
+                    // 移除旧英雄
+                    hero.RemoveSelf();
+                    
+                    // 设置 ForceHero
+                    const game = GameRules.GetGameModeEntity();
+                    game.SetCustomGameForceHero(selectedHero);
+                    
+                    // 预加载并创建新英雄
+                    PrecacheUnitByNameAsync(selectedHero, () => {
+                        const newHero = CreateHeroForPlayer(selectedHero, player) as CDOTA_BaseNPC_Hero;
+                        if (newHero) {
+                            // 设置位置
+                            if (spawnPoint) {
+                                const origin = spawnPoint.GetAbsOrigin();
+                                newHero.SetAbsOrigin(origin);
+                                FindClearSpaceForUnit(newHero, origin, true);
+                            }
+                            
+                            // 确保玩家可以控制新英雄
+                            newHero.SetControllableByPlayer(playerID, true);
+                            
+                            // 选中新英雄（让玩家控制）
+                            player.SetAssignedHeroEntity(newHero);
+                            
+                            // 通知客户端刷新英雄数据
+                            CustomGameEventManager.Send_ServerToPlayer(player, 'hero_changed', {
+                                newHeroIndex: newHero.GetEntityIndex(),
+                            });
+                        } else {
+                            print(`[RestartGame] ERROR: CreateHeroForPlayer returned null!`);
+                        }
+                    }, playerID);
+                } else {
+                    // 相同英雄，只需重生
+                    hero.RespawnHero(false, false);
+                    hero.SetHealth(hero.GetMaxHealth());
+                    hero.SetMana(hero.GetMaxMana());
 
-                // 传送回出生点
-                const spawnPointName = `start_player_${i + 1}`;
-                const spawnPoint = Entities.FindByName(undefined, spawnPointName);
-                if (spawnPoint) {
-                    const origin = spawnPoint.GetAbsOrigin();
-                    hero.SetAbsOrigin(origin);
-                    FindClearSpaceForUnit(hero, origin, true);
+                    // 传送回出生点
+                    const spawnPointName = `start_player_${i + 1}`;
+                    const spawnPoint = Entities.FindByName(undefined, spawnPointName);
+                    if (spawnPoint) {
+                        const origin = spawnPoint.GetAbsOrigin();
+                        hero.SetAbsOrigin(origin);
+                        FindClearSpaceForUnit(hero, origin, true);
+                    }
                 }
             }
         }
@@ -376,6 +687,8 @@ export class GameMode {
         // 这里我们选择立即重新开始，方便测试
         this.StartGame();
     }
+    
+
 
     // NPC出生事件处理
     private static OnNpcSpawned(event: NpcSpawnedEvent) {
@@ -393,18 +706,24 @@ export class GameMode {
             const heroName = hero.GetUnitName();
             const playerId = hero.GetPlayerOwnerID();
             
-            // 如果是剑圣，直接添加自定义技能（不再替换英雄）
-            if (heroName === 'npc_dota_hero_juggernaut' && playerId >= 0) {
-                hero.AddAbility('soldier_war_strike');
-                const ability = hero.FindAbilityByName('soldier_war_strike');
-                if (ability) {
-                    ability.SetLevel(1);
+            // 从 JSON 配置读取英雄数据
+            // @ts-ignore
+            const heroData = json_heroes[heroName];
+            
+            // 添加配置中的技能（不再硬编码剑圣）
+            if (heroData && heroData.Ability1 && playerId >= 0) {
+                const abilityName = heroData.Ability1;
+                if (abilityName && abilityName !== 'generic_hidden' && abilityName !== '') {
+                    hero.AddAbility(abilityName);
+                    const ability = hero.FindAbilityByName(abilityName);
+                    if (ability) {
+                        ability.SetLevel(1);
+                        print(`[GameMode] Added ability ${abilityName} to ${heroName}`);
+                    }
                 }
             }
             
-            // 从 json 配置读取并设置基础移速
-            // @ts-ignore
-            const heroData = json_heroes[heroName];
+            // 设置基础移速
             if (heroData && heroData.MovementSpeed) {
                 const configMoveSpeed = Number(heroData.MovementSpeed);
                 unit.SetBaseMoveSpeed(configMoveSpeed);

@@ -13,6 +13,8 @@ const InvitationCode: FC = () => {
         setIsChecking(false);
         if (event.success) {
             setIsVerified(true);
+            // 释放键盘焦点，恢复原生聊天输入
+            $.DispatchEvent('DropInputFocus');
         } else {
             setErrorMsg(event.message || '验证失败');
         }
@@ -37,7 +39,7 @@ const InvitationCode: FC = () => {
     }
 
     return (
-        <Panel hittest={true} className="invitation-root">
+        <Panel hittest={false} hittestchildren={true} className="invitation-root">
             {/* Centered Dialog */}
             <Panel className="invitation-dialog">
                 <Label text="欢迎来到修仙世界" className="invitation-title" />
