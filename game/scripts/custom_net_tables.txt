@@ -6,5 +6,6 @@
         "game_timer",
         "economy",
         "custom_stats",
+        "wave_state",
     ]
 }

@@ -1,26 +1,26 @@
 let hud: Panel | null = null;
 
-function HideHudElements(name: string) {
+function getHudRoot(): Panel {
     if (hud == null) {
         hud = $.GetContextPanel();
         while (hud?.GetParent() != null) {
             hud = hud?.GetParent()!;
         }
     }
-    const panel = hud.FindChildTraverse(name);
+    return hud;
+}
+
+function HideHudElements(name: string) {
+    const root = getHudRoot();
+    const panel = root.FindChildTraverse(name);
     if (panel) {
         panel.style.visibility = `collapse`;
     }
 }
 
 function ShowHudElement(name: string) {
-    if (hud == null) {
-        hud = $.GetContextPanel();
-        while (hud?.GetParent() != null) {
-            hud = hud?.GetParent()!;
-        }
-    }
-    const panel = hud.FindChildTraverse(name);
+    const root = getHudRoot();
+    const panel = root.FindChildTraverse(name);
     if (panel) {
         panel.style.visibility = `visible`;
         panel.style.opacity = '1';
@@ -32,6 +32,8 @@ function HideDefaultHud() {
     GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_ACTION_MINIMAP, false);
     // 隐藏商店
     GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_INVENTORY_SHOP, false);
+    // 隐藏击杀通知/击杀摄像机 (这是官方API)
+    GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_KILLCAM, false);
     // 隐藏顶部栏
     GameUI.SetDefaultUIEnabled(DotaDefaultUIElement_t.DOTA_DEFAULT_UI_TOP_BAR, false);
     // 隐藏单位信息面板（商人点击不显示原生UI）
@@ -65,6 +67,36 @@ function HideDefaultHud() {
     HideHudElements('TormentorTimer');
     // 隐藏肉山计时器
     HideHudElements('RoshanTimerContainer');
+    // 隐藏右下角击杀通知（瓜分赏金等）
+    HideHudElements('EventTicker');
+    HideHudElements('EventCenteredPanel');
+    HideHudElements('EventAreaDisplay');
+    HideHudElements('KillStreak');
+    HideHudElements('kill_cam');
+    HideHudElements('CenterKillCam');
+    // 额外隐藏击杀条目
+    HideHudElements('KillFeedEntry');
+    HideHudElements('KillFeed');
+    HideHudElements('GoldBounty');
+    HideHudElements('BountyDisplay');
+    HideHudElements('spectator_kill_display');
+    HideHudElements('kill_display');
+    // 更多可能的击杀通知元素
+    HideHudElements('DOTAHudKillDisplay');
+    HideHudElements('HudKillDisplay');
+    HideHudElements('KillDisplay');
+    HideHudElements('KillPanel');
+    HideHudElements('DOTAHudKillPanel');
+    HideHudElements('TopBarKillDisplay');
+    HideHudElements('DeathRecapPanel');
+    HideHudElements('HeroKillNotification');
+    HideHudElements('KillNotification');
+    // 从HUD结构截图识别的正确元素
+    HideHudElements('combat_events');
+    HideHudElements('FightRecap');
+    HideHudElements('NeutralCreepGoldBounty');
+    HideHudElements('LaneCreepGoldBounty');
+    HideHudElements('player_performance_container');
 }
 
 HideDefaultHud();
@@ -98,6 +130,17 @@ $.Schedule(0.5, function hideLoop() {
     HideHudElements('SettingsButton');
     HideHudElements('GameSettingsButton');
     HideHudElements('MenuButtons');
+    // 持续隐藏击杀通知
+    HideHudElements('EventTicker');
+    HideHudElements('KillFeed');
+    HideHudElements('KillFeedEntry');
+    HideHudElements('GoldBounty');
+    HideHudElements('BountyDisplay');
+    HideHudElements('combat_events');
+    HideHudElements('FightRecap');
+    HideHudElements('NeutralCreepGoldBounty');
+    HideHudElements('LaneCreepGoldBounty');
+    HideHudElements('player_performance_container');
     // 确保聊天框始终可见
     ShowHudElement('HudChat');
     ShowHudElement('ChatInputLine');

@@ -40,14 +40,12 @@ declare type PartialRecord<K extends keyof any, T> = {
 @reloadable
 export class XNetTable {
     constructor() {
-        print(`[XNetTable] Activated`);
         this._startHeartbeat();
         // 注册事件监听
         ListenToGameEvent(`player_connect_full`, keys => this._onPlayerConnectFull(keys), this);
     }
 
     Reload() {
-        print(`[XNetTable] Reloaded`);
     }
 
     // 最大传输单元，这个其实取决于服务器的带宽，不建议太大
@@ -156,7 +154,6 @@ export class XNetTable {
         const now = GameRules.GetGameTime();
         const last_update_time = this._last_update_time_mark[mark_name] ?? 0;
         if (now == last_update_time) {
-            print(`[XNetTable] ${mark_name}同一帧执行了多次更新，建议优化代码，一帧最多只更新一次，本次更新照常执行`);
         }
         this._last_update_time_mark[mark_name] = now;
 
@@ -274,13 +271,11 @@ export class XNetTable {
 
             while (this._data_queue.length > 0) {
                 if (data_sent_length > this.MTU) {
-                    // print(`[x_net_table]当前帧发送数据量${data_sent_length},剩余${this._data_queue.length}条数据未发送，留到下一帧执行`);
                     return FrameTime();
                 }
 
                 const data = this._data_queue.shift();
                 if (data == null) {
-                    // print(`数据已经发完了，进入等待状态`);
                     return FrameTime();
                 }
 
@@ -291,14 +286,12 @@ export class XNetTable {
 
                 // -1或者为null代表发送到所有客户端
                 if (target == null || target == -1) {
-                    // print(`给全体玩家发送数据${data_str}`);
                     CustomGameEventManager.Send_ServerToAllClients(`x_net_table`, {
                         data: content,
                     });
                 }
                 // 否则发送给对应玩家
                 else {
-                    // print(`给玩家${data.target}发送数据${data_str}`);
                     const player = PlayerResource.GetPlayer(target);
 
                     // 只有当玩家存在的时候才发给他

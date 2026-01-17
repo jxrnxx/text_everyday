@@ -94,7 +94,6 @@ export class FlameGraphProfiler {
      */
     public startRecording(duration: number = 0): void {
         if (this.isRecording) {
-            print('[FlameGraphProfiler] 已经在记录中，请先停止当前记录');
             return;
         }
 
@@ -109,7 +108,6 @@ export class FlameGraphProfiler {
         this.startTime = get_time();
         this.isRecording = true;
         this.executeTimeOffset(); //保证时间偏移量在第一个函数调用
-        print(`[FlameGraphProfiler] 开始记录性能数据${duration > 0 ? `，持续${duration}秒` : ''}`);
 
         // 如果设置了持续时间，则自动停止
         if (duration > 0) {
@@ -124,7 +122,6 @@ export class FlameGraphProfiler {
                 rootNodeChildren.totalTime = this.getTotalTime(rootNodeChildren);
                 rootNodeChildren.rate = Math.round((rootNodeChildren.totalTime / (get_time() - this.startTime)) * 10000 * this.maxNode);
                 this.syncToNetTable(rootNodeChildren);
-                print(`[FlameGraphProfiler] 性能诊断运行中..`);
                 return sync_time;
             });
         }
@@ -148,7 +145,6 @@ export class FlameGraphProfiler {
         rootNodeChildren.rate = Math.round((rootNodeChildren.totalTime / (this.endTime - this.startTime)) * 10000 * this.maxNode);
         DeepPrintTable(rootNodeChildren);
         this.syncToNetTable(rootNodeChildren);
-        print(`[FlameGraphProfiler] 记录已停止，总时间: ${this.endTime - this.startTime}毫秒,P键打开火焰图`);
     }
 
     /**
@@ -156,7 +152,6 @@ export class FlameGraphProfiler {
      */
     public pauseRecording(): void {
         if (!this.isRecording) {
-            print('[FlameGraphProfiler] 没有正在进行的记录');
             return;
         }
 
@@ -168,12 +163,10 @@ export class FlameGraphProfiler {
      */
     public resumeRecording(): void {
         if (this.isRecording) {
-            print('[FlameGraphProfiler] 已经在记录中');
             return;
         }
 
         this.isRecording = true;
-        print('[FlameGraphProfiler] 已恢复记录性能数据');
     }
 
     //递归遍历node,将node及所有子节点转化为同步数据
@@ -326,10 +319,8 @@ export class FlameGraphProfiler {
 
                 return result;
             };
-            print(`[FlameGraphProfiler] 已为 ${fullName} 添加性能分析`);
         }
         classInstance.prototype.print = '123';
-        print(`[FlameGraphProfiler] 已为 ${className} 的所有方法添加性能分析`);
     }
 
     // 同步当前调用栈信息到网表，用于可视化

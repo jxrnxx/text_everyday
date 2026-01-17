@@ -42,7 +42,6 @@ export class UpgradeSystem {
             this.AttemptBreakthrough(playerID, targetTier);
         });
 
-        print('[UpgradeSystem] Initialized');
     }
 
     /**
@@ -105,7 +104,6 @@ export class UpgradeSystem {
     private AttemptBreakthrough(playerID: PlayerID, targetTier: number) {
         const player = PlayerResource.GetPlayer(playerID);
         if (!player) {
-            print(`[UpgradeSystem] Invalid player: ${playerID}`);
             return;
         }
 
@@ -148,7 +146,6 @@ export class UpgradeSystem {
         EmitSoundOn('Hero_Invoker.LevelUp', hero);
 
         // 3. Log
-        print(`[UpgradeSystem] Player ${playerID} broke through to Tier ${targetTier}`);
 
         this.SendResult(player, true, targetTier, `突破成功！当前境界 Tier ${targetTier}`);
     }

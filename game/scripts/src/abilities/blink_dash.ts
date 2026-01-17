@@ -289,5 +289,4 @@ export class modifier_blink_dash_ghost extends BaseModifier {
 
 // 导出初始化函数
 export function InitBlinkDash() {
-    print('[BlinkDash] Initialized - MaxDistance: 600, Ghost Afterimage');
 }

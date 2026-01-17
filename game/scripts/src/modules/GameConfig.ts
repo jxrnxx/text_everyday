@@ -38,7 +38,6 @@ export class GameConfig {
         
         // 从 DevConfig 读取默认英雄
         game.SetCustomGameForceHero(DEV_HERO);
-        print(`[GameConfig] Default hero set to: ${DEV_HERO}`);
         game.SetUseCustomHeroLevels(true); // 是否启用自定义英雄等级
         game.SetCustomHeroMaxLevel(100); // 设置自定义英雄最大等级
         game.SetCustomXPRequiredToReachNextLevel({

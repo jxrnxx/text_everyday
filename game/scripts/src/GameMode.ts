@@ -136,21 +136,18 @@ export class GameMode {
         try {
             CustomStats.Init();
         } catch (e) {
-            print(`[GameMode] FAILED TO INIT CUSTOM STATS: ${e}`);
         }
 
         // [Rank] Initialize Rank System
         try {
             RankSystem.GetInstance();
         } catch (e) {
-            print(`[GameMode] FAILED TO INIT RANK SYSTEM: ${e}`);
         }
 
         // [Upgrade] Initialize Upgrade System
         try {
             UpgradeSystem.GetInstance();
         } catch (e) {
-            print(`[GameMode] FAILED TO INIT UPGRADE SYSTEM: ${e}`);
         }
 
         // [Level] 监听英雄升级事件，更新显示等级
@@ -209,7 +206,6 @@ export class GameMode {
             event => {
                 const text = event.text.toLowerCase();
                 if (text === 'r' || text === 'restart') {
-                    // print("[GameMode] 收到指令: 执行全量重启 (restart)");
                     SendToConsole('restart');
                 }
             },
@@ -246,7 +242,6 @@ export class GameMode {
                 // -skip: 跳过当前计时器，立即开始下一波
                 if (text === '-skip') {
                     WaveManager.GetInstance().SkipToNextWave();
-                    print(`[Debug] Player ${playerId} skipped wave timer`);
                     return;
                 }
 
@@ -255,7 +250,6 @@ export class GameMode {
                     const waveNum = parseInt(text.substring(6));
                     if (!isNaN(waveNum) && waveNum >= 1 && waveNum <= 20) {
                         WaveManager.GetInstance().JumpToWave(waveNum);
-                        print(`[Debug] Jumping to Wave ${waveNum}...`);
                     }
                     return;
                 }
@@ -273,7 +267,6 @@ export class GameMode {
                             }
                         }
                     }
-                    print(`[Debug] Killed ${killCount} enemy units`);
                     return;
                 }
 
@@ -286,7 +279,6 @@ export class GameMode {
                         for (let i = 0; i < levels; i++) {
                             hero.HeroLevelUp(false);
                         }
-                        print(`[Debug] Hero leveled up ${levels} times, now level ${hero.GetLevel()}`);
                     }
                     return;
                 }
@@ -296,7 +288,6 @@ export class GameMode {
                     const amount = parseInt(text.substring(6));
                     if (!isNaN(amount) && amount > 0) {
                         EconomySystem.GetInstance().AddSpiritCoin(playerId, amount);
-                        print(`[Debug] Added ${amount} Spirit Coins to player ${playerId}`);
                     }
                     return;
                 }
@@ -306,7 +297,6 @@ export class GameMode {
                     const amount = parseInt(text.substring(7));
                     if (!isNaN(amount) && amount > 0) {
                         EconomySystem.GetInstance().AddFaith(playerId, amount);
-                        print(`[Debug] Added ${amount} Faith to player ${playerId}`);
                     }
                     return;
                 }
@@ -328,7 +318,6 @@ export class GameMode {
             // 处理调试命令
             if (text === '-skip') {
                 WaveManager.GetInstance().SkipToNextWave();
-                print(`[Debug] Player ${playerId} skipped wave timer`);
                 return;
             }
             
@@ -336,7 +325,6 @@ export class GameMode {
                 const waveNum = parseInt(text.substring(6));
                 if (!isNaN(waveNum) && waveNum >= 1 && waveNum <= 20) {
                     WaveManager.GetInstance().JumpToWave(waveNum);
-                    print(`[Debug] Jumping to Wave ${waveNum}...`);
                 }
                 return;
             }
@@ -353,7 +341,6 @@ export class GameMode {
                         }
                     }
                 }
-                print(`[Debug] Killed ${killCount} enemies`);
                 return;
             }
             
@@ -365,7 +352,6 @@ export class GameMode {
                     for (let i = 0; i < levels; i++) {
                         hero.HeroLevelUp(false);
                     }
-                    print(`[Debug] Hero leveled up ${levels} times`);
                 }
                 return;
             }
@@ -374,7 +360,6 @@ export class GameMode {
                 const amount = parseInt(text.substring(6));
                 if (!isNaN(amount) && amount > 0) {
                     EconomySystem.GetInstance().AddSpiritCoin(playerId, amount);
-                    print(`[Debug] Added ${amount} Spirit Coins`);
                 }
                 return;
             }
@@ -383,13 +368,11 @@ export class GameMode {
                 const amount = parseInt(text.substring(7));
                 if (!isNaN(amount) && amount > 0) {
                     EconomySystem.GetInstance().AddFaith(playerId, amount);
-                    print(`[Debug] Added ${amount} Faith`);
                 }
                 return;
             }
             
             // 普通聊天消息 - 广播给所有玩家
-            print(`[Chat] Player ${playerId}: ${message}`);
         });
 
         // Register Console Commands for Keybinding (Cross-Layer Solution)
@@ -433,14 +416,12 @@ export class GameMode {
         // [Debug] 调试控制台命令 - 用 ~ 键打开控制台执行
         Convars.RegisterCommand('debug_skip', () => {
             WaveManager.GetInstance().SkipToNextWave();
-            print('[Debug] Skipping to next wave...');
         }, 'Skip to next wave', 0);
 
         Convars.RegisterCommand('debug_wave', (_, waveNum) => {
             const num = parseInt(waveNum);
             if (!isNaN(num) && num >= 1 && num <= 20) {
                 WaveManager.GetInstance().JumpToWave(num);
-                print(`[Debug] Jumping to wave ${num}...`);
             }
         }, 'Jump to specific wave', 0);
 
@@ -456,7 +437,6 @@ export class GameMode {
                     }
                 }
             }
-            print(`[Debug] Killed ${killCount} enemies`);
         }, 'Kill all enemy units', 0);
 
         Convars.RegisterCommand('debug_lvlup', (_, levels) => {
@@ -466,31 +446,26 @@ export class GameMode {
             for (let i = 0; i < num; i++) {
                 hero.HeroLevelUp(false);
             }
-            print(`[Debug] Hero leveled up ${num} times, now level ${hero.GetLevel()}`);
         }, 'Level up hero', 0);
 
         Convars.RegisterCommand('debug_gold', (_, amount) => {
             const num = parseInt(amount) || 9999;
             EconomySystem.GetInstance().AddSpiritCoin(0 as PlayerID, num);
-            print(`[Debug] Added ${num} Spirit Coins`);
         }, 'Add spirit coins', 0);
 
         Convars.RegisterCommand('debug_faith', (_, amount) => {
             const num = parseInt(amount) || 9999;
             EconomySystem.GetInstance().AddFaith(0 as PlayerID, num);
-            print(`[Debug] Added ${num} Faith`);
         }, 'Add faith', 0);
 
         // [Training] Listen for F3/F4 Key Events from Panorama
         CustomGameEventManager.RegisterListener('cmd_c2s_train_enter', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
-            print(`[GameMode] Received F3 Event from Player ${playerID}`);
             TrainingManager.GetInstance().EnterRoom(playerID);
         });
 
         CustomGameEventManager.RegisterListener('cmd_c2s_train_exit', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
-            print(`[GameMode] Received F4 Event from Player ${playerID}`);
             TrainingManager.GetInstance().ExitRoom(playerID);
         });
 
@@ -564,12 +539,10 @@ export class GameMode {
             }
         });
 
-        // print("[GameMode] 游戏模式已激活: 等待验证...");
 
         // 如果是重新加载脚本 (游戏已经在进行中)，则自动执行一次软重启以应用新逻辑
         if (GameRules.State_Get() >= 4) {
             // 4 = DOTA_GAMERULES_STATE_PRE_GAME
-            // print("[GameMode] 检测到脚本重载，自动执行 RestartGame...");
             this.RestartGame();
         }
     }
@@ -578,7 +551,6 @@ export class GameMode {
     private static StartGame() {
         if (this.isGameStarted) return;
         this.isGameStarted = true;
-        // print("[GameMode] 游戏正式开始！启动刷怪和计时...");
 
         // 通知前端开始计时
         CustomGameEventManager.Send_ServerToAllClients('update_game_timer_start', {
@@ -591,7 +563,6 @@ export class GameMode {
 
     // 重置游戏 (软重启)
     private static RestartGame() {
-        print('[GameMode] 执行软重启...');
         this.isGameStarted = false;
 
         // 1. 重置波次管理器（停止计时器并清理怪物）
@@ -659,7 +630,6 @@ export class GameMode {
                                 newHeroIndex: newHero.GetEntityIndex(),
                             });
                         } else {
-                            print(`[RestartGame] ERROR: CreateHeroForPlayer returned null!`);
                         }
                     }, playerID);
                 } else {
@@ -718,7 +688,6 @@ export class GameMode {
                     const ability = hero.FindAbilityByName(abilityName);
                     if (ability) {
                         ability.SetLevel(1);
-                        print(`[GameMode] Added ability ${abilityName} to ${heroName}`);
                     }
                 }
             }
@@ -753,8 +722,6 @@ export class GameMode {
     private static StartWave(waveNumber: number) {
         if (!this.isGameStarted) return; // 如果游戏重置了，停止刷怪
 
-        // print(`[GameMode] 第 ${waveNumber} 波开始！(持续60秒)`);
-
         // ... (目标获取逻辑)
         // 优先寻找自定义基地 "npc_dota_home_base"
         let targetEntity = Entities.FindAllByClassname('npc_dota_building').find(e => (e as CDOTA_BaseNPC).GetUnitName() === 'npc_dota_home_base');
@@ -768,22 +735,17 @@ export class GameMode {
 
         if (targetEntity) {
             targetPos = targetEntity.GetAbsOrigin();
-            // print(`[GameMode DEBUG] 找到基地目标: ${(targetEntity as CDOTA_BaseNPC).GetUnitName() || "dota_goodguys_fort"}, 位置: ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
 
             // 简单的防错：如果是那个诡异的地图角落坐标 (-11712)，说明这个实体可能损坏了，强制归零
             if (targetPos.x < -10000 && targetPos.y < -10000) {
-                print(`[GameMode DEBUG] 警告: 目标坐标异常 (可能未放置好)，重置为 (0,0,0)`);
                 targetPos = Vector(0, 0, 0);
             }
         } else {
-            print(`[GameMode DEBUG] 警告: 未找到 dota_goodguys_fort 或 npc_dota_home_base，尝试查找玩家英雄...`);
             const playerHero = PlayerResource.GetSelectedHeroEntity(0);
             if (playerHero) {
                 targetEntity = playerHero;
                 targetPos = playerHero.GetAbsOrigin();
-                print(`[GameMode DEBUG] 找到英雄目标: ${playerHero.GetUnitName()}, 位置: ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
             } else {
-                print(`[GameMode DEBUG] 严重警告: 既找不到基地也找不到英雄，怪物将攻击 (0,0,0)`);
                 targetPos = Vector(0, 0, 0);
             }
         }
@@ -801,7 +763,6 @@ export class GameMode {
                 return undefined; // 安全检查：游戏重置则停止
             }
             if (currentTick >= ticks) {
-                // print(`[GameMode] 第 ${waveNumber} 波结束`);
                 this.currentWaveTimer = null;
                 return undefined;
             }
@@ -1002,7 +963,6 @@ export class GameMode {
             event.damage = event.damage * damageBonus;
             
             // Debug log (可选)
-            // print(`[Damage Filter] Armor Pen: ${armorPen}, Armor: ${victimArmor}->${effectiveArmor}, Damage x${damageBonus.toFixed(2)}`);
         }
         
         return true;
@@ -1015,7 +975,6 @@ export class GameMode {
      */
     private static OnMerchantInteract(playerID: PlayerID, entityName: string) {
         if (!PlayerResource.IsValidPlayerID(playerID)) {
-            print(`[Merchant] Invalid player ID: ${playerID}`);
             return;
         }
 
@@ -1023,12 +982,10 @@ export class GameMode {
         const expectedShopName = `shop_${playerID + 1}`;
 
         if (entityName !== expectedShopName) {
-            print(`[Merchant] Player ${playerID} tried to access ${entityName}, but is assigned to ${expectedShopName}. Ignoring.`);
             return;
         }
 
         // Valid interaction - open the merchant panel
-        print(`[Merchant] Player ${playerID} accessed ${entityName}. Opening panel.`);
         
         const player = PlayerResource.GetPlayer(playerID);
         if (player) {

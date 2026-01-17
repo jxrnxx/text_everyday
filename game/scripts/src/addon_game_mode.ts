@@ -14,6 +14,5 @@ Object.assign(getfenv(), {
 // 如果是脚本重载 (游戏已经开始)，显式调用 Activate 以触发重载逻辑
 if (GameRules.State_Get() >= 2) {
     // 2 = DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP
-    print('[Addon] 检测到脚本重载，重新激活 GameMode...');
     GameMode.Activate();
 }

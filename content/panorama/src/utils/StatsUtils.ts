@@ -58,6 +58,8 @@ export interface RawStatsData {
     extra_move_speed: number;
     
     base_move_speed: number;
+    
+    extra_life_on_hit: number;
 }
 
 /** 计算后的面板属性 */
@@ -260,7 +262,7 @@ export function getHeroStats(heroIndex: EntityIndex): PanelStats | null {
         extraArmor: raw.extra_armor || 0,
         extraMoveSpeed: raw.extra_move_speed || 0,
         extraDamage: raw.extra_base_damage || 0,
-        extraLifeOnHit: (raw.life_on_hit || 0) - (raw.life_on_hit_base || 0),
+        extraLifeOnHit: raw.extra_life_on_hit || 0,
     };
 }
 

@@ -31,29 +31,22 @@ export class InvitationModule {
                 success: true,
                 message: `验证成功，选择英雄: ${heroName === 'npc_dota_hero_juggernaut' ? '剑圣' : '玛西'}`,
             });
-            print(`[InvitationModule] Player ${playerID} verified with code ${code}, target hero: ${heroName}`);
 
             // Spawn Hero Logic
             let hero = PlayerResource.GetSelectedHeroEntity(playerID);
-            print(`[InvitationModule] Current hero: ${hero ? hero.GetUnitName() : 'NONE'}`);
 
             if (hero) {
                 // If player has a hero, replace it if different
                 if (hero.GetUnitName() !== heroName) {
-                    print(`[InvitationModule] Replacing ${hero.GetUnitName()} with ${heroName}`);
                     const newHero = PlayerResource.ReplaceHeroWith(playerID, heroName, 0, 0);
                     if (newHero) {
                         hero = newHero;
-                        print(`[InvitationModule] Replaced successfully! New hero: ${hero.GetUnitName()}`);
                     } else {
-                        print(`[InvitationModule] ReplaceHeroWith FAILED!`);
                     }
                 } else {
-                    print(`[InvitationModule] Hero already correct: ${heroName}`);
                 }
             } else {
                 // If no hero exists, create one
-                print(`[InvitationModule] No hero exists, creating ${heroName}`);
                 hero = CreateHeroForPlayer(heroName, player);
             }
 
@@ -85,7 +78,6 @@ export class InvitationModule {
                 success: false,
                 message: '验证码错误，请输入: 1(剑圣) 或 2(玛西)',
             });
-            print(`Player ${playerID} verification failed with code: ${code}`);
         }
     }
 }

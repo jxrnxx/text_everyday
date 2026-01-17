@@ -54,6 +54,7 @@ interface HeroStats {
     extra_max_mana: number;          // 额外最大法力
     extra_move_speed: number;        // 额外移速
     extra_base_damage: number;       // 额外攻击力
+    extra_life_on_hit: number;       // 额外攻击回血（商店购买）
     lifesteal: number;               // 吸血百分比
     armor_pen: number;               // 护甲穿透(破势)
     base_move_speed: number;         // 基础移速（从配置读取）
@@ -76,7 +77,7 @@ const DEFAULT_STATS: HeroStats = {
     // 额外属性
     extra_constitution: 0, extra_martial: 0, extra_divinity: 0, extra_agility: 0,
     extra_attack_speed: 0, extra_mana_regen: 0, extra_armor: 0,
-    extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0,
+    extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0, extra_life_on_hit: 0,
     lifesteal: 0, armor_pen: 0, base_move_speed: 300,
     life_on_hit_base: 0, life_on_hit: 0,
 };
@@ -98,7 +99,6 @@ export class CustomStats {
         if (this.cache[unitIndex]) return;
 
         const unitName = hero.GetUnitName();
-        print(`[CustomStats] Initializing hero: ${unitName}`);
         
         // 使用 HeroConfigManager 获取配置（规范化的入口）
         const { HeroConfigManager } = require('./HeroConfigManager');
@@ -132,7 +132,6 @@ export class CustomStats {
         // 基础攻击回血
         const lifeOnHitBase = Number(heroConfig.LifeOnHit) || 0;
         
-        print(`[CustomStats] Loaded from Excel: Constitution=${constitutionBase}, Martial=${martialBase}, Divinity=${divinityBase}`);
 
         const initialStats: HeroStats = {
             // 基础属性
@@ -175,6 +174,7 @@ export class CustomStats {
             extra_max_mana: 0,
             extra_move_speed: 0,
             extra_base_damage: 0,
+            extra_life_on_hit: 0,
             lifesteal: 0,
             armor_pen: 0,
             base_move_speed: baseMoveSpeed,
@@ -190,7 +190,6 @@ export class CustomStats {
         // Add Modifier
         hero.AddNewModifier(hero, undefined, 'modifier_custom_stats_handler', {});
 
-        print(`[CustomStats] Initialized stats for ${unitName} (Job: ${initialStats.profession})`);
         
         // Send to client immediately
         this.SendStatsToClient(hero, initialStats);
@@ -209,15 +208,27 @@ export class CustomStats {
         if (currentStats[statType] !== undefined && typeof currentStats[statType] === 'number') {
             (currentStats as any)[statType] += value;
             
+            // 如果是 extra_life_on_hit，同时更新 life_on_hit 面板值
+            if (statType === 'extra_life_on_hit') {
+                currentStats.life_on_hit = (currentStats.life_on_hit_base || 0) + (currentStats.extra_life_on_hit || 0);
+            }
+            
             // Update Cache & NetTable
             this.cache[unitIndex] = currentStats;
             CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, currentStats);
             
+            // 保存修改前的血量/蓝量状态
+            const oldHealth = unit.GetHealth();
+            const oldMaxHealth = unit.GetMaxHealth();
+            const oldMana = unit.GetMana();
+            const oldMaxMana = unit.GetMaxMana();
+            const healthRatio = oldHealth / Math.max(oldMaxHealth, 1);
+            const manaRatio = oldMana / Math.max(oldMaxMana, 1);
+            
             // 强制刷新 modifier 属性
-            // 找到 modifier 并触发重新计算
             const modifier = unit.FindModifierByName('modifier_custom_stats_handler');
             if (modifier) {
-                // 触发 modifier 的 OnIntervalThink 来立即重新计算
+                // 触发 modifier 的 ForceRefresh 来立即重新计算
                 (modifier as any).ForceRefresh && (modifier as any).ForceRefresh();
                 // 如果 ForceRefresh 不存在，至少调用 CalculateStatBonus
                 if (unit.IsRealHero()) {
@@ -225,12 +236,28 @@ export class CustomStats {
                 }
             }
             
+            // 立即计算并设置正确的血量（避免闪烁）
+            // 正确的血量计算逻辑：
+            // 新增的最大血量部分，按当前血量比例计算应该增加多少当前血量
+            // 例如：当前90/100血(90%)，新增100最大血量 -> 新血量 = 90 + 100*90% = 180
+            const newMaxHealth = unit.GetMaxHealth();
+            const newMaxMana = unit.GetMaxMana();
+            
+            const healthGain = newMaxHealth - oldMaxHealth;
+            const manaGain = newMaxMana - oldMaxMana;
+            
+            // 新血量 = 旧血量 + (新增最大血量 * 血量比例)
+            const newHealth = Math.max(1, Math.floor(oldHealth + healthGain * healthRatio));
+            const newMana = Math.floor(oldMana + manaGain * manaRatio);
+            
+            unit.SetHealth(Math.min(newHealth, newMaxHealth));
+            unit.SetMana(Math.min(newMana, newMaxMana));
+            
             // 通知客户端属性已更新
             if (unit.IsRealHero()) {
                 this.SendStatsToClient(unit);
             }
         } else {
-            print(`[CustomStats] Invalid or non-numeric stat type: ${statType}`);
         }
     }
 
@@ -483,7 +510,6 @@ export class CustomStats {
             if (currentCoin < cost) {
                 // 灵石不足
                 hero.EmitSound('General.CastFail_NoMana');
-                print(`[CustomStats] Player ${playerId} - 灵石不足! 需要: ${cost}, 拥有: ${currentCoin}`);
                 return;
             }
             
@@ -496,7 +522,7 @@ export class CustomStats {
                 'armor': { stat: 'extra_armor', amount: 2 },
                 'mana_regen': { stat: 'extra_mana_regen', amount: 2 },
                 'attack_speed': { stat: 'extra_attack_speed', amount: 15 },
-                'life_on_hit': { stat: 'life_on_hit', amount: 10 },  // 攻击回血
+                'life_on_hit': { stat: 'extra_life_on_hit', amount: 10 },  // 攻击回血
                 'base_damage': { stat: 'extra_base_damage', amount: 15 },
                 'armor_pen': { stat: 'armor_pen', amount: 10 },  // 护甲穿透(破势)
             };
@@ -509,12 +535,9 @@ export class CustomStats {
                 // 添加属性
                 CustomStats.AddStat(hero, mapping.stat, amount || mapping.amount);
                 hero.EmitSound('Item.TomeOfKnowledge');
-                print(`[CustomStats] Player ${playerId} purchased ${statType} +${amount || mapping.amount} for ${cost} 灵石`);
             } else {
-                print(`[CustomStats] Unknown stat type: ${statType}`);
             }
         });
         
-        print("[CustomStats] System Initialized with Memory Cache.");
     }
 }

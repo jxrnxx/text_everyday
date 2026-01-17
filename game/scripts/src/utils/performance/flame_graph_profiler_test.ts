@@ -161,14 +161,12 @@ export class FlameGraphProfilerTests {
         if (cmd === '-test2') {
             // 测试单个方法装饰器
             FlameGraphCommands.getInstance().handleStart();
-            print('测试单个方法装饰器...');
             const decoratorTest = new ProfileDecoratorTest();
             for (let i = 0; i < 5; i++) {
                 decoratorTest.testMethod1();
             }
 
             // 测试类装饰器
-            print('测试类装饰器...');
             const classTest = new ProfileClassTest();
 
             for (let i = 0; i < 5; i++) {
@@ -176,7 +174,6 @@ export class FlameGraphProfilerTests {
             }
 
             // 测试手动性能分析
-            print('测试手动性能分析...');
             const manualTest = new ManualProfileTest();
             for (let i = 0; i < 5; i++) {
                 manualTest.testManualProfiling();

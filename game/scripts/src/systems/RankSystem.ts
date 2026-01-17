@@ -89,7 +89,6 @@ export class RankSystem {
     private AttemptRankUp(playerID: PlayerID) {
         const player = PlayerResource.GetPlayer(playerID);
         if (!player) {
-            print(`[RankSystem] Invalid player: ${playerID}`);
             return;
         }
 
@@ -146,7 +145,6 @@ export class RankSystem {
 
         // 5. Log and notify
         const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
-        print(`[RankSystem] Player ${playerID} ranked up to ${rankName} (Rank ${newRank})`);
         
         this.SendResult(player, true, newRank, `突破成功！晋升${rankName}`);
 

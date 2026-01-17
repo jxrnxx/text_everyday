@@ -261,8 +261,10 @@ export class modifier_custom_stats_handler extends BaseModifier {
         return bonusSpeed;
     }
     
-    // 攻击回血 - 攻击命中时回复生命
+    // 攻击回血 + 吸血 - 攻击命中时回复生命
     OnAttackLanded(event: ModifierAttackEvent): void {
+        if (!IsServer()) return;
+        
         // 只处理自己发起的攻击
         if (event.attacker !== this.GetParent()) return;
         
@@ -270,11 +272,25 @@ export class modifier_custom_stats_handler extends BaseModifier {
         if (!parent || parent.IsNull()) return;
         
         const stats = CustomStats.GetAllStats(parent);
-        const lifeOnHit = stats.life_on_hit || 0;
+        const lifeOnHit = Number(stats.extra_life_on_hit) || 0;
+        const lifestealPercent = Number(stats.lifesteal) || 0;
         
+        let totalHeal = 0;
+        
+        // 攻击回血（固定值）
         if (lifeOnHit > 0) {
-            // 回复生命
-            parent.Heal(lifeOnHit, undefined);
+            totalHeal += lifeOnHit;
+        }
+        
+        // 吸血（基于造成的伤害）
+        if (lifestealPercent > 0 && event.damage > 0) {
+            const lifestealHeal = event.damage * (lifestealPercent / 100);
+            totalHeal += lifestealHeal;
+        }
+        
+        // 回复生命
+        if (totalHeal > 0) {
+            parent.Heal(totalHeal, undefined);
         }
     }
 }

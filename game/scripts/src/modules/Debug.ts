@@ -9,9 +9,7 @@ const DebugCallbacks: Record<string, { desc: string; func: DebugCallbackFunction
     ['-help']: {
         desc: '显示所有的测试指令',
         func: () => {
-            print('所有的测试指令:');
             for (const [cmd, { desc }] of Object.entries(DebugCallbacks)) {
-                print(`${cmd}: ${desc}`);
             }
         },
     },
@@ -19,14 +17,12 @@ const DebugCallbacks: Record<string, { desc: string; func: DebugCallbackFunction
         desc: '重载脚本',
         func: () => {
             SendToConsole('script_reload');
-            print('-r 命令script_reload!重载脚本!');
         },
     },
     ['-r']: {
         desc: '重启游戏',
         func: () => {
             SendToConsole('restart'); // 重启游戏
-            print('-r 命令restart重启游戏!');
         },
     },
     ['get_key_v3']: {
@@ -96,9 +92,7 @@ export class Debug {
             this.DebugEnabled = on;
         }
         if (this.DebugEnabled) {
-            print('Debug mode enabled!');
         } else {
-            print('Debug mode disabled!');
         }
     }
 

@@ -6,14 +6,11 @@ import '../utils/hide-default-hud';
 
 import { type FC, useEffect } from 'react';
 import { render } from 'react-panorama-x';
-import GameTimer from './GameTimer';
-import WaveTimer from './WaveTimer';
+import TopHUD from './TopHUD';
 import InvitationCode from './InvitationCode';
-import EconomyDisplay from './EconomyDisplay';
 import TrainingButtons from './TrainingButtons';
 import RankUpButton from './RankUpButton';
 import MerchantShopPanel from './MerchantShopPanel';
-import BackToLobbyButton from './BackToLobbyButton';
 import HeroHUD from './HeroHUD';
 import EnemyPanel from './EnemyPanel';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
@@ -21,11 +18,8 @@ import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 const Root: FC = () => {
     return (
         <>
-            <BackToLobbyButton />
-            <GameTimer />
-            <WaveTimer />
+            <TopHUD />
             <InvitationCode />
-            <EconomyDisplay />
             <TrainingButtons />
             <RankUpButton />
             <MerchantShopPanel />

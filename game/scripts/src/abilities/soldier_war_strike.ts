@@ -181,11 +181,9 @@ export class modifier_soldier_war_strike extends BaseModifier {
 
         const baseDamage = caster.GetAverageTrueAttackDamage(mainTarget);
         const damage = baseDamage * (this.damage_pct / 100);
-        // print(`[WarStrike] Damage Calc: Base ${baseDamage} * ${this.damage_pct}% = ${damage}`);
 
         const angleThreshold = Math.cos((this.cleave_angle / 2) * (Math.PI / 180));
 
-        // print(`[WarStrike] Radius: ${this.cleave_radius}, DegAngle: ${this.cleave_angle}, Threshold: ${angleThreshold.toFixed(3)}`);
 
         for (const enemy of enemies) {
             if (enemy !== mainTarget && enemy.IsAlive()) {

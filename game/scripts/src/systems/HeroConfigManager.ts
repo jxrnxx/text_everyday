@@ -94,7 +94,6 @@ export class HeroConfigManager {
         const jsonData = json_heroes as any;
         this.configRoot = jsonData.DOTAHeroes || jsonData.XLSXContent || jsonData.default?.XLSXContent || jsonData;
         
-        print(`[HeroConfigManager] Initialized with ${Object.keys(this.configRoot).length} hero configs`);
     }
     
     /**
@@ -116,14 +115,12 @@ export class HeroConfigManager {
                 const candidate = this.configRoot[key];
                 if (candidate && candidate.override_hero === heroName) {
                     config = candidate;
-                    print(`[HeroConfigManager] Found ${heroName} via override_hero in ${key}`);
                     break;
                 }
             }
         }
         
         if (!config) {
-            print(`[HeroConfigManager] WARNING: No config found for ${heroName}`);
             return null;
         }
         
@@ -140,7 +137,6 @@ export class HeroConfigManager {
         
         if (!config) {
             config = this.GetHeroConfig('npc_dota_hero_juggernaut');
-            print(`[HeroConfigManager] Using fallback config (juggernaut) for ${heroName}`);
         }
         
         return config || this.getDefaultConfig();

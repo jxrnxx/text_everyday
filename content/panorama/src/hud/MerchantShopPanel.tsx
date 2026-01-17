@@ -75,6 +75,23 @@ const MerchantShopPanel: React.FC = () => {
     const [skills, setSkills] = useState<SkillSlot[]>(SKILL_CONFIG);
     const [hoveredSkill, setHoveredSkill] = useState<{ skill: SkillSlot; index: number } | null>(null);
     const [currentTier, setCurrentTier] = useState(1);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const toastTimerRef = React.useRef<number>(0); // 用于跟踪定时器
+    
+    // 显示浮动提示
+    const showToast = (message: string) => {
+        // 增加计时器版本号，使旧的定时器失效
+        toastTimerRef.current += 1;
+        const currentTimer = toastTimerRef.current;
+        
+        setToastMessage(message);
+        $.Schedule(1.3, () => {
+            // 只有当版本号匹配时才清除（说明没有新的消息覆盖）
+            if (toastTimerRef.current === currentTimer) {
+                setToastMessage(null);
+            }
+        });
+    };
 
     // 检查是否所有技能都购买了
     const allPurchased = skills.every(s => s.purchased);
@@ -84,9 +101,31 @@ const MerchantShopPanel: React.FC = () => {
     const unpurchasedCount = skills.filter(s => !s.purchased).length;
     // 全修需要的总金币
     const totalCostForAll = unpurchasedCount * SLOT_COST;
-    // 检查是否有足够金币 (简化版 - 之后可以接入真实经济系统)
-    const [playerGold, setPlayerGold] = useState(9999); // TODO: 从经济系统获取
+    // 从 NetTable 读取玩家灵石
+    const [playerGold, setPlayerGold] = useState(0);
+    
+    // 订阅经济数据更新
+    useEffect(() => {
+        const localPlayer = Players.GetLocalPlayer();
+        const updateGold = () => {
+            const economyData = CustomNetTables.GetTableValue('economy', `player_${localPlayer}` as any) as any;
+            if (economyData && economyData.spirit_coin !== undefined) {
+                setPlayerGold(economyData.spirit_coin);
+            }
+        };
+        
+        // 初始读取
+        updateGold();
+        
+        // 订阅更新
+        const listener = CustomNetTables.SubscribeNetTableListener('economy' as any, updateGold);
+        return () => {
+            CustomNetTables.UnsubscribeNetTableListener(listener);
+        };
+    }, []);
+    
     const canAffordAll = playerGold >= totalCostForAll && unpurchasedCount > 0;
+    const canAffordOne = playerGold >= SLOT_COST;
 
     // handleClose 引用 - 需要在 useEffect 之前定义
     const handleCloseRef = React.useRef<() => void>(() => {});
@@ -186,6 +225,13 @@ const MerchantShopPanel: React.FC = () => {
     const handlePurchase = (skill: SkillSlot) => {
         if (skill.purchased) return;
         
+        // 检查余额
+        if (playerGold < SLOT_COST) {
+            Game.EmitSound('General.CastFail_NoMana');
+            showToast('灵石不足');
+            return;
+        }
+        
         // 发送购买事件到服务端
         const statType = STAT_TYPE_MAP[skill.name];
         if (statType) {
@@ -203,6 +249,13 @@ const MerchantShopPanel: React.FC = () => {
     };
 
     const handlePurchaseAll = () => {
+        // 检查余额是否足够购买所有
+        if (playerGold < totalCostForAll || unpurchasedCount === 0) {
+            Game.EmitSound('General.CastFail_NoMana');
+            showToast(`灵石不足，需要 ${totalCostForAll} 灵石`);
+            return;
+        }
+        
         // 全修 - 购买所有未购买的槽位
         skills.forEach(skill => {
             if (!skill.purchased) {
@@ -231,12 +284,26 @@ const MerchantShopPanel: React.FC = () => {
             {/* 主包装容器 - NPC肖像 + 玉面板 */}
             <Panel style={styles.merchantWrapper}>
                 
-                {/* NPC肖像 (左侧) - 呼吸动画 */}
-                <Image 
-                    src="file://{resources}/images/shop_01.png"
-                    style={styles.npcPortrait}
-                    className="NpcBreathing"
-                />
+                {/* NPC肖像区域 */}
+                <Panel style={styles.npcContainer}>
+                    {/* 商人对话气泡 - 显示在NPC头顶 */}
+                    {toastMessage && (
+                        <Panel style={styles.speechBubbleWrapper} className="SpeechFadeIn">
+                            <Panel style={styles.speechBubble}>
+                                <Label text={`"${toastMessage}"`} style={styles.speechText} />
+                            </Panel>
+                            {/* 气泡小尾巴 */}
+                            <Panel style={styles.speechTail} />
+                        </Panel>
+                    )}
+                    
+                    {/* NPC肖像 - 呼吸动画 */}
+                    <Image 
+                        src="file://{resources}/images/shop_01.png"
+                        style={styles.npcPortrait}
+                        className="NpcBreathing"
+                    />
+                </Panel>
 
                 {/* 玉面板容器 (右侧) */}
                 <Panel style={styles.panelContainer}>
@@ -325,6 +392,8 @@ const MerchantShopPanel: React.FC = () => {
                         </Panel>
                     )}
 
+
+
                 </Panel>
             </Panel>
         </Panel>
@@ -350,7 +419,6 @@ const styles = {
     npcPortrait: {
         width: '350px',
         height: '500px',
-        marginRight: '-40px',
     },
     
     // 玉面板容器
@@ -543,6 +611,74 @@ const styles = {
         fontSize: '14px',
     },
     
+    // 浮动提示 - 显示在标题下方居中
+    toast: {
+        position: '240px 118px 0px' as const,
+        width: '200px',
+        padding: '10px 24px',
+        backgroundColor: 'rgba(60, 20, 15, 0.92)',
+        border: '1px solid #c9a861',
+        borderRadius: '4px',
+        boxShadow: '0px 0px 12px 3px rgba(180, 120, 60, 0.3)',
+        horizontalAlign: 'center' as const,
+    },
+    toastText: {
+        color: '#ff8866',
+        fontSize: '15px',
+        fontWeight: 'bold' as const,
+        textShadow: '0px 0px 6px #cc4422',
+        textAlign: 'center' as const,
+        horizontalAlign: 'center' as const,
+        width: '100%',
+        letterSpacing: '3px',
+    },
+    
+    // NPC容器 - 包含对话气泡和胸像
+    npcContainer: {
+        flowChildren: 'down' as const,
+        width: '350px',
+        marginRight: '-40px',
+    },
+    
+    // 气泡包装器 - 用于整体定位和动画
+    speechBubbleWrapper: {
+        flowChildren: 'down' as const,
+        marginLeft: '140px',
+        marginBottom: '-15px',
+        horizontalAlign: 'center' as const,
+    },
+    
+    // 商人对话气泡
+    speechBubble: {
+        width: '160px',
+        padding: '8px 14px',
+        backgroundColor: 'rgba(40, 30, 20, 0.92)',
+        border: '1px solid #c9a861',
+        borderRadius: '8px',
+        boxShadow: '0px 0px 10px 2px rgba(180, 140, 80, 0.3)',
+    },
+    
+    // 气泡小尾巴 - 倒三角
+    speechTail: {
+        width: '0px',
+        height: '0px',
+        marginLeft: '60px',
+        marginTop: '-1px',
+        borderLeft: '8px solid transparent',
+        borderRight: '8px solid transparent',
+        borderTop: '10px solid #c9a861',
+    },
+    
+    speechText: {
+        color: '#ffd080',
+        fontSize: '13px',
+        fontWeight: 'bold' as const,
+        textShadow: '0px 0px 4px #c9a861',
+        textAlign: 'center' as const,
+        horizontalAlign: 'center' as const,
+        width: '100%',
+        fontStyle: 'italic' as const,
+    },
 
 };
 

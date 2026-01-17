@@ -83,7 +83,6 @@ export class TrainingRoomManager {
     private static readonly TILE_SIZE = 512; // Approx size of the rock at scale 1
 
     public static Init() {
-        print('[TrainingRoomManager] Initializing Themed Floating Islands...');
         for (let i = 0; i < this.ROOM_CONFIGS.length; i++) {
             this.GenerateRoom(i);
         }
@@ -100,7 +99,6 @@ export class TrainingRoomManager {
     private static GenerateRoom(index: number) {
         const config = this.ROOM_CONFIGS[index];
         const center = config.center;
-        print(`[TrainingRoomManager] Generating ${config.name} at ${center.x}, ${center.y}`);
 
         // 1. FLOOR GENERATION
         if (config.name === '天枢界域') {
@@ -137,7 +135,6 @@ export class TrainingRoomManager {
                     }
                 }
             }
-            print(`[TrainingRoomManager] Generated High-Tech Gold Floor for Tianshu`);
         } else {
             // Keep the "Massive Single Floor" for others
             const floor = CreateUnitByName(

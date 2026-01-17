@@ -11,6 +11,7 @@ export class EconomySystem {
     // Constants for KV Drops
     private readonly KV_DROP_COIN = 'CustomDrop_Coin';
     private readonly KV_DROP_FAITH = 'CustomDrop_Faith';
+    private readonly KV_DROP_DEFENDER_POINTS = 'CustomDrop_DefenderPoints';
 
     public constructor() {
         this.Initialize();
@@ -24,7 +25,7 @@ export class EconomySystem {
     }
 
     // Simplified KV cache for relevant keys
-    private unitKVCache: { [unitName: string]: { coin: number; faith: number; exp: number } } = {};
+    private unitKVCache: { [unitName: string]: { coin: number; faith: number; exp: number; defenderPoints: number } } = {};
 
     private Initialize() {
         // Load Unit KVs
@@ -33,19 +34,16 @@ export class EconomySystem {
         // Listen for Entity Killed
         ListenToGameEvent('entity_killed', event => this.OnEntityKilled(event), undefined);
 
-        print('[EconomySystem] Initialized');
     }
 
     private LoadUnitKVs() {
         // Try loading the custom units file directly
         const unitsKV = LoadKeyValues('scripts/npc/custom_units.txt');
         if (unitsKV && typeof unitsKV === 'object') {
-            print(`[EconomySystem] Loaded KV Object Keys: ${Object.keys(unitsKV).join(', ')}`);
 
             // Check if "XLSXContent" exists, otherwise assume root IS the units map
             let dotaUnits = (unitsKV as any)['XLSXContent'];
             if (!dotaUnits) {
-                print("[EconomySystem] 'XLSXContent' key not found, assuming root object contains units.");
                 dotaUnits = unitsKV;
             }
 
@@ -56,34 +54,27 @@ export class EconomySystem {
                         const coin = data[this.KV_DROP_COIN] ? Number(data[this.KV_DROP_COIN]) : 0;
                         const faith = data[this.KV_DROP_FAITH] ? Number(data[this.KV_DROP_FAITH]) : 0;
                         const exp = data['HaveLevel'] ? Number(data['HaveLevel']) : 0;
+                        const defenderPoints = data[this.KV_DROP_DEFENDER_POINTS] ? Number(data[this.KV_DROP_DEFENDER_POINTS]) : 0;
 
-                        // print(`[EconomySystem] Checking Unit: ${unitName} -> Coin: ${coin}, Faith: ${faith}`, Exp: ${exp});
-
-                        if (coin > 0 || faith > 0 || exp > 0) {
-                            this.unitKVCache[unitName] = { coin, faith, exp };
+                        if (coin > 0 || faith > 0 || exp > 0 || defenderPoints > 0) {
+                            this.unitKVCache[unitName] = { coin, faith, exp, defenderPoints };
                         }
                     }
                 }
             }
-            print(`[EconomySystem] Loaded KV drops for ${Object.keys(this.unitKVCache).length} units.`);
         } else {
-            print(`[EconomySystem] Warning: Failed to load scripts/npc/npc_units_custom.txt`);
         }
     }
 
-    private GetUnitDropInfo(unitName: string): { coin: number; faith: number; exp: number } {
+    private GetUnitDropInfo(unitName: string): { coin: number; faith: number; exp: number; defenderPoints: number } {
         // Check cache first
         if (this.unitKVCache[unitName]) {
             return this.unitKVCache[unitName];
         }
 
         // Default Fallback logic
-        // 1. If it's a hero? Maybe drops nothing by default or huge bounty.
-        // 2. If it is a generic creep (has 'npc_dota_creature' class but no custom KV?), give 10 coins.
-        return { coin: 10, faith: 0, exp: 0 };
+        return { coin: 10, faith: 0, exp: 0, defenderPoints: 0 };
     }
-
-    // ... (rest of methods)
 
     /**
      * Initializes a player's economy when they join or spawn
@@ -94,18 +85,23 @@ export class EconomySystem {
         const currentData = CustomNetTables.GetTableValue('economy', `player_${playerId}`);
         if (!currentData) {
             // 初始灵石 200，让玩家可以直接买第一个技能
-            this.UpdatePlayerEconomy(playerId, 200, 0);
+            this.UpdatePlayerEconomy(playerId, 200, 0, 0);
         }
     }
 
     public AddSpiritCoin(playerId: PlayerID, amount: number) {
         const stats = this.GetPlayerEconomy(playerId);
-        this.UpdatePlayerEconomy(playerId, stats.spirit_coin + amount, stats.faith);
+        this.UpdatePlayerEconomy(playerId, stats.spirit_coin + amount, stats.faith, stats.defender_points);
     }
 
     public AddFaith(playerId: PlayerID, amount: number) {
         const stats = this.GetPlayerEconomy(playerId);
-        this.UpdatePlayerEconomy(playerId, stats.spirit_coin, stats.faith + amount);
+        this.UpdatePlayerEconomy(playerId, stats.spirit_coin, stats.faith + amount, stats.defender_points);
+    }
+
+    public AddDefenderPoints(playerId: PlayerID, amount: number) {
+        const stats = this.GetPlayerEconomy(playerId);
+        this.UpdatePlayerEconomy(playerId, stats.spirit_coin, stats.faith, stats.defender_points + amount);
     }
 
     public GetSpiritCoin(playerId: PlayerID): number {
@@ -116,23 +112,32 @@ export class EconomySystem {
         return this.GetPlayerEconomy(playerId).faith;
     }
 
-    private GetPlayerEconomy(playerId: PlayerID): { spirit_coin: number; faith: number } {
-        const data = CustomNetTables.GetTableValue('economy', `player_${playerId}`);
-        return data || { spirit_coin: 0, faith: 0 };
+    public GetDefenderPoints(playerId: PlayerID): number {
+        return this.GetPlayerEconomy(playerId).defender_points;
     }
 
-    private UpdatePlayerEconomy(playerId: PlayerID, coin: number, faith: number) {
-        const data = { spirit_coin: coin, faith: faith };
+    private GetPlayerEconomy(playerId: PlayerID): { spirit_coin: number; faith: number; defender_points: number } {
+        const data = CustomNetTables.GetTableValue('economy', `player_${playerId}`) as { spirit_coin: number; faith: number; defender_points?: number } | undefined;
+        return {
+            spirit_coin: data?.spirit_coin ?? 0,
+            faith: data?.faith ?? 0,
+            defender_points: data?.defender_points ?? 0,
+        };
+    }
+
+    private UpdatePlayerEconomy(playerId: PlayerID, coin: number, faith: number, defenderPoints: number) {
+        const data = { spirit_coin: coin, faith: faith, defender_points: defenderPoints };
         CustomNetTables.SetTableValue('economy', `player_${playerId}`, data);
 
         // Instant Event Update to bypass NetTable throttling
         const player = PlayerResource.GetPlayer(playerId);
         if (player) {
-            CustomGameEventManager.Send_ServerToPlayer(player, 'economy_update', {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'economy_update' as never, {
                 player_id: playerId,
                 spirit_coin: coin,
                 faith: faith,
-            });
+                defender_points: defenderPoints,
+            } as never);
         }
     }
 
@@ -161,6 +166,11 @@ export class EconomySystem {
             this.ShowOverheadMsg(attackerUnit, info.faith, 'OVERHEAD_ALERT_DAMAGE');
         }
 
+        // 添加守家积分（战魂）
+        if (info.defenderPoints > 0) {
+            this.AddDefenderPoints(playerId, info.defenderPoints);
+        }
+
         // 添加经验值 - 使用自定义经验系统（完全绕过Dota2的30级限制）
         if (info.exp > 0) {
             const hero = PlayerResource.GetSelectedHeroEntity(playerId);
@@ -181,3 +191,4 @@ export class EconomySystem {
         SendOverheadEventMessage(player, msgType, unit, value, player);
     }
 }
+

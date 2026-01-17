@@ -165,7 +165,6 @@ export class modifier_tiny_toss_x extends BaseModifierMotionBoth {
                 false
             );
 
-            print(`find ${enemies.length} enemies`);
 
             enemies.forEach(enemy => {
                 const damage: ApplyDamageOptions = {

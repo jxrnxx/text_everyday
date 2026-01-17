@@ -106,7 +106,6 @@ b, library_name = bit, 'bit'
 
 if print_debug_messages then
    -- Printing list of abilities of your system
-   print("Abilities:")
    print(
       "   Lua version:               " ..
          (is_LuaJIT and

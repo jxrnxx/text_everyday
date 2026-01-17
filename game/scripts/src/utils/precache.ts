@@ -79,7 +79,6 @@ export default function Precache(context: CScriptPrecacheContext) {
         ],
         context
     );
-    // print(`[Precache] Precache finished.`);
 }
 
 // 预载入KV文件中的所有资源
