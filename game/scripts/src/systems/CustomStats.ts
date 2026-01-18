@@ -27,12 +27,12 @@ interface HeroStats {
     damage_base: number;         // 基础攻击力
     damage_gain: number;         // 攻击力成长
     damage_bonus: number;        // 攻击力加成百分比
-    
+
     // ===== 计算后的面板属性 (用于显示) =====
     constitution: number;        // 面板根骨
     martial: number;             // 面板武道
     divinity: number;            // 面板神念
-    
+
     // ===== 其他属性 =====
     rank: number;
     display_level: number;       // 显示等级 (由服务端控制)
@@ -42,7 +42,7 @@ interface HeroStats {
     crit_damage: number;
     main_stat: string;           // 主属性: 'Martial' 或 'Divinity'
     profession?: string;
-    
+
     // ===== 额外获得的属性 (商人/游戏奖励/装备等) =====
     extra_constitution: number;      // 额外根骨
     extra_martial: number;           // 额外武道
@@ -84,29 +84,30 @@ const DEFAULT_STATS: HeroStats = {
 
 @reloadable
 export class CustomStats {
-    // Server-side memory cache to guarantee immediate data access
-    private static cache: { [key: string]: HeroStats } = {};
+    // 不再使用静态 cache，所有数据存储在 unit.CustomValue['_heroStats']
 
     /**
      * 初始化英雄的自定义属性
      * 使用 HeroConfigManager 从 Excel/JSON 配置读取
+     * 数据存储到 unit.CustomValue['_heroStats']，同时同步到 NetTable
      */
     public static InitializeHeroStats(hero: CDOTA_BaseNPC_Hero) {
         if (!hero || hero.IsNull()) return;
 
-        // 检查是否已经有数据 (Check Cache first)
-        const unitIndex = tostring(hero.GetEntityIndex());
-        if (this.cache[unitIndex]) return;
+        // 检查是否已经有数据 (Check CustomValue first)
+        const existingData = hero.GetCustomValue('_heroStats');
+        if (existingData) return;
 
         const unitName = hero.GetUnitName();
-        
+        const unitIndex = tostring(hero.GetEntityIndex());
+
         // 使用 HeroConfigManager 获取配置（规范化的入口）
         const { HeroConfigManager } = require('./HeroConfigManager');
         const heroConfig = HeroConfigManager.GetHeroConfigWithFallback(unitName);
-        
+
         // 从配置读取属性（使用类型安全的方法）
         const mainStat = heroConfig.CustomMainStat || 'Martial';
-        
+
         // 根骨
         const constitutionBase = Number(heroConfig.AttributeBaseConstitution) || 5;
         const constitutionGain = Number(heroConfig.AttributeConstitutionGain) || 0;
@@ -131,7 +132,7 @@ export class CustomStats {
         const baseMoveSpeed = Number(heroConfig.MovementSpeed) || 300;
         // 基础攻击回血
         const lifeOnHitBase = Number(heroConfig.LifeOnHit) || 0;
-        
+
 
         const initialStats: HeroStats = {
             // 基础属性
@@ -180,9 +181,10 @@ export class CustomStats {
             base_move_speed: baseMoveSpeed,
             life_on_hit_base: lifeOnHitBase,
             life_on_hit: lifeOnHitBase,  // 初始面板值 = 基础值
-        };        
-        // 1. Write to Cache (Source of Truth)
-        this.cache[unitIndex] = initialStats;
+        };
+
+        // 1. Write to CustomValue (Source of Truth)
+        hero.SetCustomValue('_heroStats', initialStats);
 
         // 2. Write to NetTable (For Client Sync)
         CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, initialStats);
@@ -190,7 +192,6 @@ export class CustomStats {
         // Add Modifier
         hero.AddNewModifier(hero, undefined, 'modifier_custom_stats_handler', {});
 
-        
         // Send to client immediately
         this.SendStatsToClient(hero, initialStats);
     }
@@ -202,21 +203,21 @@ export class CustomStats {
         if (!unit || unit.IsNull()) return;
 
         const unitIndex = tostring(unit.GetEntityIndex());
-        // Read from Cache -> Fallback to NetTable -> Fallback to Default
-        const currentStats = this.cache[unitIndex] || CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
+        // Read from CustomValue -> Fallback to NetTable -> Fallback to Default
+        const currentStats = unit.GetCustomValue('_heroStats') || CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
 
         if (currentStats[statType] !== undefined && typeof currentStats[statType] === 'number') {
             (currentStats as any)[statType] += value;
-            
+
             // 如果是 extra_life_on_hit，同时更新 life_on_hit 面板值
             if (statType === 'extra_life_on_hit') {
                 currentStats.life_on_hit = (currentStats.life_on_hit_base || 0) + (currentStats.extra_life_on_hit || 0);
             }
-            
-            // Update Cache & NetTable
-            this.cache[unitIndex] = currentStats;
+
+            // Update CustomValue & NetTable
+            unit.SetCustomValue('_heroStats', currentStats);
             CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, currentStats);
-            
+
             // 保存修改前的血量/蓝量状态
             const oldHealth = unit.GetHealth();
             const oldMaxHealth = unit.GetMaxHealth();
@@ -224,7 +225,7 @@ export class CustomStats {
             const oldMaxMana = unit.GetMaxMana();
             const healthRatio = oldHealth / Math.max(oldMaxHealth, 1);
             const manaRatio = oldMana / Math.max(oldMaxMana, 1);
-            
+
             // 强制刷新 modifier 属性
             const modifier = unit.FindModifierByName('modifier_custom_stats_handler');
             if (modifier) {
@@ -235,24 +236,24 @@ export class CustomStats {
                     (unit as CDOTA_BaseNPC_Hero).CalculateStatBonus(true);
                 }
             }
-            
+
             // 立即计算并设置正确的血量（避免闪烁）
             // 正确的血量计算逻辑：
             // 新增的最大血量部分，按当前血量比例计算应该增加多少当前血量
             // 例如：当前90/100血(90%)，新增100最大血量 -> 新血量 = 90 + 100*90% = 180
             const newMaxHealth = unit.GetMaxHealth();
             const newMaxMana = unit.GetMaxMana();
-            
+
             const healthGain = newMaxHealth - oldMaxHealth;
             const manaGain = newMaxMana - oldMaxMana;
-            
+
             // 新血量 = 旧血量 + (新增最大血量 * 血量比例)
             const newHealth = Math.max(1, Math.floor(oldHealth + healthGain * healthRatio));
             const newMana = Math.floor(oldMana + manaGain * manaRatio);
-            
+
             unit.SetHealth(Math.min(newHealth, newMaxHealth));
             unit.SetMana(Math.min(newMana, newMaxMana));
-            
+
             // 通知客户端属性已更新
             if (unit.IsRealHero()) {
                 this.SendStatsToClient(unit);
@@ -280,45 +281,54 @@ export class CustomStats {
     public static GetAllStats(unit: CDOTA_BaseNPC): HeroStats {
         if (!unit || unit.IsNull()) return { ...DEFAULT_STATS };
         const unitIndex = tostring(unit.GetEntityIndex());
-        // Prioritize Cache
-        return this.cache[unitIndex] || CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
+
+        // 检查 GetCustomValue 方法是否存在（非英雄单位可能没有）
+        let fromCustomValue: any = undefined;
+        if (typeof unit.GetCustomValue === 'function') {
+            fromCustomValue = unit.GetCustomValue('_heroStats');
+        }
+
+        // 从 NetTable 获取
+        const fromNetTable = CustomNetTables.GetTableValue('custom_stats' as any, unitIndex);
+
+        return fromCustomValue || fromNetTable || { ...DEFAULT_STATS };
     }
-    
+
     /**
      * 计算身法值
      * 公式: (基础身法 + (等级-1) * 身法成长) * (1 + 身法加成)
      */
     public static GetAgility(unit: CDOTA_BaseNPC): number {
         if (!unit || unit.IsNull()) return 0;
-        
+
         const stats = this.GetAllStats(unit);
         const level = unit.GetLevel();
-        
+
         // 公式: (基础身法 + (等级-1) * 身法成长) * (1 + 身法加成)
         const baseAgility = stats.agility_base + (level - 1) * stats.agility_gain;
         const totalAgility = Math.floor(baseAgility * (1 + stats.agility_bonus));
-        
+
         return totalAgility;
     }
-    
+
     /**
      * 更新显示等级 - 根据实际等级和阶位计算
      * 当有经验溢出时，会限制显示等级在当前阶位的合理范围内
      */
     public static UpdateDisplayLevel(hero: CDOTA_BaseNPC_Hero) {
         if (!hero || hero.IsNull()) return;
-        
+
         const stats = this.GetAllStats(hero);
         const rawLevel = hero.GetLevel();
         const rank = stats.rank;
-        
+
         // 计算当前阶位允许的最大等级: (rank + 1) * 10
         const currentMaxLevel = (rank + 1) * 10;
         // 计算上一阶位的最大等级 (用于判断溢出)
         const prevMaxLevel = rank > 0 ? rank * 10 : 0;
-        
+
         let displayLevel = rawLevel;
-        
+
         // 如果实际等级超过了当前阶位的最大等级，限制显示
         if (rawLevel > currentMaxLevel) {
             displayLevel = currentMaxLevel;
@@ -328,29 +338,29 @@ export class CustomStats {
             // 保持在上一阶位最大等级，直到真正升级
             displayLevel = Math.max(stats.display_level, prevMaxLevel);
         }
-        
+
         // 只有等级变化时才更新
         if (displayLevel !== stats.display_level) {
             this.SetDisplayLevel(hero, displayLevel);
         }
     }
-    
+
     /**
      * 直接设置显示等级
      */
     public static SetDisplayLevel(unit: CDOTA_BaseNPC, level: number) {
         if (!unit || unit.IsNull()) return;
-        
+
         const unitIndex = tostring(unit.GetEntityIndex());
-        
+
         // 使用 GetAllStats 获取完整的 stats 对象（不会丢失其他属性）
         const stats = this.GetAllStats(unit);
-        
+
         stats.display_level = level;
-        this.cache[unitIndex] = stats;
+        unit.SetCustomValue('_heroStats', stats);
         CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
     }
-    
+
     /**
      * 获取指定等级升级所需经验
      * 使用公式：100 + level * 30 + (level * level * 5)
@@ -359,35 +369,35 @@ export class CustomStats {
         // 简单的经验公式
         return 100 + level * 30 + Math.floor(level * level * 5);
     }
-    
+
     /**
      * 添加自定义经验（完全绕过Dota2的经验系统）
      * 返回是否升级
      */
     public static AddCustomExp(hero: CDOTA_BaseNPC_Hero, expAmount: number): boolean {
         if (!hero || hero.IsNull()) return false;
-        
+
         const unitIndex = tostring(hero.GetEntityIndex());
         const stats = this.GetAllStats(hero);
-        
+
         const currentLevel = stats.display_level;
         const rank = stats.rank;
-        
+
         // 禁忌阶位(rank=5)是最高阶位，不再获取经验
         if (rank >= 5) {
             return false;
         }
-        
+
         const maxLevel = Math.min((rank + 1) * 10, 50);  // 最高50级
-        
+
         // 如果已经达到当前阶位的等级上限，不添加经验
         if (currentLevel >= maxLevel) {
             return false;
         }
-        
+
         // 添加经验
         stats.custom_exp += expAmount;
-        
+
         // 检测是否升级
         let leveledUp = false;
         while (stats.custom_exp >= stats.custom_exp_required && stats.display_level < maxLevel) {
@@ -397,16 +407,16 @@ export class CustomStats {
             stats.custom_exp_required = this.GetExpRequiredForLevel(stats.display_level);
             leveledUp = true;
         }
-        
+
         // 如果升级后达到上限，清空多余经验
         if (stats.display_level >= maxLevel) {
             stats.custom_exp = stats.custom_exp_required; // 满经验显示
         }
-        
-        // 更新缓存和 NetTable
-        this.cache[unitIndex] = stats;
+
+        // 更新 CustomValue 和 NetTable
+        hero.SetCustomValue('_heroStats', stats);
         CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
-        
+
         // 如果升级了，强制刷新 modifier 以更新血量等属性
         if (leveledUp) {
             // 延迟一帧执行，确保 display_level 已更新
@@ -418,49 +428,49 @@ export class CustomStats {
                 }
             });
         }
-        
+
         // 通知客户端
         this.SendStatsToClient(hero);
-        
+
         return leveledUp;
     }
-    
+
     /**
      * 重置自定义经验（进阶后调用）
      */
     public static ResetCustomExp(hero: CDOTA_BaseNPC_Hero) {
         if (!hero || hero.IsNull()) return;
-        
+
         const unitIndex = tostring(hero.GetEntityIndex());
         const stats = this.GetAllStats(hero);
-        
+
         // 重置经验为 0
         stats.custom_exp = 0;
         // 计算当前等级的升级所需经验
         stats.custom_exp_required = this.GetExpRequiredForLevel(stats.display_level);
-        
-        // 更新缓存和 NetTable
-        this.cache[unitIndex] = stats;
+
+        // 更新 CustomValue 和 NetTable
+        hero.SetCustomValue('_heroStats', stats);
         CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
     }
-    
+
     /**
      * 设置经验条满（用于禁忌阶位）
      */
     public static SetCustomExpFull(hero: CDOTA_BaseNPC_Hero) {
         if (!hero || hero.IsNull()) return;
-        
+
         const unitIndex = tostring(hero.GetEntityIndex());
         const stats = this.GetAllStats(hero);
-        
+
         // 设置经验等于所需经验（100%）
         stats.custom_exp = stats.custom_exp_required;
-        
-        // 更新缓存和 NetTable
-        this.cache[unitIndex] = stats;
+
+        // 更新 CustomValue 和 NetTable
+        hero.SetCustomValue('_heroStats', stats);
         CustomNetTables.SetTableValue('custom_stats' as any, unitIndex, stats);
     }
-    
+
     /**
      * 发送属性数据给客户端
      */
@@ -472,7 +482,7 @@ export class CustomStats {
 
         // Use explicit, or fetch from Cache via GetAllStats
         const stats = explicitStats || this.GetAllStats(unit);
-        
+
         CustomGameEventManager.Send_ServerToPlayer(player, "custom_stats_update", {
             entindex: unit.GetEntityIndex(),
             stats: stats
@@ -490,7 +500,7 @@ export class CustomStats {
                 CustomStats.SendStatsToClient(hero);
             }
         });
-        
+
         // 商人购买属性事件处理
         CustomGameEventManager.RegisterListener("cmd_merchant_purchase", (_, event: any) => {
             const playerId = event.PlayerID;
@@ -498,11 +508,11 @@ export class CustomStats {
             if (!player) return;
             const hero = player.GetAssignedHero();
             if (!hero) return;
-            
+
             const statType = event.stat_type as string;
             const amount = event.amount as number || 0;
             const slotIndex = event.slot_index as number;
-            
+
             // 从 UpgradeSystem 获取当前 Tier 的费用
             const { UpgradeSystem } = require('./UpgradeSystem');
             const upgradeSystem = UpgradeSystem.GetInstance();
@@ -510,17 +520,17 @@ export class CustomStats {
             const shopData = upgradeSystem.GetShopData(playerId);
             const tierConfig = UpgradeSystem.GetTierConfig(shopData.current_tier);  // 使用静态方法而非 .find()
             const cost = tierConfig?.cost_per_slot || 200;
-            
+
             // 检查灵石是否足够
             const economy = EconomySystem.GetInstance();
             const currentCoin = economy.GetSpiritCoin(playerId);
-            
+
             if (currentCoin < cost) {
                 // 灵石不足
                 hero.EmitSound('General.CastFail_NoMana');
                 return;
             }
-            
+
             // 属性映射表 - 将前端属性名映射到 HeroStats 字段
             const statMap: { [key: string]: { stat: keyof HeroStats; defaultAmount: number } } = {
                 'constitution': { stat: 'extra_constitution', defaultAmount: 5 },
@@ -535,19 +545,19 @@ export class CustomStats {
                 'base_damage': { stat: 'extra_base_damage', defaultAmount: 15 },
                 'armor_pen': { stat: 'armor_pen', defaultAmount: 10 },
             };
-            
+
             const mapping = statMap[statType];
             if (mapping) {
                 // 扣除灵石
                 economy.AddSpiritCoin(playerId, -cost);
-                
+
                 // 添加属性 (使用事件传来的 amount)
                 const actualAmount = amount || mapping.defaultAmount;
                 CustomStats.AddStat(hero, mapping.stat, actualAmount);
                 hero.EmitSound('Item.TomeOfKnowledge');
-                
+
                 print(`[CustomStats] Purchased: ${statType} +${actualAmount}, slot_index=${slotIndex}, cost=${cost}`);
-                
+
                 // 通知 UpgradeSystem 槽位已购买 (用于触发自动突破)
                 if (typeof slotIndex === 'number' && slotIndex >= 0 && slotIndex < 8) {
                     print(`[CustomStats] Calling MarkSlotPurchased(${playerId}, ${slotIndex})`);
@@ -559,6 +569,6 @@ export class CustomStats {
                 print(`[CustomStats] Unknown stat type: ${statType}`);
             }
         });
-        
+
     }
 }

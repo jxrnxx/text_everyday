@@ -47,10 +47,11 @@ declare global {
 
 /**
  * 获取自定义值
+ * 注意：不存在的 key 返回 undefined（而不是 0，因为 Lua 中 0 是 truthy）
  */
 CDOTA_BaseNPC.GetCustomValue = function (key: string): any {
     const t = (this as any).CustomValue || {};
-    return t[key] !== undefined ? t[key] : 0;
+    return t[key];  // 返回 undefined 如果 key 不存在
 };
 
 /**

@@ -18,7 +18,8 @@ const CONFIGURED_STATUS_HEALTH = 1;   // npc_heroes_custom.txt 中配置的 Stat
 @registerModifier('modifier_custom_stats_handler')
 export class modifier_custom_stats_handler extends BaseModifier {
     mainStat: string = '';
-    
+    engineBaseDamage: number = 0;  // 引擎原始攻击力（在 modifier 添加 bonus 前获取）
+
     // 缓存计算后的额外血量、蓝量和攻击力（用于 modifier 返回值）
     cachedExtraHealth: number = 0;
     cachedExtraMana: number = 0;
@@ -41,7 +42,7 @@ export class modifier_custom_stats_handler extends BaseModifier {
 
         const parent = this.GetParent();
         const unitName = parent.GetUnitName();
-        
+
         // @ts-ignore
         const heroData = json_heroes[unitName];
 
@@ -51,7 +52,7 @@ export class modifier_custom_stats_handler extends BaseModifier {
         } else {
             this.mainStat = 'Martial';
         }
-        
+
         // 强制重置 Dota 原版三维属性为 0
         if (parent.IsRealHero()) {
             const hero = parent as CDOTA_BaseNPC_Hero;
@@ -60,9 +61,13 @@ export class modifier_custom_stats_handler extends BaseModifier {
             hero.SetBaseIntellect(0);
         }
 
+        // 在 modifier 添加任何 bonus 之前，获取引擎原始攻击力
+        // 这样就能动态适应不同英雄模型
+        this.engineBaseDamage = Math.floor((parent.GetBaseDamageMin() + parent.GetBaseDamageMax()) / 2);
+
         // 立即计算一次属性
         this.RecalculateStats();
-        
+
         // 延迟一帧后设置满血满蓝（确保 modifier bonus 已生效）
         // 同时再次计算属性，确保攻击力等正确显示
         Timers.CreateTimer(0.03, () => {
@@ -78,13 +83,13 @@ export class modifier_custom_stats_handler extends BaseModifier {
         // 每 0.5 秒更新一次
         this.StartIntervalThink(0.5);
     }
-    
+
     OnIntervalThink(): void {
         if (!IsServer()) return;
-        
+
         const parent = this.GetParent();
         if (!parent || parent.IsNull()) return;
-        
+
         // 持续重置三维属性
         if (parent.IsRealHero()) {
             const hero = parent as CDOTA_BaseNPC_Hero;
@@ -94,52 +99,52 @@ export class modifier_custom_stats_handler extends BaseModifier {
                 hero.SetBaseIntellect(0);
             }
         }
-        
+
         // 定期重算属性
         this.RecalculateStats();
     }
-    
+
     // 外部调用：强制立即刷新属性
     ForceRefresh(): void {
         this.RecalculateStats();
-        
+
         // 通过 StackCount 变化触发引擎刷新 modifier 属性
         const currentStack = this.GetStackCount();
         this.SetStackCount(currentStack + 1);
         this.SetStackCount(currentStack);
-        
+
         // 强制重新计算 modifier 声明的函数
         const parent = this.GetParent();
         if (parent && !parent.IsNull()) {
             (parent as any).CalculateStatBonus?.(true);
         }
     }
-    
+
     // 重新计算所有属性
     RecalculateStats(): void {
         const parent = this.GetParent();
         if (!parent || parent.IsNull()) return;
-        
+
         const stats = CustomStats.GetAllStats(parent);
         // 使用 display_level 而不是引擎等级，确保升级后属性正确更新
         const currentLevel = stats.display_level ?? parent.GetLevel();
-        
+
         // 计算目标生命值 = 根骨面板 × 30 + StatusHealth
         const panelConstitution = Math.floor((stats.constitution_base + (currentLevel - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
         const targetHealth = panelConstitution * 30 + CONFIGURED_STATUS_HEALTH;
-        
+
         // 获取引擎当前的基础最大血量（不含 modifier bonus）
         // 注意：GetBaseMaxHealth() 返回不含 modifier 加成的基础值
         const engineBaseHealth = parent.GetBaseMaxHealth();
-        
+
         // 计算需要通过 modifier 增加的额外血量
         // 额外血量 = 目标血量 - 引擎基础血量
         this.cachedExtraHealth = targetHealth - engineBaseHealth;
-        
+
         // 计算目标法力值 = StatusMana + extra_max_mana
         const extraMana = stats.extra_max_mana || 0;
         this.cachedExtraMana = extraMana;
-        
+
         // 计算攻击力 = (基础攻击 + (等级-1) * 攻击成长) * (1 + 攻击加成) + 主属性面板*1.5 + 额外攻击
         let mainStatValue = 0;
         switch (this.mainStat) {
@@ -153,16 +158,13 @@ export class modifier_custom_stats_handler extends BaseModifier {
                 mainStatValue = Math.floor((stats.agility_base + (currentLevel - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
                 break;
         }
-        
+
         const baseDamage = Math.floor((stats.damage_base + (currentLevel - 1) * stats.damage_gain) * (1 + stats.damage_bonus));
         const totalDamage = baseDamage + Math.floor(mainStatValue * 1.5) + (stats.extra_base_damage || 0);
-        
-        // 获取引擎当前的基础攻击力（不含 modifier bonus）
-        const engineBaseDamage = parent.GetBaseDamageMin();
-        
-        // 计算需要通过 modifier 增加的额外攻击力
-        // 这样原生 HUD 会正确显示总攻击力
-        this.cachedBonusDamage = totalDamage - engineBaseDamage;
+
+        // 使用在 OnCreated 中获取的引擎原始攻击力
+        // 这样可以动态适应不同英雄模型
+        this.cachedBonusDamage = totalDamage - this.engineBaseDamage;
     }
 
     DeclareFunctions(): ModifierFunction[] {
@@ -186,7 +188,7 @@ export class modifier_custom_stats_handler extends BaseModifier {
             // ModifierFunction.EXP_RATE_BOOST,
         ];
     }
-    
+
     // [暂时禁用] 经验获取控制 - 可能导致性能问题
     // GetModifierPercentageExpRateBonus(): number {
     //     const parent = this.GetParent();
@@ -202,17 +204,17 @@ export class modifier_custom_stats_handler extends BaseModifier {
     //     }
     //     return 0;
     // }
-    
+
     // 通过 modifier 增加额外血量上限（不会触发回血！）
     GetModifierExtraHealthBonus(): number {
         return this.cachedExtraHealth;
     }
-    
+
     // 通过 modifier 增加额外蓝量上限
     GetModifierManaBonus(): number {
         return this.cachedExtraMana;
     }
-    
+
     // 通过 modifier 增加额外攻击力（原生 HUD 会显示为绿字）
     GetModifierBaseAttack_BonusDamage(): number {
         return this.cachedBonusDamage;
@@ -250,7 +252,7 @@ export class modifier_custom_stats_handler extends BaseModifier {
     GetModifierLifestealRegenAmplify_Percentage(): number {
         return CustomStats.GetStat(this.GetParent(), 'lifesteal');
     }
-    
+
     // 移速加成 = 身法面板 * 0.4 + 额外移速
     GetModifierMoveSpeedBonus_Constant(): number {
         const parent = this.GetParent();
@@ -260,34 +262,34 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const bonusSpeed = Math.floor(panelAgility * 0.4) + (stats.extra_move_speed || 0);
         return bonusSpeed;
     }
-    
+
     // 攻击回血 + 吸血 - 攻击命中时回复生命
     OnAttackLanded(event: ModifierAttackEvent): void {
         if (!IsServer()) return;
-        
+
         // 只处理自己发起的攻击
         if (event.attacker !== this.GetParent()) return;
-        
+
         const parent = this.GetParent();
         if (!parent || parent.IsNull()) return;
-        
+
         const stats = CustomStats.GetAllStats(parent);
         const lifeOnHit = Number(stats.extra_life_on_hit) || 0;
         const lifestealPercent = Number(stats.lifesteal) || 0;
-        
+
         let totalHeal = 0;
-        
+
         // 攻击回血（固定值）
         if (lifeOnHit > 0) {
             totalHeal += lifeOnHit;
         }
-        
+
         // 吸血（基于造成的伤害）
         if (lifestealPercent > 0 && event.damage > 0) {
             const lifestealHeal = event.damage * (lifestealPercent / 100);
             totalHeal += lifestealHeal;
         }
-        
+
         // 回复生命
         if (totalHeal > 0) {
             parent.Heal(totalHeal, undefined);

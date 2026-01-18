@@ -52,21 +52,21 @@ interface HeroStats {
 
 // 计算显示等级和经验百分比
 const getDisplayLevelAndExp = (
-    rank: number, 
-    displayLevelFromServer: number, 
-    customExp: number, 
+    rank: number,
+    displayLevelFromServer: number,
+    customExp: number,
     customExpRequired: number
 ): { displayLevel: number; displayExpPercent: number } => {
     const currentMaxLevel = getMaxLevelForRank(rank);
     let displayLevel = Math.min(displayLevelFromServer, currentMaxLevel);
     let displayExpPercent: number;
-    
+
     if (displayLevel >= currentMaxLevel) {
         displayExpPercent = 100;
     } else {
         displayExpPercent = Math.min((customExp / Math.max(customExpRequired, 1)) * 100, 100);
     }
-    
+
     return { displayLevel, displayExpPercent };
 };
 
@@ -98,11 +98,11 @@ const HeroHUD: FC = () => {
         customExp: 0,
         customExpRequired: 230,
     });
-    
+
     // 血条状态追踪
     const [prevHp, setPrevHp] = useState(0);
     const [hpState, setHpState] = useState<HpState>('normal');
-    
+
     // Buff列表 - 存储当前英雄的buff信息
     interface BuffInfo {
         buffSerial: number;
@@ -110,10 +110,10 @@ const HeroHUD: FC = () => {
         stackCount: number;
     }
     const [buffs, setBuffs] = useState<BuffInfo[]>([]);
-    
+
     // 隐藏状态 - 当其他面板打开时隐藏HeroHUD
     const [isHidden, setIsHidden] = useState(false);
-    
+
     // 监听面板打开/关闭事件 - 使用 PanelManager 状态检测
     useEffect(() => {
         // 定期检查面板状态
@@ -123,13 +123,13 @@ const HeroHUD: FC = () => {
         }
         checkPanelState();
     }, []);
-    
+
     // 计算血条状态 - 优化：只在状态实际改变时才更新
     useEffect(() => {
         const hpPercent = stats.hp / stats.maxHp;
-        
+
         let newState: HpState = 'normal';
-        
+
         if (stats.hp >= stats.maxHp) {
             newState = 'full';
         } else if (hpPercent <= 0.25) {
@@ -147,12 +147,12 @@ const HeroHUD: FC = () => {
                 setHpState(prev => prev === 'damaged' ? 'normal' : prev);
             });
         }
-        
+
         // 只在状态改变时才更新
         if (newState !== hpState && (newState === 'healing' || newState === 'damaged' || newState === 'low' || newState === 'full')) {
             setHpState(newState);
         }
-        
+
         // 只在HP值真正改变时更新 prevHp
         if (stats.hp !== prevHp) {
             setPrevHp(stats.hp);
@@ -166,7 +166,7 @@ const HeroHUD: FC = () => {
             if (localHero === -1) return;
 
             const armor = Entities.GetPhysicalArmorValue(localHero);
-            
+
             // 获取真实HP/MP
             const hp = Entities.GetHealth(localHero);
             const maxHp = Entities.GetMaxHealth(localHero);
@@ -223,7 +223,7 @@ const HeroHUD: FC = () => {
             updateApiStats();
             updateNetTableStats();
         });
-        
+
         // 再次延迟刷新 (3秒后确保数据已同步)
         $.Schedule(3.0, () => {
             updateApiStats();
@@ -237,7 +237,7 @@ const HeroHUD: FC = () => {
                 updateNetTableStats();
             }
         });
-        
+
         // 定期刷新 NetTable 数据 (每2秒，确保数据同步)
         $.Schedule(1.0, function netTableLoop() {
             updateNetTableStats();
@@ -249,18 +249,18 @@ const HeroHUD: FC = () => {
             updateApiStats();
             $.Schedule(0.2, hpLoop);
         });
-        
+
         // Buff 更新函数 - 获取英雄当前所有可见的buff
         const updateBuffs = () => {
             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
             if (localHero === -1) return;
-            
+
             const buffList: { buffSerial: number; textureName: string; stackCount: number }[] = [];
-            
+
             // 使用正确的Buffs API - 直接使用 buffIndex
             // @ts-ignore
             const modifierCount = Entities.GetNumBuffs(localHero);
-            
+
             for (let i = 0; i < modifierCount; i++) {
                 // 在 Panorama 中，Buffs API 直接使用 buffIndex (i) 作为第二个参数
                 // @ts-ignore
@@ -271,20 +271,20 @@ const HeroHUD: FC = () => {
                 const textureName = Buffs.GetTexture(localHero, i);
                 // @ts-ignore
                 const stackCount = Buffs.GetStackCount(localHero, i) || 0;
-                
+
                 if (isHidden) continue;
                 if (!textureName) continue;
-                
+
                 buffList.push({
                     buffSerial: i, // 使用 index 作为唯一标识
                     textureName,
                     stackCount,
                 });
             }
-            
+
             setBuffs(buffList);
         };
-        
+
         // Buff 更新循环 - 每0.2秒刷新（保证攻速快时也能跟上）
         $.Schedule(0.5, function buffLoop() {
             updateBuffs();
@@ -321,8 +321,8 @@ const HeroHUD: FC = () => {
                 }}>
                     {/* 动态渲染Buff图标 */}
                     {buffs.map((buff) => (
-                        <Panel 
-                            key={buff.buffSerial} 
+                        <Panel
+                            key={buff.buffSerial}
                             className="BuffIcon"
                             style={{
                                 width: '40px',
@@ -335,7 +335,7 @@ const HeroHUD: FC = () => {
                                 boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.8), inset 0px 0px 8px rgba(180, 140, 60, 0.3)',
                             }}
                         >
-                            <Image 
+                            <Image
                                 src={`s2r://panorama/images/spellicons/${buff.textureName}_png.vtex`}
                                 style={{
                                     width: '34px',
@@ -346,7 +346,7 @@ const HeroHUD: FC = () => {
                             />
                             {/* 层数显示 - 右下角 */}
                             {buff.stackCount > 0 && (
-                                <Label 
+                                <Label
                                     text={String(buff.stackCount)}
                                     style={{
                                         position: '22px 24px 0px' as const,
@@ -368,7 +368,7 @@ const HeroHUD: FC = () => {
             </Panel>
 
             {/* 主HUD背景横条 */}
-            <Image 
+            <Image
                 src="file://{resources}/images/hud_bar_extended.png"
                 style={{
                     width: '1200px',
@@ -376,7 +376,7 @@ const HeroHUD: FC = () => {
                     position: '0px 145px 0px' as const,
                 }}
             />
-            
+
             {/* 头像框 - 在背景内部左侧 */}
             <Panel style={{
                 width: '210px',
@@ -412,7 +412,7 @@ const HeroHUD: FC = () => {
                     }}
                 />
                 {/* 头像框背景图（中层） */}
-                <Image 
+                <Image
                     src="file://{resources}/images/hero_portrait_frame_v2.png"
                     style={{
                         width: '210px',
@@ -421,7 +421,7 @@ const HeroHUD: FC = () => {
                     }}
                 />
                 {/* 英雄职业名称（顶层）- 位置上移 */}
-                <Label 
+                <Label
                     text={professionName}
                     style={{
                         width: '210px',
@@ -455,7 +455,7 @@ const HeroHUD: FC = () => {
                         width: '55px',
                         height: '24px',
                     }}>
-                        <Label 
+                        <Label
                             text={(RANK_CONFIG[stats.rank] || RANK_CONFIG[0]).name}
                             style={{
                                 fontSize: '14px',
@@ -472,7 +472,7 @@ const HeroHUD: FC = () => {
                         height: '24px',
                         flowChildren: 'right' as const,
                     }}>
-                        <Label 
+                        <Label
                             text="战力"
                             style={{
                                 fontSize: '14px',
@@ -481,7 +481,7 @@ const HeroHUD: FC = () => {
                                 marginTop: '3px',
                             }}
                         />
-                        <Label 
+                        <Label
                             text={formatCombatPower(stats.combatPower)}
                             style={{
                                 width: '70px',
@@ -497,7 +497,7 @@ const HeroHUD: FC = () => {
                         width: '40px',
                         height: '24px',
                     }}>
-                        <Label 
+                        <Label
                             text={`Lv.${stats.displayLevel}`}
                             style={{
                                 fontSize: '17px',
@@ -508,7 +508,7 @@ const HeroHUD: FC = () => {
                         />
                     </Panel>
                 </Panel>
-                
+
                 {/* 经验条 - 绝对定位固定在右边 */}
                 {(() => {
                     // 使用服务端控制的显示等级和自定义经验
@@ -518,35 +518,35 @@ const HeroHUD: FC = () => {
                         stats.customExp,
                         stats.customExpRequired
                     );
-                    
+
                     // 判断是否在突破状态（使用显示等级）
                     // 禁忌阶位(rank=5)时不显示突破特效，因为已经是最高阶位
                     const atBreakthrough = stats.rank < 5 && isAtBreakthrough(displayLevel, stats.rank);
-                    
+
                     // 禁忌阶位：满经验条，但使用普通颜色
                     const isForbiddenRank = stats.rank === 5;
-                    
+
                     // 经验条宽度
                     const expWidth = (atBreakthrough || isForbiddenRank) ? '100%' : (displayExpPercent + '%');
-                    
+
                     return (
-                        <Panel 
+                        <Panel
                             className={atBreakthrough ? 'ExpBarGlowPulse' : ''}
                             style={{
-                            width: '785px',
-                            height: '14px',
-                            position: '205px 4px 0px' as const,
-                            backgroundColor: 'rgba(10, 12, 8, 0.85)',
-                            // 突破时金色边框（禁忌阶位用普通边框）
-                            border: atBreakthrough 
-                                ? '1px solid #ddaa55'
-                                : '1px solid #4a5530',
-                            borderRadius: '7px',
-                            // 突破时简单的金色光晕 (动画由CSS类控制)
-                            boxShadow: atBreakthrough
-                                ? '0px 0px 8px rgba(255, 180, 80, 0.5), inset 0px 1px 2px rgba(0, 0, 0, 0.5)'
-                                : 'inset 0px 1px 2px rgba(0, 0, 0, 0.5)',
-                        }}>
+                                width: '785px',
+                                height: '14px',
+                                position: '205px 4px 0px' as const,
+                                backgroundColor: 'rgba(10, 12, 8, 0.85)',
+                                // 突破时金色边框（禁忌阶位用普通边框）
+                                border: atBreakthrough
+                                    ? '1px solid #ddaa55'
+                                    : '1px solid #4a5530',
+                                borderRadius: '7px',
+                                // 突破时简单的金色光晕 (动画由CSS类控制)
+                                boxShadow: atBreakthrough
+                                    ? '0px 0px 8px rgba(255, 180, 80, 0.5), inset 0px 1px 2px rgba(0, 0, 0, 0.5)'
+                                    : 'inset 0px 1px 2px rgba(0, 0, 0, 0.5)',
+                            }}>
                             {/* 经验条填充 */}
                             <Panel style={{
                                 width: expWidth,
@@ -582,7 +582,7 @@ const HeroHUD: FC = () => {
                             </Panel>
                             {/* 突破状态粒子特效 - 在经验条满时显示 (带脉冲) */}
                             {atBreakthrough && (
-                                <Panel 
+                                <Panel
                                     className="ExpParticlePulse"
                                     style={{
                                         width: '100%',
@@ -630,7 +630,7 @@ const HeroHUD: FC = () => {
                     }}
                     className="ExpBarGlowPulse"
                 >
-                    <Label 
+                    <Label
                         text="进阶"
                         style={{
                             color: '#1a1a00',
@@ -652,7 +652,7 @@ const HeroHUD: FC = () => {
                 position: '292px 315px 0px' as const,
             }}>
                 {/* 透明边框 */}
-                <Image 
+                <Image
                     src="file://{resources}/images/stats_frame.png"
                     style={{
                         width: '180px',
@@ -660,7 +660,7 @@ const HeroHUD: FC = () => {
                         position: '-30px -25px 0px' as const,
                     }}
                 />
-                
+
                 {/* 5个属性行 */}
                 <Panel style={{
                     flowChildren: 'down' as const,
@@ -670,47 +670,47 @@ const HeroHUD: FC = () => {
                 }}>
                     {/* 攻击 */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '4px', height: '30px' }}>
-                        <Image 
+                        <Image
                             src="file://{resources}/images/icon_attack.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
-                        <Label text="攻击1" style={statLabelStyle} />
+                        <Label text="攻击2" style={statLabelStyle} />
                         <Label text={String(stats.attack)} style={statValueStyle} />
                     </Panel>
-                    
+
                     {/* 防御 */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '4px', height: '30px' }}>
-                        <Image 
+                        <Image
                             src="file://{resources}/images/icon_defense.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
                         <Label text="防御:" style={statLabelStyle} />
                         <Label text={String(stats.defense)} style={statValueStyle} />
                     </Panel>
-                    
+
                     {/* 根骨 */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '4px', height: '30px' }}>
-                        <Image 
+                        <Image
                             src="file://{resources}/images/icon_constitution.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
                         <Label text="根骨:" style={statLabelStyle} />
                         <Label text={String(stats.constitution)} style={statValueStyle} />
                     </Panel>
-                    
+
                     {/* 武道 */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '4px', height: '30px' }}>
-                        <Image 
+                        <Image
                             src="file://{resources}/images/icon_martial.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
                         <Label text="武道:" style={statLabelStyle} />
                         <Label text={String(stats.martial)} style={statValueStyle} />
                     </Panel>
-                    
+
                     {/* 神念 */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '4px', height: '30px' }}>
-                        <Image 
+                        <Image
                             src="file://{resources}/images/icon_spirit.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
@@ -721,7 +721,7 @@ const HeroHUD: FC = () => {
             </Panel>
 
             {/* 流光分隔线 - 在属性面板右边 */}
-            <Image 
+            <Image
                 src="file://{resources}/images/divider_glow_vertical.png"
                 style={{
                     width: '40px',
@@ -740,15 +740,15 @@ const HeroHUD: FC = () => {
                 {/* 血条 HP */}
                 <Panel style={{
                     width: '400px',
-                    height: '38px', 
+                    height: '38px',
                     marginBottom: '2px',
                 }}>
                     {/* 血条背景 - 根据状态切换样式 */}
-                    <Panel 
+                    <Panel
                         className={
-                            hpState === 'low' ? 'HpBarBg--low' : 
-                            hpState === 'full' ? 'HpBarBg--full' : 
-                            'HpBarBg'
+                            hpState === 'low' ? 'HpBarBg--low' :
+                                hpState === 'full' ? 'HpBarBg--full' :
+                                    'HpBarBg'
                         }
                         style={{
                             width: '400px',
@@ -756,7 +756,7 @@ const HeroHUD: FC = () => {
                         }}
                     >
                         {/* 血条填充 */}
-                        <Panel 
+                        <Panel
                             className={`HpBarFill ${hpState === 'damaged' ? 'HpBarFill--damaged' : ''}`}
                             style={{
                                 width: `${Math.floor(396 * stats.hp / stats.maxHp)}px`,
@@ -788,7 +788,7 @@ const HeroHUD: FC = () => {
                         </Panel>
                     </Panel>
                     {/* HP数值 */}
-                    <Label 
+                    <Label
                         text={`${Math.floor(stats.hp)} / ${Math.floor(stats.maxHp)}`}
                         style={{
                             align: 'center center',
@@ -808,7 +808,7 @@ const HeroHUD: FC = () => {
                     marginBottom: '8px',
                 }}>
                     {/* 蓝条背景 */}
-                    <Panel 
+                    <Panel
                         className="MpBarBg"
                         style={{
                             width: '400px',
@@ -816,7 +816,7 @@ const HeroHUD: FC = () => {
                         }}
                     >
                         {/* 蓝条填充 - 渐变 + 动态宽度 */}
-                        <Panel 
+                        <Panel
                             className="MpBarFill"
                             style={{
                                 width: `${Math.floor(396 * stats.mp / stats.maxMp)}px`,
@@ -848,7 +848,7 @@ const HeroHUD: FC = () => {
                         </Panel>
                     </Panel>
                     {/* 灵力数值 - 金色 */}
-                    <Label 
+                    <Label
                         text={`${Math.floor(stats.mp)} / ${Math.floor(stats.maxMp)}`}
                         style={{
                             align: 'center center',
@@ -866,7 +866,7 @@ const HeroHUD: FC = () => {
                     {/* 第1个技能 - 职业技能1 (兵伐·裂空) */}
                     <Panel className="SkillSlot">
                         <Panel className="SkillSlotFrame">
-                            <DOTAAbilityImage 
+                            <DOTAAbilityImage
                                 className="SkillSlotInner"
                                 // @ts-ignore
                                 abilityname="soldier_war_strike"
@@ -880,7 +880,7 @@ const HeroHUD: FC = () => {
                             />
                         </Panel>
                     </Panel>
-                    
+
                     {/* 第2-3个技能槽 - 职业技能2、3 (空槽) */}
                     {[2, 3].map((skillNum) => (
                         <Panel key={skillNum} className="SkillSlot">
@@ -889,10 +889,10 @@ const HeroHUD: FC = () => {
                             </Panel>
                         </Panel>
                     ))}
-                    
+
                     {/* 空隙 - 分隔职业技能和公共技能 */}
                     <Panel style={{ width: '58px', height: '54px' }} />
-                    
+
                     {/* 第4-6个技能 - 公共技能 (空槽) */}
                     {[4, 5, 6].map((skillNum) => (
                         <Panel key={skillNum} className="SkillSlot">
@@ -904,7 +904,7 @@ const HeroHUD: FC = () => {
                 </Panel>
             </Panel>
             {/* 流光分隔线 - 在属性面板右边 */}
-            <Image 
+            <Image
                 src="file://{resources}/images/divider_glow_vertical.png"
                 style={{
                     width: '40px',
@@ -971,7 +971,7 @@ const HeroHUD: FC = () => {
                             }} />
                         </Panel>
                     </Panel>
-                    
+
                     {/* 第二行 - 3个装备槽 */}
                     <Panel style={{ flowChildren: 'right' as const }}>
                         {/* 鞋子槽 */}

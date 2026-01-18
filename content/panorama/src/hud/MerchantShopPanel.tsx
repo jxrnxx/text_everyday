@@ -87,13 +87,13 @@ const MerchantShopPanel: React.FC = () => {
     const [slotCost, setSlotCost] = useState(DEFAULT_SLOT_COST);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const toastTimerRef = React.useRef<number>(0); // 用于跟踪定时器
-    
+
     // 显示浮动提示
     const showToast = (message: string) => {
         // 增加计时器版本号，使旧的定时器失效
         toastTimerRef.current += 1;
         const currentTimer = toastTimerRef.current;
-        
+
         setToastMessage(message);
         $.Schedule(1.3, () => {
             // 只有当版本号匹配时才清除（说明没有新的消息覆盖）
@@ -111,7 +111,7 @@ const MerchantShopPanel: React.FC = () => {
     const unpurchasedCount = skills.filter(s => !s.purchased).length;
     // 从 NetTable 读取玩家灵石
     const [playerGold, setPlayerGold] = useState(0);
-    
+
     // 订阅经济数据更新
     useEffect(() => {
         const localPlayer = Players.GetLocalPlayer();
@@ -121,10 +121,10 @@ const MerchantShopPanel: React.FC = () => {
                 setPlayerGold(economyData.spirit_coin);
             }
         };
-        
+
         // 初始读取
         updateGold();
-        
+
         // 订阅更新
         const listener = CustomNetTables.SubscribeNetTableListener('economy' as any, updateGold);
         return () => {
@@ -137,30 +137,25 @@ const MerchantShopPanel: React.FC = () => {
         if (isVisible) {
             const localPlayer = Players.GetLocalPlayer();
             const netTableKey = `player_${localPlayer}`;
-            $.Msg(`[MerchantPanel] Panel opened! localPlayer=${localPlayer}, key=${netTableKey}`);
-            
+
             // 尝试读取 NetTable
             const upgradeData = CustomNetTables.GetTableValue('upgrade_system', netTableKey as any) as any;
-            $.Msg(`[MerchantPanel] upgradeData exists: ${upgradeData != null}`);
-            
+
             if (upgradeData) {
-                $.Msg(`[MerchantPanel] upgradeData.current_tier=${upgradeData.current_tier}`);
-                $.Msg(`[MerchantPanel] upgradeData.cost_per_slot=${upgradeData.cost_per_slot}`);
-                
+
                 // 更新状态
                 setCurrentTier(upgradeData.current_tier || 1);
                 setTierName(upgradeData.tier_name || TIER_NAMES[upgradeData.current_tier] || '入门期');
                 setSlotCost(upgradeData.cost_per_slot || 200);
-                
+
                 if (upgradeData.slots_config) {
                     const newSkills: SkillSlot[] = [];
                     for (let i = 0; i < 8; i++) {
                         const luaIndex = i + 1;
                         const slotConfig = upgradeData.slots_config[luaIndex];
                         const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
-                        
+
                         if (slotConfig && slotConfig.name) {
-                            $.Msg(`[MerchantPanel] Slot ${i}: ${slotConfig.name} +${slotConfig.value}, purchased=${isPurchased}`);
                             newSkills.push({
                                 id: i + 1,
                                 name: slotConfig.name,
@@ -176,10 +171,8 @@ const MerchantShopPanel: React.FC = () => {
                         }
                     }
                     setSkills(newSkills);
-                    $.Msg(`[MerchantPanel] Panel refresh complete! Loaded ${newSkills.length} skills.`);
                 }
             } else {
-                $.Msg(`[MerchantPanel] No upgrade data found on panel open`);
             }
         }
     }, [isVisible]);
@@ -188,7 +181,7 @@ const MerchantShopPanel: React.FC = () => {
     // 使用 ref 来追踪当前 tier，避免闭包问题
     const currentTierRef = React.useRef(currentTier);
     currentTierRef.current = currentTier;
-    
+
     useEffect(() => {
         const localPlayer = Players.GetLocalPlayer();
         const updateUpgradeData = () => {
@@ -196,7 +189,7 @@ const MerchantShopPanel: React.FC = () => {
             if (upgradeData) {
                 const serverTier = upgradeData.current_tier;
                 const tierChanged = serverTier !== currentTierRef.current;
-                
+
                 // 更新 Tier 信息
                 if (serverTier !== undefined) {
                     setCurrentTier(serverTier);
@@ -205,20 +198,18 @@ const MerchantShopPanel: React.FC = () => {
                 if (upgradeData.cost_per_slot !== undefined) {
                     setSlotCost(upgradeData.cost_per_slot);
                 }
-                
+
                 // 更新槽位配置
                 if (upgradeData.slots_config) {
-                    $.Msg(`[MerchantPanel] NetTable update: tier=${serverTier}, tierChanged=${tierChanged}`);
-                    
+
                     // 如果 tier 变化了（突破），完全重置为新tier的配置
                     if (tierChanged) {
-                        $.Msg(`[MerchantPanel] Tier changed! Resetting all skills.`);
                         const newSkills: SkillSlot[] = [];
                         for (let i = 0; i < 8; i++) {
                             const luaIndex = i + 1;
                             const slotConfig = upgradeData.slots_config[luaIndex];
                             const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
-                            
+
                             if (slotConfig && slotConfig.name) {
                                 newSkills.push({
                                     id: i + 1,
@@ -241,10 +232,10 @@ const MerchantShopPanel: React.FC = () => {
                 }
             }
         };
-        
+
         // 初始读取
         updateUpgradeData();
-        
+
         // 订阅更新
         const listener = CustomNetTables.SubscribeNetTableListener('upgrade_system' as any, updateUpgradeData);
         return () => {
@@ -255,30 +246,27 @@ const MerchantShopPanel: React.FC = () => {
     // 监听突破刷新事件
     useEffect(() => {
         const listenerId = GameEvents.Subscribe('refresh_merchant_ui', (event: any) => {
-            $.Msg(`[MerchantPanel] refresh_merchant_ui received! new_tier=${event.new_tier}`);
-            
+
             // 突破成功后，显示提示并播放音效
             const newTier = event.new_tier;
             const tierNameFromServer = event.tier_name || TIER_NAMES[newTier] || '';
-            
+
             showToast(`突破成功！进入${tierNameFromServer}！`);
             Game.EmitSound('Hero_Zeus.GodsWrath.Target');
-            
+
             // 延迟 100ms 后读取 NetTable，确保数据已同步
             $.Schedule(0.1, () => {
                 const localPlayer = Players.GetLocalPlayer();
                 const upgradeData = CustomNetTables.GetTableValue('upgrade_system', `player_${localPlayer}` as any) as any;
-                
-                $.Msg(`[MerchantPanel] Reading NetTable after delay...`);
-                
+
+
                 if (upgradeData && upgradeData.current_tier) {
                     // 更新 Tier 信息
                     setCurrentTier(upgradeData.current_tier);
                     setTierName(upgradeData.tier_name || TIER_NAMES[upgradeData.current_tier] || '');
                     setSlotCost(upgradeData.cost_per_slot || 200);
-                    
-                    $.Msg(`[MerchantPanel] Updated: tier=${upgradeData.current_tier}, cost=${upgradeData.cost_per_slot}`);
-                    
+
+
                     // 更新技能配置
                     if (upgradeData.slots_config) {
                         const newSkills: SkillSlot[] = [];
@@ -286,9 +274,8 @@ const MerchantShopPanel: React.FC = () => {
                             const luaIndex = i + 1;
                             const slotConfig = upgradeData.slots_config[luaIndex];
                             const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
-                            
+
                             if (slotConfig && slotConfig.name) {
-                                $.Msg(`[MerchantPanel] Slot ${i}: ${slotConfig.name} +${slotConfig.value}, purchased=${isPurchased}`);
                                 newSkills.push({
                                     id: i + 1,
                                     name: slotConfig.name,
@@ -304,10 +291,8 @@ const MerchantShopPanel: React.FC = () => {
                             }
                         }
                         setSkills(newSkills);
-                        $.Msg(`[MerchantPanel] Skills updated to tier ${upgradeData.current_tier}!`);
                     }
                 } else {
-                    $.Msg(`[MerchantPanel] ERROR: No valid upgradeData. Retrying in 200ms...`);
                     // 如果仍然没有数据，再试一次
                     $.Schedule(0.2, () => {
                         const retryData = CustomNetTables.GetTableValue('upgrade_system', `player_${localPlayer}` as any) as any;
@@ -315,52 +300,51 @@ const MerchantShopPanel: React.FC = () => {
                             setCurrentTier(retryData.current_tier);
                             setTierName(retryData.tier_name || TIER_NAMES[retryData.current_tier] || '');
                             setSlotCost(retryData.cost_per_slot || 200);
-                            $.Msg(`[MerchantPanel] Retry success: tier=${retryData.current_tier}`);
                         }
                     });
                 }
             });
         });
-        
+
         return () => {
             GameEvents.Unsubscribe(listenerId);
         };
     }, []);
-    
+
     // 使用动态 slotCost 计算
     const dynamicTotalCost = unpurchasedCount * slotCost;
     const canAffordAll = playerGold >= dynamicTotalCost && unpurchasedCount > 0;
     const canAffordOne = playerGold >= slotCost;
 
     // handleClose 引用 - 需要在 useEffect 之前定义
-    const handleCloseRef = React.useRef<() => void>(() => {});
-    
+    const handleCloseRef = React.useRef<() => void>(() => { });
+
     // 标记循环是否已启动，避免重复创建
     const loopStartedRef = React.useRef(false);
-    
+
     // 使用 ref 跟踪 isVisible 状态，避免闭包问题
     const isVisibleRef = React.useRef(isVisible);
     isVisibleRef.current = isVisible;
-    
+
     // 检测点击商人打开面板 + 右键关闭 + 选中英雄关闭
     useEffect(() => {
         // 仅在首次挂载时启动循环
         if (loopStartedRef.current) return;
         loopStartedRef.current = true;
-        
+
         // 注册到 PanelManager
         registerPanel('merchant_panel', () => {
             setIsVisible(false);
             Game.EmitSound('Shop.PanelDown');
         });
-        
+
         const checkMerchantClick = () => {
             const selectedEntity = Players.GetLocalPlayerPortraitUnit();
             const localPlayer = Players.GetLocalPlayer();
             const heroIndex = Players.GetPlayerHeroEntityIndex(localPlayer);
-            
+
             if (selectedEntity === -1) return;
-            
+
             const unitName = Entities.GetUnitName(selectedEntity);
             const isMerchant = unitName === 'npc_cultivation_merchant';
             const isOwnHero = selectedEntity === heroIndex;
@@ -371,12 +355,12 @@ const MerchantShopPanel: React.FC = () => {
                 setIsVisible(true);
                 Game.EmitSound('Shop.PanelUp');
             }
-            
+
             // 选中自己英雄时关闭面板
             if (isVisibleRef.current && isOwnHero) {
                 handleCloseRef.current();
             }
-            
+
             // 右键关闭逻辑: 面板可见 + 右键按下
             const isRightDown = GameUI.IsMouseDown(1) || GameUI.IsMouseDown(2);
             if (isVisibleRef.current && isRightDown) {
@@ -389,8 +373,8 @@ const MerchantShopPanel: React.FC = () => {
             $.Schedule(0.1, loop); // 加快检测频率
         });
     }, []);
-    
-    
+
+
     // ESC 键关闭
     useEffect(() => {
         if (isVisible) {
@@ -405,7 +389,7 @@ const MerchantShopPanel: React.FC = () => {
         setIsVisible(false);
         Game.EmitSound('Shop.PanelDown');
         markPanelClosed('merchant_panel'); // 通知 PanelManager 面板已关闭，HeroHUD 会自动显示
-        
+
         // 强制选中玩家英雄，这样商人就被取消选中了
         // 下次点击商人才会被检测为"新选中"
         const localPlayer = Players.GetLocalPlayer();
@@ -436,14 +420,14 @@ const MerchantShopPanel: React.FC = () => {
 
     const handlePurchase = (skill: SkillSlot) => {
         if (skill.purchased) return;
-        
+
         // 检查余额 (使用动态 slotCost)
         if (playerGold < slotCost) {
             Game.EmitSound('General.CastFail_NoMana');
             showToast(`灵石不足，需要 ${slotCost}`);
             return;
         }
-        
+
         // 发送购买事件到服务端 (包含 slot_index 用于自动突破检测)
         const statType = STAT_TYPE_MAP[skill.name];
         const slotIndex = skills.findIndex(s => s.id === skill.id);
@@ -454,9 +438,9 @@ const MerchantShopPanel: React.FC = () => {
                 slot_index: slotIndex,
             });
         }
-        
+
         // 立即更新本地状态
-        setSkills(prev => prev.map(s => 
+        setSkills(prev => prev.map(s =>
             s.id === skill.id ? { ...s, purchased: true } : s
         ));
         Game.EmitSound('General.Buy');
@@ -469,7 +453,7 @@ const MerchantShopPanel: React.FC = () => {
             showToast(`灵石不足，需要 ${dynamicTotalCost} 灵石`);
             return;
         }
-        
+
         // 全修 - 购买所有未购买的槽位
         skills.forEach((skill, index) => {
             if (!skill.purchased) {
@@ -483,7 +467,7 @@ const MerchantShopPanel: React.FC = () => {
                 }
             }
         });
-        
+
         // 立即更新本地状态
         setSkills(prev => prev.map(s => ({ ...s, purchased: true })));
         Game.EmitSound('General.Buy');
@@ -499,7 +483,7 @@ const MerchantShopPanel: React.FC = () => {
         <Panel style={styles.overlay} hittest={false} hittestchildren={true}>
             {/* 主包装容器 - NPC肖像 + 玉面板 */}
             <Panel style={styles.merchantWrapper}>
-                
+
                 {/* NPC肖像区域 */}
                 <Panel style={styles.npcContainer}>
                     {/* 商人对话气泡 - 显示在NPC头顶 */}
@@ -512,9 +496,9 @@ const MerchantShopPanel: React.FC = () => {
                             <Panel style={styles.speechTail} />
                         </Panel>
                     )}
-                    
+
                     {/* NPC肖像 - 呼吸动画 */}
-                    <Image 
+                    <Image
                         src="file://{resources}/images/shop_01.png"
                         style={styles.npcPortrait}
                         className="NpcBreathing"
@@ -524,13 +508,13 @@ const MerchantShopPanel: React.FC = () => {
                 {/* 玉面板容器 (右侧) */}
                 <Panel style={styles.panelContainer}>
                     {/* 背景图 */}
-                    <Image 
+                    <Image
                         src="file://{resources}/images/shop_panel_large.png"
                         style={styles.background}
                     />
-                    
+
                     {/* 标题 - 显示 Tier 名称 */}
-                    <Label 
+                    <Label
                         text={`修炼境界 · ${tierName}`}
                         style={styles.title}
                     />
@@ -548,14 +532,14 @@ const MerchantShopPanel: React.FC = () => {
                             onactivate={() => handlePurchase(skill)}
                         >
                             {/* 槽位图片 */}
-                            <Image 
+                            <Image
                                 src={SLOT_IMAGES[index]}
                                 style={{
                                     ...styles.slotImage,
                                     ...(!skill.purchased ? styles.slotDimmed : styles.slotBright),
                                 }}
                             />
-                            
+
                             {/* 未购买遮罩 (暗淡) */}
                             {!skill.purchased && (
                                 <Panel style={styles.dimmedOverlay} />
@@ -572,7 +556,7 @@ const MerchantShopPanel: React.FC = () => {
                         className="BreathScale"
                     >
                         {/* 图标 + 燃烧效果 */}
-                        <Image 
+                        <Image
                             src="file://{resources}/images/slot_quan_new2.png"
                             style={styles.slotImage}
                             className="BurningImage"
@@ -581,7 +565,7 @@ const MerchantShopPanel: React.FC = () => {
 
                     {/* 底部区域 - 费用显示 (动态 slotCost) */}
                     <Panel style={styles.costBar}>
-                        <Label 
+                        <Label
                             text={`【 演 武 代 价 ：${slotCost} 灵石 / 式 】`}
                             style={styles.costTitle}
                         />
@@ -589,7 +573,7 @@ const MerchantShopPanel: React.FC = () => {
 
                     {/* 悬浮提示 - 暖玉琥珀风格 */}
                     {hoveredSkill && (
-                        <Panel 
+                        <Panel
                             style={{
                                 ...styles.tooltip,
                                 position: `${SLOT_POSITIONS[hoveredSkill.index].x + 60}px ${SLOT_POSITIONS[hoveredSkill.index].y - 20}px 0px`,
@@ -612,7 +596,7 @@ const MerchantShopPanel: React.FC = () => {
 
                     {/* 全修按钮悬浮提示 */}
                     {hoveredPurchaseAll && (
-                        <Panel 
+                        <Panel
                             style={{
                                 ...styles.tooltip,
                                 position: '400px 30px 0px',
@@ -621,12 +605,12 @@ const MerchantShopPanel: React.FC = () => {
                         >
                             <Label text="一键全修" style={styles.tooltipTitle} />
                             <Panel style={styles.tooltipDivider} />
-                            <Label 
-                                text={unpurchasedCount > 0 
+                            <Label
+                                text={unpurchasedCount > 0
                                     ? `立即购买剩余 ${unpurchasedCount} 式`
                                     : '已全部购买'
-                                } 
-                                style={styles.tooltipDesc} 
+                                }
+                                style={styles.tooltipDesc}
                             />
                             {unpurchasedCount > 0 && (
                                 <Panel style={styles.tooltipValueRow}>
@@ -648,7 +632,7 @@ const styles = {
         width: '100%',
         height: '100%',
     },
-    
+
     // 主包装器 - 水平布局 (NPC + 面板)
     merchantWrapper: {
         flowChildren: 'right' as const,
@@ -657,26 +641,26 @@ const styles = {
         marginBottom: '0px',
         marginLeft: '150px',
     },
-    
+
     // NPC肖像
     npcPortrait: {
         width: '350px',
         height: '500px',
     },
-    
+
     // 玉面板容器
     panelContainer: {
         width: '680px',
         height: '420px',
     },
-    
+
     // 背景图
     background: {
         width: '680px',
         height: '420px',
         position: '0px 30px 0px' as const,
     },
-    
+
     // 标题
     title: {
         color: '#ffd700',
@@ -689,40 +673,40 @@ const styles = {
         width: '100%',
         textAlign: 'center' as const,
     },
-    
+
     // 技能槽位容器 - 点击区域和图片大小一致
     skillSlot: {
         width: '50px',
         height: '50px',
     },
-    
+
     // 槽位图片 - 填满容器
     slotImage: {
         width: '100%',
         height: '100%',
     },
-    
+
     // 槽位图片 - 绝对定位 (用于全修按钮)
     slotImageAbsolute: {
         width: '100%',
         height: '100%',
         position: '0px 0px 0px' as const,
     },
-    
+
     // 未购买的槽位 (灰暗化)
     slotDimmed: {
         opacity: '0.4',
         saturation: '0.2',
         brightness: '0.6',
     },
-    
+
     // 已购买的槽位 (原图亮度)
     slotBright: {
         opacity: '1.0',
         saturation: '1.0',
         brightness: '1.0',
     },
-    
+
     // 未购买遮罩
     dimmedOverlay: {
         width: '100%',
@@ -732,7 +716,7 @@ const styles = {
         borderRadius: '6px',
         backgroundColor: 'rgba(15, 25, 25, 0.5)',
     },
-    
+
     // 底部费用栏 - 置于面板内部
     costBar: {
         flowChildren: 'down' as const,
@@ -740,7 +724,7 @@ const styles = {
         width: '400px',
         horizontalAlign: 'left' as const,
     },
-    
+
     // 费用标题
     costTitle: {
         color: '#c9a861',
@@ -751,14 +735,14 @@ const styles = {
         textAlign: 'center' as const,
         width: '100%',
     },
-    
+
     // 费用数值行
     costValueRow: {
         flowChildren: 'right' as const,
         horizontalAlign: 'center' as const,
         marginTop: '2px',
     },
-    
+
     // 费用数值
     costValue: {
         color: '#ffdd44',
@@ -766,7 +750,7 @@ const styles = {
         fontWeight: 'bold' as const,
         textShadow: '0px 0px 8px #ffd700',
     },
-    
+
     // 费用单位
     costUnit: {
         color: '#d4c4a8',
@@ -774,7 +758,7 @@ const styles = {
         verticalAlign: 'bottom' as const,
         marginBottom: '1px',
     },
-    
+
     // "全修"图标按钮 - 位于第二行右侧
     purchaseAllSlot: {
         width: '50px',
@@ -782,7 +766,7 @@ const styles = {
         position: '525px 220px 0px' as const,
         borderRadius: '6px',
     },
-    
+
     // 全修按钮 (文字按钮)
     purchaseAllBtn: {
         backgroundColor: '#884422',
@@ -791,7 +775,7 @@ const styles = {
         padding: '8px 24px',
         verticalAlign: 'center' as const,
     },
-    
+
     // 全修按钮文字
     purchaseAllText: {
         color: '#ffd700',
@@ -799,7 +783,7 @@ const styles = {
         fontWeight: 'bold' as const,
         textShadow: '0px 0px 8px #ff8800',
     },
-    
+
     // 悬浮提示 - 青玉风格
     tooltip: {
         flowChildren: 'down' as const,
@@ -853,7 +837,7 @@ const styles = {
         color: '#e8d8b8',
         fontSize: '14px',
     },
-    
+
     // 浮动提示 - 显示在标题下方居中
     toast: {
         position: '240px 118px 0px' as const,
@@ -875,14 +859,14 @@ const styles = {
         width: '100%',
         letterSpacing: '3px',
     },
-    
+
     // NPC容器 - 包含对话气泡和胸像
     npcContainer: {
         flowChildren: 'down' as const,
         width: '350px',
         marginRight: '-40px',
     },
-    
+
     // 气泡包装器 - 用于整体定位和动画
     speechBubbleWrapper: {
         flowChildren: 'down' as const,
@@ -890,7 +874,7 @@ const styles = {
         marginBottom: '-15px',
         horizontalAlign: 'center' as const,
     },
-    
+
     // 商人对话气泡
     speechBubble: {
         width: '160px',
@@ -900,7 +884,7 @@ const styles = {
         borderRadius: '8px',
         boxShadow: '0px 0px 10px 2px rgba(180, 140, 80, 0.3)',
     },
-    
+
     // 气泡小尾巴 - 倒三角
     speechTail: {
         width: '0px',
@@ -911,7 +895,7 @@ const styles = {
         borderRight: '8px solid transparent',
         borderTop: '10px solid #c9a861',
     },
-    
+
     speechText: {
         color: '#ffd080',
         fontSize: '13px',

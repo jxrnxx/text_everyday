@@ -4,17 +4,19 @@ import { CustomStats } from './systems/CustomStats';
 import { RankSystem } from './systems/RankSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
 import { WaveManager } from './systems/WaveManager';
+import { DamageSystem } from './systems/DamageSystem';
 import { InitGameStateManager, GetGameStateManager } from './systems/state_manager';
-import './enhance';  // CDOTA_BaseNPC 扩展方法 + 全局工具函数
+import './enhance';  // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
 import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
 import * as json_heroes from './json/npc_heroes_custom.json';
+import { PlayerRegister } from './player/PlayerRegister';
+
 
 // 游戏模式类
 export class GameMode {
     private static isGameStarted = false;
-    private static selectedHeroes: { [playerID: number]: string } = {};  // 玩家选择的英雄
     private static get currentWaveTimer(): string | null {
         return (GameRules as any)._CurrentWaveTimer || null;
     }
@@ -30,6 +32,10 @@ export class GameMode {
         // 初始化游戏状态管理器
         const gameStateManager = InitGameStateManager('LoadingState');
         print('[GameMode] 状态管理器已初始化');
+
+        // 初始化玩家注册系统
+        PlayerRegister.GetInstance().Init();
+        print('[GameMode] 玩家注册系统已初始化');
 
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.GOODGUYS, 4);
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.BADGUYS, 0);
@@ -56,87 +62,8 @@ export class GameMode {
             }
         }, undefined);
 
-        GameRules.SetPreGameTime(0);
-        GameRules.SetHeroSelectionTime(0);  // 跳过原生英雄选择界面
-        GameRules.SetStrategyTime(0);
-        GameRules.SetShowcaseTime(0);
-
-        // 英雄选择流程说明：
-        // 1. ForceHero 设置默认英雄（剑圣），跳过原生选择界面
-        // 2. 验证码界面输入 1=剑圣, 2=玛西
-        // 3. 如果选择不同英雄，RestartGame 后生成正确英雄
-
-        const gameMode = GameRules.GetGameModeEntity();
-        gameMode.SetCustomGameForceHero('npc_dota_hero_juggernaut');
-        gameMode.SetFogOfWarDisabled(true);
-        gameMode.SetCameraDistanceOverride(1450);
-
-        // [Economy] Disable native gold & XP
-        GameRules.SetGoldTickTime(99999);
-        GameRules.SetGoldPerTick(0);
-
-        // [XP] 使用自定义经验值系统
-        GameRules.SetUseCustomHeroXPValues(true);
-
-        // [Level Cap] 解锁最高50级 (Dota2默认最高30级)
-        // 需要通过 GameMode 设置自定义等级表
-        gameMode.SetUseCustomHeroLevels(true);
-        gameMode.SetCustomHeroMaxLevel(50);
-
-        // 设置自定义经验表 (每级所需经验)
-        // 索引从0开始，表示从1级升到2级所需的经验
-        const customXPPerLevel = [
-            230,    // 1 -> 2
-            370,    // 2 -> 3
-            480,    // 3 -> 4
-            580,    // 4 -> 5
-            600,    // 5 -> 6
-            720,    // 6 -> 7
-            750,    // 7 -> 8
-            890,    // 8 -> 9
-            930,    // 9 -> 10
-            970,    // 10 -> 11
-            1010,   // 11 -> 12
-            1050,   // 12 -> 13
-            1225,   // 13 -> 14
-            1250,   // 14 -> 15
-            1275,   // 15 -> 16
-            1300,   // 16 -> 17
-            1325,   // 17 -> 18
-            1500,   // 18 -> 19
-            1590,   // 19 -> 20
-            1600,   // 20 -> 21
-            1850,   // 21 -> 22
-            2100,   // 22 -> 23
-            2350,   // 23 -> 24
-            2600,   // 24 -> 25
-            3500,   // 25 -> 26
-            4500,   // 26 -> 27
-            5500,   // 27 -> 28
-            6500,   // 28 -> 29
-            7500,   // 29 -> 30
-            8000,   // 30 -> 31
-            8500,   // 31 -> 32
-            9000,   // 32 -> 33
-            9500,   // 33 -> 34
-            10000,  // 34 -> 35
-            10500,  // 35 -> 36
-            11000,  // 36 -> 37
-            11500,  // 37 -> 38
-            12000,  // 38 -> 39
-            12500,  // 39 -> 40
-            13000,  // 40 -> 41
-            13500,  // 41 -> 42
-            14000,  // 42 -> 43
-            14500,  // 43 -> 44
-            15000,  // 44 -> 45
-            15500,  // 45 -> 46
-            16000,  // 46 -> 47
-            16500,  // 47 -> 48
-            17000,  // 48 -> 49
-            17500,  // 49 -> 50
-        ];
-        gameMode.SetCustomXPRequiredToReachNextLevel(customXPPerLevel);
+        // 注意: 游戏规则配置已移至 GameConfig.ts
+        // 这里只初始化 GameMode 特有的逻辑
 
         // [Economy] Initialize Custom Economy System
         EconomySystem.GetInstance();
@@ -184,11 +111,12 @@ export class GameMode {
             this
         );
 
-        // [Damage Filter] Apply armor penetration (破势)
+        // [Damage Filter] Apply armor penetration, crit, lifesteal
         GameRules.GetGameModeEntity().SetDamageFilter(
-            (event: DamageFilterEvent) => this.DamageFilter(event),
+            (event: DamageFilterEvent) => DamageSystem.OnDamageFilter(event),
             this
         );
+        DamageSystem.Init();
 
 
         // [Merchant] Listen for NPC interactions (Interaction Security)
@@ -494,60 +422,13 @@ export class GameMode {
             GameRules.SetGameWinner(DotaTeam.GOODGUYS);
         });
 
-        // 监听前端验证码请求
-        // 验证码同时作为英雄选择：1=剑圣，2=玛西
-        CustomGameEventManager.RegisterListener('to_server_verify_code', (_, event) => {
-            const playerID = (event as any).PlayerID as PlayerID;
-            const code = (event as any).code;
-            const player = PlayerResource.GetPlayer(playerID);
-
-            if (player) {
-                // 英雄选择映射
-                const heroMap: { [key: string]: string } = {
-                    '1': 'npc_dota_hero_juggernaut',  // 剑圣
-                    '2': 'npc_dota_hero_marci',        // 玛西
-                    '669571': 'npc_dota_hero_juggernaut',  // 旧验证码兼容
-                };
-
-                const selectedHero = heroMap[code];
-
-                if (selectedHero) {
-                    // 保存玩家选择的英雄
-                    this.selectedHeroes[playerID] = selectedHero;
-
-                    // 设置 ForceHero（游戏尚未开始时有效）
-                    const game = GameRules.GetGameModeEntity();
-                    game.SetCustomGameForceHero(selectedHero);
-
-                    // 检查玩家是否已有英雄
-                    const existingHero = player.GetAssignedHero();
-
-                    if (!existingHero) {
-                        // 没有英雄，创建新英雄
-                        CreateHeroForPlayer(selectedHero, player);
-                    } else if (existingHero.GetUnitName() !== selectedHero) {
-                        // 英雄不匹配，需要替换
-                        this.RestartGame();
-                    }
-
-                    CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
-                        success: true,
-                        message: '验证成功，正在加载...',
-                    });
-
-                    // 验证通过后，如果游戏还没开始，则开始游戏
-                    if (!this.isGameStarted) {
-                        this.StartGame();
-                    }
-                } else {
-                    CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
-                        success: false,
-                        message: '请输入: 1=剑圣, 2=玛西',
-                    });
-                }
+        // 验证码逻辑已移至 InvitationModule
+        // 监听验证成功后开始游戏
+        CustomGameEventManager.RegisterListener('from_server_verify_result', (_, event) => {
+            if ((event as any).success && !this.isGameStarted) {
+                this.StartGame();
             }
         });
-
 
         // 如果是重新加载脚本 (游戏已经在进行中)，则自动执行一次软重启以应用新逻辑
         if (GameRules.State_Get() >= 4) {
@@ -588,58 +469,22 @@ export class GameMode {
 
         // 3. 重置玩家英雄状态和位置
         for (let i = 0; i <= 3; i++) {
-            const playerID = i as PlayerID; // 显式转换
-            const player = PlayerResource.GetPlayer(playerID);
+            const playerID = i as PlayerID;
+            const controller = PlayerResource.GetPlayer(playerID);
             const hero = PlayerResource.GetSelectedHeroEntity(playerID);
 
-            // 检查是否需要替换英雄
-            const selectedHero = this.selectedHeroes[playerID];
-
-            if (hero && player) {
+            if (hero && controller) {
+                // 使用 Player 系统获取选择的英雄
+                const playerAsset = controller.GetAsset();
+                const selectedHero = playerAsset?.GetSelectedHero() || '';
                 const currentHeroName = hero.GetUnitName();
 
-                // 如果选择的英雄与当前英雄不同，需要创建新英雄
+                // 如果选择的英雄与当前英雄不同，需要替换
                 if (selectedHero && currentHeroName !== selectedHero) {
-
-                    // 保存位置
-                    const spawnPointName = `start_player_${i + 1}`;
-                    const spawnPoint = Entities.FindByName(undefined, spawnPointName);
-
-                    // 清除旧英雄的 NetTable 数据
-                    const oldIndex = tostring(hero.GetEntityIndex());
-                    CustomNetTables.SetTableValue('custom_stats' as any, oldIndex, null as any);
-
-                    // 移除旧英雄
-                    hero.RemoveSelf();
-
-                    // 设置 ForceHero
-                    const game = GameRules.GetGameModeEntity();
-                    game.SetCustomGameForceHero(selectedHero);
-
-                    // 预加载并创建新英雄
-                    PrecacheUnitByNameAsync(selectedHero, () => {
-                        const newHero = CreateHeroForPlayer(selectedHero, player) as CDOTA_BaseNPC_Hero;
-                        if (newHero) {
-                            // 设置位置
-                            if (spawnPoint) {
-                                const origin = spawnPoint.GetAbsOrigin();
-                                newHero.SetAbsOrigin(origin);
-                                FindClearSpaceForUnit(newHero, origin, true);
-                            }
-
-                            // 确保玩家可以控制新英雄
-                            newHero.SetControllableByPlayer(playerID, true);
-
-                            // 选中新英雄（让玩家控制）
-                            player.SetAssignedHeroEntity(newHero);
-
-                            // 通知客户端刷新英雄数据
-                            CustomGameEventManager.Send_ServerToPlayer(player, 'hero_changed', {
-                                newHeroIndex: newHero.GetEntityIndex(),
-                            });
-                        } else {
-                        }
-                    }, playerID);
+                    // 通过 Player.CreateHero 处理替换
+                    if (playerAsset) {
+                        playerAsset.CreateHero(selectedHero);
+                    }
                 } else {
                     // 相同英雄，只需重生
                     hero.RespawnHero(false, false);

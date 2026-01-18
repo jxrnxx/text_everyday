@@ -9,7 +9,7 @@ export class GameConfig {
         GameRules.SetCustomGameSetupRemainingTime(0); // 剩余时间
         GameRules.SetCustomGameSetupTimeout(1); // 超时1秒后自动启动 (设为0会导致问题)
         GameRules.EnableCustomGameSetupAutoLaunch(true); // 启用自动启动
-        
+
         GameRules.SetHeroSelectionTime(0); // 选择英雄阶段的持续时间
         GameRules.SetHeroSelectPenaltyTime(0); // 选择英雄超时惩罚
         GameRules.SetStrategyTime(0); // 策略阶段时间
@@ -35,8 +35,8 @@ export class GameConfig {
         game.SetDaynightCycleDisabled(true); // 是否禁用白天黑夜循环
         game.SetForceRightClickAttackDisabled(true); // 是否禁用右键攻击
         game.SetHudCombatEventsDisabled(true); // 是否禁用战斗事件（左下角的战斗消息）
-        
-        // 从 DevConfig 读取默认英雄
+
+        // 设置默认英雄
         game.SetCustomGameForceHero(DEV_HERO);
         game.SetUseCustomHeroLevels(true); // 是否启用自定义英雄等级
         game.SetCustomHeroMaxLevel(100); // 设置自定义英雄最大等级

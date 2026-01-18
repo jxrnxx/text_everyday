@@ -30,9 +30,8 @@ export function openPanel(panelId: PanelId) {
     if (state.currentPanel !== 'none' && state.currentPanel !== panelId) {
         closePanel(state.currentPanel);
     }
-    
+
     state.currentPanel = panelId;
-    $.Msg(`[PanelManager] Opened: ${panelId}`);
 }
 
 /**
@@ -43,11 +42,10 @@ export function closePanel(panelId: PanelId) {
     if (callback) {
         callback();
     }
-    
+
     if (state.currentPanel === panelId) {
         state.currentPanel = 'none';
     }
-    $.Msg(`[PanelManager] Closed: ${panelId}`);
 }
 
 /**

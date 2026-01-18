@@ -27,6 +27,16 @@ declare global {
     var FindVecByName: (name: string) => Vector;
     /** 创建特效到指定点 */
     var CreateParticleToPoint: (path: string, attach: number, pos: Vector, duration?: number) => ParticleID;
+
+    // ============= 玩家系统 =============
+    /** 设置玩家子系统 (存储 Player、Knapsack 等实例) */
+    var SetPlayerSys: (playerid: PlayerID, key: string, value: any) => void;
+    /** 获取玩家子系统 */
+    var GetPlayerSys: (playerid: PlayerID | CDOTAPlayerController, key: string) => any;
+    /** 设置玩家临时值 (全局版本) */
+    var SetPlayerCustomValue: (playerId: PlayerID, key: string, value: any) => void;
+    /** 获取玩家临时值 (全局版本) */
+    var GetPlayerCustomValue: (playerId: PlayerID, key: string) => any;
 }
 
 // ============= 向量运算 =============
@@ -237,6 +247,60 @@ CreateParticleToPoint = function (path: string, attach: number, pos: Vector, dur
     }
 
     return fx;
+};
+
+// ============= 玩家系统 =============
+
+// 初始化全局存储
+_G['PlayerSys'] = _G['PlayerSys'] || {};
+_G['PlayerCustomValue'] = _G['PlayerCustomValue'] || {};
+
+/**
+ * 设置玩家子系统
+ * @param playerid 玩家ID
+ * @param key 子系统键名 (如 'assets', 'knapsack')
+ * @param value 子系统实例
+ */
+SetPlayerSys = function (playerid: PlayerID, key: string, value: any) {
+    _G['PlayerSys'][playerid] = _G['PlayerSys'][playerid] || {};
+    _G['PlayerSys'][playerid][key] = value;
+};
+
+/**
+ * 获取玩家子系统
+ * @param playerid 玩家ID 或 CDOTAPlayerController
+ * @param key 子系统键名
+ * @returns 子系统实例，不存在返回 null
+ */
+GetPlayerSys = function (playerid: PlayerID | CDOTAPlayerController, key: string) {
+    if (typeof playerid === 'object') {
+        playerid = playerid.GetPlayerID();
+    }
+    if (!_G['PlayerSys']) return null;
+    if (!_G['PlayerSys'][playerid]) return null;
+    return _G['PlayerSys'][playerid][key];
+};
+
+/**
+ * 设置玩家临时值 (全局版本)
+ * @param playerId 玩家ID
+ * @param key 键名
+ * @param value 值
+ */
+SetPlayerCustomValue = function (playerId: PlayerID, key: string, value: any) {
+    if (!_G['PlayerCustomValue'][playerId]) _G['PlayerCustomValue'][playerId] = {};
+    _G['PlayerCustomValue'][playerId][key] = value;
+};
+
+/**
+ * 获取玩家临时值 (全局版本)
+ * @param playerId 玩家ID
+ * @param key 键名
+ * @returns 值，不存在返回 0
+ */
+GetPlayerCustomValue = function (playerId: PlayerID, key: string) {
+    if (!_G['PlayerCustomValue'][playerId]) return 0;
+    return _G['PlayerCustomValue'][playerId][key] || 0;
 };
 
 export { };

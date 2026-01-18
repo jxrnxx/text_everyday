@@ -50,7 +50,7 @@ export default function Precache(context: CScriptPrecacheContext) {
 
             // Cultivation Merchant
             'models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl',
-            
+
             // Blink Dash - 使用幽灵假人法，无需粒子特效
         ],
         context
@@ -112,7 +112,7 @@ function precacheUnits(unitNamesList: string[], context?: CScriptPrecacheContext
         });
     } else {
         unitNamesList.forEach(unitName => {
-            PrecacheUnitByNameAsync(unitName, () => {});
+            PrecacheUnitByNameAsync(unitName, () => { });
         });
     }
 }

@@ -5,7 +5,7 @@ import Precache from './utils/precache';
 
 Object.assign(getfenv(), {
     Activate: () => {
-        // ActivateModules(); // 禁用旧的界域/练功房逻辑
+        ActivateModules();  // 初始化邀请码等模块
         GameMode.Activate();
     },
     Precache: Precache,

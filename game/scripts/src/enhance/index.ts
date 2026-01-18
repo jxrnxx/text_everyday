@@ -6,6 +6,9 @@
 // CDOTA_BaseNPC 扩展方法
 import './CDOTA_BaseNPC';
 
+// CDOTAPlayerController 扩展方法
+import './CDOTAPlayerController';
+
 // 全局工具函数
 import './global';
 

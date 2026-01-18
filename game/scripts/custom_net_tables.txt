@@ -8,5 +8,6 @@
         "custom_stats",
         "wave_state",
         "upgrade_system",
+        "CustomValue",
     ]
 }
