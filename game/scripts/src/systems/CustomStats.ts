@@ -501,7 +501,15 @@ export class CustomStats {
             
             const statType = event.stat_type as string;
             const amount = event.amount as number || 0;
-            const cost = 200; // 每个技能费用 200 灵石
+            const slotIndex = event.slot_index as number;
+            
+            // 从 UpgradeSystem 获取当前 Tier 的费用
+            const { UpgradeSystem } = require('./UpgradeSystem');
+            const upgradeSystem = UpgradeSystem.GetInstance();
+            upgradeSystem.InitPlayer(playerId);  // 确保玩家数据已初始化
+            const shopData = upgradeSystem.GetShopData(playerId);
+            const tierConfig = UpgradeSystem.GetTierConfig(shopData.current_tier);  // 使用静态方法而非 .find()
+            const cost = tierConfig?.cost_per_slot || 200;
             
             // 检查灵石是否足够
             const economy = EconomySystem.GetInstance();
@@ -513,18 +521,19 @@ export class CustomStats {
                 return;
             }
             
-            // 属性映射表 - 增加额外属性
-            const statMap: { [key: string]: { stat: keyof HeroStats; amount: number } } = {
-                'constitution': { stat: 'extra_constitution', amount: 5 },
-                'martial': { stat: 'extra_martial', amount: 5 },
-                'divinity': { stat: 'extra_divinity', amount: 5 },
-                'agility': { stat: 'extra_agility', amount: 5 },
-                'armor': { stat: 'extra_armor', amount: 2 },
-                'mana_regen': { stat: 'extra_mana_regen', amount: 2 },
-                'attack_speed': { stat: 'extra_attack_speed', amount: 15 },
-                'life_on_hit': { stat: 'extra_life_on_hit', amount: 10 },  // 攻击回血
-                'base_damage': { stat: 'extra_base_damage', amount: 15 },
-                'armor_pen': { stat: 'armor_pen', amount: 10 },  // 护甲穿透(破势)
+            // 属性映射表 - 将前端属性名映射到 HeroStats 字段
+            const statMap: { [key: string]: { stat: keyof HeroStats; defaultAmount: number } } = {
+                'constitution': { stat: 'extra_constitution', defaultAmount: 5 },
+                'martial': { stat: 'extra_martial', defaultAmount: 5 },
+                'divinity': { stat: 'extra_divinity', defaultAmount: 5 },
+                'agility': { stat: 'extra_agility', defaultAmount: 5 },
+                'armor': { stat: 'extra_armor', defaultAmount: 2 },
+                'mana_regen': { stat: 'extra_mana_regen', defaultAmount: 2 },
+                'attack_speed': { stat: 'extra_attack_speed', defaultAmount: 15 },
+                'life_on_hit': { stat: 'extra_life_on_hit', defaultAmount: 10 },
+                'lifesteal_pct': { stat: 'lifesteal', defaultAmount: 5 },  // 百分比吸血
+                'base_damage': { stat: 'extra_base_damage', defaultAmount: 15 },
+                'armor_pen': { stat: 'armor_pen', defaultAmount: 10 },
             };
             
             const mapping = statMap[statType];
@@ -532,10 +541,22 @@ export class CustomStats {
                 // 扣除灵石
                 economy.AddSpiritCoin(playerId, -cost);
                 
-                // 添加属性
-                CustomStats.AddStat(hero, mapping.stat, amount || mapping.amount);
+                // 添加属性 (使用事件传来的 amount)
+                const actualAmount = amount || mapping.defaultAmount;
+                CustomStats.AddStat(hero, mapping.stat, actualAmount);
                 hero.EmitSound('Item.TomeOfKnowledge');
+                
+                print(`[CustomStats] Purchased: ${statType} +${actualAmount}, slot_index=${slotIndex}, cost=${cost}`);
+                
+                // 通知 UpgradeSystem 槽位已购买 (用于触发自动突破)
+                if (typeof slotIndex === 'number' && slotIndex >= 0 && slotIndex < 8) {
+                    print(`[CustomStats] Calling MarkSlotPurchased(${playerId}, ${slotIndex})`);
+                    upgradeSystem.MarkSlotPurchased(playerId, slotIndex);
+                } else {
+                    print(`[CustomStats] WARNING: Invalid slot_index: ${slotIndex}`);
+                }
             } else {
+                print(`[CustomStats] Unknown stat type: ${statType}`);
             }
         });
         

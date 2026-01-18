@@ -92,6 +92,13 @@ declare interface CustomGameEventDeclarations {
     cmd_merchant_purchase: {
         stat_type: string;
         amount: number;
+        slot_index: number;
+    };
+
+    /** Refresh merchant UI after breakthrough (Server -> Client) */
+    refresh_merchant_ui: {
+        new_tier: number;
+        tier_name: string;
     };
 
     /** End game (Client -> Server) */

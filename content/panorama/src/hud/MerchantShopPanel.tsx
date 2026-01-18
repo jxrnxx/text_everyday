@@ -17,31 +17,38 @@ interface SkillSlot {
     purchased: boolean;
 }
 
-// 全局费用
-const SLOT_COST = 200;
+// 默认费用 (会被 NetTable 覆盖)
+const DEFAULT_SLOT_COST = 200;
 
-// 8个技能配置 (带描述)
-const SKILL_CONFIG: SkillSlot[] = [
+// Tier 名称映射 (用于显示)
+const TIER_NAMES: Record<number, string> = {
+    1: '入门期',
+    2: '觉醒期',
+    3: '凝丹期',
+};
+
+// 默认技能配置 (会被 NetTable 覆盖)
+const DEFAULT_SKILL_CONFIG: SkillSlot[] = [
     { id: 1, name: '根骨', stat: '+5', bonus: '根骨', purchased: false },
     { id: 2, name: '武道', stat: '+5', bonus: '武道', purchased: false },
     { id: 3, name: '神念', stat: '+5', bonus: '神念', purchased: false },
-    { id: 4, name: '护甲', stat: '+2', bonus: '护甲', purchased: false },
-    { id: 5, name: '回蓝', stat: '+2', bonus: '回蓝', purchased: false },
-    { id: 6, name: '攻速', stat: '+15', bonus: '攻速', purchased: false },
-    { id: 7, name: '回血', stat: '+10', bonus: '攻击回血', purchased: false },
-    { id: 8, name: '攻击', stat: '+15', bonus: '攻击', purchased: false },
+    { id: 4, name: '戒守', stat: '+2', bonus: '护甲', purchased: false },
+    { id: 5, name: '回能', stat: '+2', bonus: '回蓝', purchased: false },
+    { id: 6, name: '极速', stat: '+15', bonus: '攻速', purchased: false },
+    { id: 7, name: '饮血', stat: '+10', bonus: '攻击回血', purchased: false },
+    { id: 8, name: '破军', stat: '+15', bonus: '攻击', purchased: false },
 ];
 
-// 技能描述 (用于悬浮窗)
+// 技能描述 (用于悬浮窗) - key 需要匹配技能的 name 字段
 const SKILL_DESC: Record<string, string> = {
-    '根骨': '肉身根基，气血充沛',
-    '武道': '武学造诣，勇猛精进',
-    '神念': '神魂凝练，法力深厚',
-    '护甲': '金刚不坏，刀枪不入',
-    '回蓝': '内息运转，灵力回复',
-    '攻速': '出手如电，迅捷无双',
-    '回血': '以战养战，攻击回血',
-    '攻击': '力量增幅，攻击提升',
+    '根骨': '肉身根基，气血充沛（+生命值）',
+    '武道': '武学造诣，勇猛精进（+物理伤害）',
+    '神念': '神魂凝练，法力深厚（+魔法值）',
+    '戒守': '金刚不坏，刀枪不入（+护甲）',
+    '回能': '内息运转，灵力回复（+回蓝）',
+    '极速': '出手如电，迅捷无双（+攻速）',
+    '饮血': '以战养战，攻击回血（+吸血%）',
+    '破军': '力量增幅，攻击提升（+攻击力）',
 };
 
 // 槽位图片路径 (100x100px 填满版本)
@@ -72,9 +79,12 @@ const SLOT_POSITIONS = [
 
 const MerchantShopPanel: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
-    const [skills, setSkills] = useState<SkillSlot[]>(SKILL_CONFIG);
+    const [skills, setSkills] = useState<SkillSlot[]>(DEFAULT_SKILL_CONFIG);
     const [hoveredSkill, setHoveredSkill] = useState<{ skill: SkillSlot; index: number } | null>(null);
+    const [hoveredPurchaseAll, setHoveredPurchaseAll] = useState(false);  // 全修按钮悬停状态
     const [currentTier, setCurrentTier] = useState(1);
+    const [tierName, setTierName] = useState('入门期');
+    const [slotCost, setSlotCost] = useState(DEFAULT_SLOT_COST);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const toastTimerRef = React.useRef<number>(0); // 用于跟踪定时器
     
@@ -99,8 +109,6 @@ const MerchantShopPanel: React.FC = () => {
     const purchasedCount = skills.filter(s => s.purchased).length;
     // 未购买数量
     const unpurchasedCount = skills.filter(s => !s.purchased).length;
-    // 全修需要的总金币
-    const totalCostForAll = unpurchasedCount * SLOT_COST;
     // 从 NetTable 读取玩家灵石
     const [playerGold, setPlayerGold] = useState(0);
     
@@ -123,9 +131,206 @@ const MerchantShopPanel: React.FC = () => {
             CustomNetTables.UnsubscribeNetTableListener(listener);
         };
     }, []);
+
+    // 每次面板打开时强制刷新数据
+    useEffect(() => {
+        if (isVisible) {
+            const localPlayer = Players.GetLocalPlayer();
+            const netTableKey = `player_${localPlayer}`;
+            $.Msg(`[MerchantPanel] Panel opened! localPlayer=${localPlayer}, key=${netTableKey}`);
+            
+            // 尝试读取 NetTable
+            const upgradeData = CustomNetTables.GetTableValue('upgrade_system', netTableKey as any) as any;
+            $.Msg(`[MerchantPanel] upgradeData exists: ${upgradeData != null}`);
+            
+            if (upgradeData) {
+                $.Msg(`[MerchantPanel] upgradeData.current_tier=${upgradeData.current_tier}`);
+                $.Msg(`[MerchantPanel] upgradeData.cost_per_slot=${upgradeData.cost_per_slot}`);
+                
+                // 更新状态
+                setCurrentTier(upgradeData.current_tier || 1);
+                setTierName(upgradeData.tier_name || TIER_NAMES[upgradeData.current_tier] || '入门期');
+                setSlotCost(upgradeData.cost_per_slot || 200);
+                
+                if (upgradeData.slots_config) {
+                    const newSkills: SkillSlot[] = [];
+                    for (let i = 0; i < 8; i++) {
+                        const luaIndex = i + 1;
+                        const slotConfig = upgradeData.slots_config[luaIndex];
+                        const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
+                        
+                        if (slotConfig && slotConfig.name) {
+                            $.Msg(`[MerchantPanel] Slot ${i}: ${slotConfig.name} +${slotConfig.value}, purchased=${isPurchased}`);
+                            newSkills.push({
+                                id: i + 1,
+                                name: slotConfig.name,
+                                stat: `+${slotConfig.value}${slotConfig.is_percent ? '%' : ''}`,
+                                bonus: slotConfig.name,
+                                purchased: isPurchased,
+                            });
+                        } else {
+                            newSkills.push({
+                                ...DEFAULT_SKILL_CONFIG[i],
+                                purchased: isPurchased,
+                            });
+                        }
+                    }
+                    setSkills(newSkills);
+                    $.Msg(`[MerchantPanel] Panel refresh complete! Loaded ${newSkills.length} skills.`);
+                }
+            } else {
+                $.Msg(`[MerchantPanel] No upgrade data found on panel open`);
+            }
+        }
+    }, [isVisible]);
+
+    // 订阅升级系统 NetTable - 获取当前 Tier 配置
+    // 使用 ref 来追踪当前 tier，避免闭包问题
+    const currentTierRef = React.useRef(currentTier);
+    currentTierRef.current = currentTier;
     
-    const canAffordAll = playerGold >= totalCostForAll && unpurchasedCount > 0;
-    const canAffordOne = playerGold >= SLOT_COST;
+    useEffect(() => {
+        const localPlayer = Players.GetLocalPlayer();
+        const updateUpgradeData = () => {
+            const upgradeData = CustomNetTables.GetTableValue('upgrade_system', `player_${localPlayer}` as any) as any;
+            if (upgradeData) {
+                const serverTier = upgradeData.current_tier;
+                const tierChanged = serverTier !== currentTierRef.current;
+                
+                // 更新 Tier 信息
+                if (serverTier !== undefined) {
+                    setCurrentTier(serverTier);
+                    setTierName(upgradeData.tier_name || TIER_NAMES[serverTier] || '');
+                }
+                if (upgradeData.cost_per_slot !== undefined) {
+                    setSlotCost(upgradeData.cost_per_slot);
+                }
+                
+                // 更新槽位配置
+                if (upgradeData.slots_config) {
+                    $.Msg(`[MerchantPanel] NetTable update: tier=${serverTier}, tierChanged=${tierChanged}`);
+                    
+                    // 如果 tier 变化了（突破），完全重置为新tier的配置
+                    if (tierChanged) {
+                        $.Msg(`[MerchantPanel] Tier changed! Resetting all skills.`);
+                        const newSkills: SkillSlot[] = [];
+                        for (let i = 0; i < 8; i++) {
+                            const luaIndex = i + 1;
+                            const slotConfig = upgradeData.slots_config[luaIndex];
+                            const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
+                            
+                            if (slotConfig && slotConfig.name) {
+                                newSkills.push({
+                                    id: i + 1,
+                                    name: slotConfig.name,
+                                    stat: `+${slotConfig.value}${slotConfig.is_percent ? '%' : ''}`,
+                                    bonus: slotConfig.name,
+                                    purchased: isPurchased,
+                                });
+                            } else {
+                                newSkills.push({
+                                    ...DEFAULT_SKILL_CONFIG[i],
+                                    purchased: isPurchased,
+                                });
+                            }
+                        }
+                        setSkills(newSkills);
+                    }
+                    // 如果 tier 没变，不覆盖本地状态（避免覆盖本地的已购买状态）
+                    // 本地状态由 handlePurchase 直接管理
+                }
+            }
+        };
+        
+        // 初始读取
+        updateUpgradeData();
+        
+        // 订阅更新
+        const listener = CustomNetTables.SubscribeNetTableListener('upgrade_system' as any, updateUpgradeData);
+        return () => {
+            CustomNetTables.UnsubscribeNetTableListener(listener);
+        };
+    }, []);
+
+    // 监听突破刷新事件
+    useEffect(() => {
+        const listenerId = GameEvents.Subscribe('refresh_merchant_ui', (event: any) => {
+            $.Msg(`[MerchantPanel] refresh_merchant_ui received! new_tier=${event.new_tier}`);
+            
+            // 突破成功后，显示提示并播放音效
+            const newTier = event.new_tier;
+            const tierNameFromServer = event.tier_name || TIER_NAMES[newTier] || '';
+            
+            showToast(`突破成功！进入${tierNameFromServer}！`);
+            Game.EmitSound('Hero_Zeus.GodsWrath.Target');
+            
+            // 延迟 100ms 后读取 NetTable，确保数据已同步
+            $.Schedule(0.1, () => {
+                const localPlayer = Players.GetLocalPlayer();
+                const upgradeData = CustomNetTables.GetTableValue('upgrade_system', `player_${localPlayer}` as any) as any;
+                
+                $.Msg(`[MerchantPanel] Reading NetTable after delay...`);
+                
+                if (upgradeData && upgradeData.current_tier) {
+                    // 更新 Tier 信息
+                    setCurrentTier(upgradeData.current_tier);
+                    setTierName(upgradeData.tier_name || TIER_NAMES[upgradeData.current_tier] || '');
+                    setSlotCost(upgradeData.cost_per_slot || 200);
+                    
+                    $.Msg(`[MerchantPanel] Updated: tier=${upgradeData.current_tier}, cost=${upgradeData.cost_per_slot}`);
+                    
+                    // 更新技能配置
+                    if (upgradeData.slots_config) {
+                        const newSkills: SkillSlot[] = [];
+                        for (let i = 0; i < 8; i++) {
+                            const luaIndex = i + 1;
+                            const slotConfig = upgradeData.slots_config[luaIndex];
+                            const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
+                            
+                            if (slotConfig && slotConfig.name) {
+                                $.Msg(`[MerchantPanel] Slot ${i}: ${slotConfig.name} +${slotConfig.value}, purchased=${isPurchased}`);
+                                newSkills.push({
+                                    id: i + 1,
+                                    name: slotConfig.name,
+                                    stat: `+${slotConfig.value}${slotConfig.is_percent ? '%' : ''}`,
+                                    bonus: slotConfig.name,
+                                    purchased: isPurchased,
+                                });
+                            } else {
+                                newSkills.push({
+                                    ...DEFAULT_SKILL_CONFIG[i],
+                                    purchased: isPurchased,
+                                });
+                            }
+                        }
+                        setSkills(newSkills);
+                        $.Msg(`[MerchantPanel] Skills updated to tier ${upgradeData.current_tier}!`);
+                    }
+                } else {
+                    $.Msg(`[MerchantPanel] ERROR: No valid upgradeData. Retrying in 200ms...`);
+                    // 如果仍然没有数据，再试一次
+                    $.Schedule(0.2, () => {
+                        const retryData = CustomNetTables.GetTableValue('upgrade_system', `player_${localPlayer}` as any) as any;
+                        if (retryData && retryData.current_tier) {
+                            setCurrentTier(retryData.current_tier);
+                            setTierName(retryData.tier_name || TIER_NAMES[retryData.current_tier] || '');
+                            setSlotCost(retryData.cost_per_slot || 200);
+                            $.Msg(`[MerchantPanel] Retry success: tier=${retryData.current_tier}`);
+                        }
+                    });
+                }
+            });
+        });
+        
+        return () => {
+            GameEvents.Unsubscribe(listenerId);
+        };
+    }, []);
+    
+    // 使用动态 slotCost 计算
+    const dynamicTotalCost = unpurchasedCount * slotCost;
+    const canAffordAll = playerGold >= dynamicTotalCost && unpurchasedCount > 0;
+    const canAffordOne = playerGold >= slotCost;
 
     // handleClose 引用 - 需要在 useEffect 之前定义
     const handleCloseRef = React.useRef<() => void>(() => {});
@@ -210,66 +415,77 @@ const MerchantShopPanel: React.FC = () => {
         }
     };
 
-    // 技能名称到属性类型的映射
+    // 技能名称到属性类型的映射 (包含新旧名称)
     const STAT_TYPE_MAP: { [key: string]: string } = {
         '根骨': 'constitution',
         '武道': 'martial',
         '神念': 'divinity',
+        // 旧名称兼容
         '护甲': 'armor',
         '回蓝': 'mana_regen',
         '攻速': 'attack_speed',
         '回血': 'life_on_hit',
         '攻击': 'base_damage',
+        // Tier 配置使用的新名称
+        '戒守': 'armor',
+        '回能': 'mana_regen',
+        '极速': 'attack_speed',
+        '饮血': 'life_on_hit',  // Tier 1 用 life_on_hit, Tier 2 用 lifesteal_pct (由后端处理)
+        '破军': 'base_damage',
     };
 
     const handlePurchase = (skill: SkillSlot) => {
         if (skill.purchased) return;
         
-        // 检查余额
-        if (playerGold < SLOT_COST) {
+        // 检查余额 (使用动态 slotCost)
+        if (playerGold < slotCost) {
             Game.EmitSound('General.CastFail_NoMana');
-            showToast('灵石不足');
+            showToast(`灵石不足，需要 ${slotCost}`);
             return;
         }
         
-        // 发送购买事件到服务端
+        // 发送购买事件到服务端 (包含 slot_index 用于自动突破检测)
         const statType = STAT_TYPE_MAP[skill.name];
+        const slotIndex = skills.findIndex(s => s.id === skill.id);
         if (statType) {
             GameEvents.SendCustomGameEventToServer('cmd_merchant_purchase', {
                 stat_type: statType,
-                amount: parseInt(skill.stat.replace('+', '')) || 0,
+                amount: parseInt(skill.stat.replace(/[+%]/g, '')) || 0,
+                slot_index: slotIndex,
             });
         }
         
-        // 更新UI状态
-        setSkills(skills.map(s => 
+        // 立即更新本地状态
+        setSkills(prev => prev.map(s => 
             s.id === skill.id ? { ...s, purchased: true } : s
         ));
         Game.EmitSound('General.Buy');
     };
 
     const handlePurchaseAll = () => {
-        // 检查余额是否足够购买所有
-        if (playerGold < totalCostForAll || unpurchasedCount === 0) {
+        // 检查余额是否足够购买所有 (使用动态 cost)
+        if (playerGold < dynamicTotalCost || unpurchasedCount === 0) {
             Game.EmitSound('General.CastFail_NoMana');
-            showToast(`灵石不足，需要 ${totalCostForAll} 灵石`);
+            showToast(`灵石不足，需要 ${dynamicTotalCost} 灵石`);
             return;
         }
         
         // 全修 - 购买所有未购买的槽位
-        skills.forEach(skill => {
+        skills.forEach((skill, index) => {
             if (!skill.purchased) {
                 const statType = STAT_TYPE_MAP[skill.name];
                 if (statType) {
                     GameEvents.SendCustomGameEventToServer('cmd_merchant_purchase', {
                         stat_type: statType,
-                        amount: parseInt(skill.stat.replace('+', '')) || 0,
+                        amount: parseInt(skill.stat.replace(/[+%]/g, '')) || 0,
+                        slot_index: index,
                     });
                 }
             }
         });
         
-        setSkills(skills.map(s => ({ ...s, purchased: true })));
+        // 立即更新本地状态
+        setSkills(prev => prev.map(s => ({ ...s, purchased: true })));
         Game.EmitSound('General.Buy');
         Game.EmitSound('Hero_Invoker.LevelUp');
     };
@@ -313,9 +529,9 @@ const MerchantShopPanel: React.FC = () => {
                         style={styles.background}
                     />
                     
-                    {/* 标题 */}
+                    {/* 标题 - 显示 Tier 名称 */}
                     <Label 
-                        text={`修炼境界 · 第${currentTier}重`}
+                        text={`修炼境界 · ${tierName}`}
                         style={styles.title}
                     />
 
@@ -351,6 +567,8 @@ const MerchantShopPanel: React.FC = () => {
                     <Panel
                         style={styles.purchaseAllSlot}
                         onactivate={handlePurchaseAll}
+                        onmouseover={() => setHoveredPurchaseAll(true)}
+                        onmouseout={() => setHoveredPurchaseAll(false)}
                         className="BreathScale"
                     >
                         {/* 图标 + 燃烧效果 */}
@@ -361,10 +579,10 @@ const MerchantShopPanel: React.FC = () => {
                         />
                     </Panel>
 
-                    {/* 底部区域 - 费用显示 */}
+                    {/* 底部区域 - 费用显示 (动态 slotCost) */}
                     <Panel style={styles.costBar}>
                         <Label 
-                            text={`【 演 武 代 价 ：${SLOT_COST} 灵石 / 式 】`}
+                            text={`【 演 武 代 价 ：${slotCost} 灵石 / 式 】`}
                             style={styles.costTitle}
                         />
                     </Panel>
@@ -392,8 +610,33 @@ const MerchantShopPanel: React.FC = () => {
                         </Panel>
                     )}
 
-
-
+                    {/* 全修按钮悬浮提示 */}
+                    {hoveredPurchaseAll && (
+                        <Panel 
+                            style={{
+                                ...styles.tooltip,
+                                position: '400px 30px 0px',
+                            }}
+                            className="JadeTooltip"
+                        >
+                            <Label text="一键全修" style={styles.tooltipTitle} />
+                            <Panel style={styles.tooltipDivider} />
+                            <Label 
+                                text={unpurchasedCount > 0 
+                                    ? `立即购买剩余 ${unpurchasedCount} 式`
+                                    : '已全部购买'
+                                } 
+                                style={styles.tooltipDesc} 
+                            />
+                            {unpurchasedCount > 0 && (
+                                <Panel style={styles.tooltipValueRow}>
+                                    <Label text="总计 " style={styles.tooltipDesc} />
+                                    <Label text={`${dynamicTotalCost}`} style={{ color: '#f5d76e', fontSize: '16px', fontWeight: 'bold' as const }} />
+                                    <Label text=" 灵石" style={styles.tooltipDesc} />
+                                </Panel>
+                            )}
+                        </Panel>
+                    )}
                 </Panel>
             </Panel>
         </Panel>

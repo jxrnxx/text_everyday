@@ -5,16 +5,94 @@
  * Rules:
  * - Max_Shop_Tier = Rank + 2
  * - Cannot breakthrough to a tier higher than allowed
+ * 
+ * Tier Progression:
+ * - Tier 1 (入门期): Basic stats, cost 200
+ * - Tier 2 (觉醒期): Explosive stats for Wave 5+ difficulty, cost 800
+ * - Tier 3 (凝丹期): Advanced stats, cost 2000
  */
 
 import { reloadable } from '../utils/tstl-utils';
 import { CustomStats } from './CustomStats';
 
-// Shop tier data structure (placeholder for actual shop implementation)
+// Slot configuration for each tier
+export interface TierSlotConfig {
+    stat_type: string;      // constitution, martial, etc.
+    name: string;           // 中文名称
+    value: number;          // 数值
+    is_percent?: boolean;   // 是否百分比
+}
+
+// Tier configuration structure
+export interface TierConfig {
+    tier: number;
+    name: string;           // Tier 名称
+    cost_per_slot: number;  // 每个槽位费用
+    slots: TierSlotConfig[];
+}
+
+// ========================
+// UPGRADE TIER CONFIGURATION
+// ========================
+export const UPGRADE_TIER_CONFIG: TierConfig[] = [
+    // Tier 1: 入门期 (Wave 1-4)
+    {
+        tier: 1,
+        name: '入门期',
+        cost_per_slot: 200,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 5 },
+            { stat_type: 'martial', name: '武道', value: 5 },
+            { stat_type: 'divinity', name: '神念', value: 5 },
+            { stat_type: 'armor', name: '戒守', value: 2 },
+            { stat_type: 'mana_regen', name: '回能', value: 2 },
+            { stat_type: 'attack_speed', name: '极速', value: 15 },
+            { stat_type: 'life_on_hit', name: '饮血', value: 10 },  // Flat HP on hit
+            { stat_type: 'base_damage', name: '破军', value: 15 },
+        ]
+    },
+    // Tier 2: 觉醒期 (Wave 5-8) - EXPLOSIVE growth to handle difficulty spike
+    {
+        tier: 2,
+        name: '觉醒期',
+        cost_per_slot: 800,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 40 },   // ~1200 HP gain
+            { stat_type: 'martial', name: '武道', value: 40 },
+            { stat_type: 'divinity', name: '神念', value: 40 },
+            { stat_type: 'armor', name: '戒守', value: 8 },          // Crucial for damage mitigation
+            { stat_type: 'mana_regen', name: '回能', value: 5 },
+            { stat_type: 'attack_speed', name: '极速', value: 50 },   // Flat Agility
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 5, is_percent: true },  // 5% lifesteal
+            { stat_type: 'base_damage', name: '破军', value: 80 },   // Flat Damage
+        ]
+    },
+    // Tier 3: 凝丹期 (Wave 9+)
+    {
+        tier: 3,
+        name: '凝丹期',
+        cost_per_slot: 2000,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 100 },
+            { stat_type: 'martial', name: '武道', value: 100 },
+            { stat_type: 'divinity', name: '神念', value: 100 },
+            { stat_type: 'armor', name: '戒守', value: 15 },
+            { stat_type: 'mana_regen', name: '回能', value: 10 },
+            { stat_type: 'attack_speed', name: '极速', value: 80 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 10, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 150 },
+        ]
+    },
+];
+
+// Shop tier data structure
 interface PlayerShopData {
     current_tier: number;
-    slots_purchased: number;  // Out of 8 slots per tier
+    slots_purchased: boolean[];  // Array of 8 booleans for each slot
 }
+
+// Default empty slots array
+const DEFAULT_SLOTS = (): boolean[] => [false, false, false, false, false, false, false, false];
 
 @reloadable
 export class UpgradeSystem {
@@ -35,13 +113,14 @@ export class UpgradeSystem {
     }
 
     private Initialize() {
-        // Listen for breakthrough requests
+        // Listen for breakthrough requests (manual breakthrough button)
         CustomGameEventManager.RegisterListener('cmd_request_breakthrough', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
             const targetTier = (event as any).target_tier as number;
             this.AttemptBreakthrough(playerID, targetTier);
         });
-
+        
+        // Note: cmd_merchant_purchase is handled in CustomStats.ts, which calls MarkSlotPurchased()
     }
 
     /**
@@ -51,8 +130,10 @@ export class UpgradeSystem {
         if (!this.shopData[playerID]) {
             this.shopData[playerID] = {
                 current_tier: 1,
-                slots_purchased: 0,
+                slots_purchased: DEFAULT_SLOTS(),
             };
+            // Sync to client
+            this.SyncShopDataToClient(playerID);
         }
     }
 
@@ -65,10 +146,71 @@ export class UpgradeSystem {
     }
 
     /**
+     * Get tier configuration by tier number
+     */
+    public static GetTierConfig(tier: number): TierConfig | undefined {
+        // 使用 for 循环而非 .find() 以兼容 Lua
+        for (let i = 0; i < UPGRADE_TIER_CONFIG.length; i++) {
+            if (UPGRADE_TIER_CONFIG[i].tier === tier) {
+                return UPGRADE_TIER_CONFIG[i];
+            }
+        }
+        return undefined;
+    }
+
+    /**
      * Get player's current shop data
      */
     public GetShopData(playerID: PlayerID): PlayerShopData {
-        return this.shopData[playerID] || { current_tier: 1, slots_purchased: 0 };
+        if (!this.shopData[playerID]) {
+            this.InitPlayer(playerID);
+        }
+        return this.shopData[playerID];
+    }
+
+    /**
+     * Get the count of purchased slots
+     */
+    private GetPurchasedCount(slots: boolean[]): number {
+        // 使用 for 循环而非 .filter() 以兼容 Lua
+        let count = 0;
+        for (let i = 0; i < slots.length; i++) {
+            if (slots[i]) count++;
+        }
+        return count;
+    }
+
+    /**
+     * Check if all slots are purchased
+     */
+    private AllSlotsPurchased(slots: boolean[]): boolean {
+        // 使用 for 循环而非 .every() 以兼容 Lua
+        for (let i = 0; i < slots.length; i++) {
+            if (!slots[i]) return false;
+        }
+        return true;
+    }
+    /**
+     * Mark a slot as purchased and check for auto-breakthrough
+     */
+    public MarkSlotPurchased(playerID: PlayerID, slotIndex: number) {
+        const shopData = this.GetShopData(playerID);
+        
+        if (slotIndex < 0 || slotIndex >= 8) return;
+        
+        shopData.slots_purchased[slotIndex] = true;
+        
+        const purchasedCount = this.GetPurchasedCount(shopData.slots_purchased);
+        print(`[UpgradeSystem] Slot ${slotIndex} purchased. Total: ${purchasedCount}/8, Tier: ${shopData.current_tier}`);
+        
+        // Check if all 8 slots are purchased - trigger auto breakthrough
+        if (this.AllSlotsPurchased(shopData.slots_purchased)) {
+            print(`[UpgradeSystem] All slots purchased! Triggering breakthrough...`);
+            this.TriggerBreakthrough(playerID);
+        }
+        
+        // Sync to client
+        this.SyncShopDataToClient(playerID);
     }
 
     /**
@@ -91,21 +233,51 @@ export class UpgradeSystem {
         }
 
         // Check 2: Must purchase all 8 slots in current tier
-        if (shopData.slots_purchased < 8) {
-            return { allowed: false, reason: `需购买全部8个槽位 (${shopData.slots_purchased}/8)` };
+        const purchasedCount = this.GetPurchasedCount(shopData.slots_purchased);
+        if (purchasedCount < 8) {
+            return { allowed: false, reason: `需购买全部8个槽位 (${purchasedCount}/8)` };
         }
 
         return { allowed: true, reason: '' };
     }
 
     /**
-     * Attempt to breakthrough to the next tier
+     * Trigger breakthrough when all slots are purchased (auto-breakthrough)
+     */
+    private TriggerBreakthrough(playerID: PlayerID) {
+        const player = PlayerResource.GetPlayer(playerID);
+        if (!player) return;
+
+        const hero = player.GetAssignedHero();
+        if (!hero) return;
+
+        const shopData = this.GetShopData(playerID);
+        const currentRank = CustomStats.GetStat(hero, 'rank') || 0;
+        const maxTier = UpgradeSystem.GetMaxTierForRank(currentRank);
+        const nextTier = shopData.current_tier + 1;
+
+        // Check if can progress to next tier
+        if (nextTier > maxTier) {
+            // Can't breakthrough, but stats are already applied
+            // Just notify the player
+            CustomGameEventManager.Send_ServerToPlayer(player, 'breakthrough_result', {
+                success: false,
+                new_tier: shopData.current_tier,
+                message: '需提升阶位才能突破到下一境界',
+            });
+            return;
+        }
+
+        // === SUCCESS: BREAKTHROUGH! ===
+        this.PerformBreakthrough(playerID, player, hero, nextTier);
+    }
+
+    /**
+     * Attempt to breakthrough to the next tier (manual button)
      */
     private AttemptBreakthrough(playerID: PlayerID, targetTier: number) {
         const player = PlayerResource.GetPlayer(playerID);
-        if (!player) {
-            return;
-        }
+        if (!player) return;
 
         const hero = player.GetAssignedHero();
         if (!hero) {
@@ -130,40 +302,138 @@ export class UpgradeSystem {
         }
 
         // Check slots purchased
-        if (shopData.slots_purchased < 8) {
-            this.SendResult(player, false, shopData.current_tier, `需购买全部8个槽位 (${shopData.slots_purchased}/8)`);
+        const purchasedCount = this.GetPurchasedCount(shopData.slots_purchased);
+        if (purchasedCount < 8) {
+            this.SendResult(player, false, shopData.current_tier, `需购买全部8个槽位 (${purchasedCount}/8)`);
             return;
         }
 
         // === SUCCESS ===
-        // 1. Increment tier and reset slots
-        this.shopData[playerID] = {
-            current_tier: targetTier,
-            slots_purchased: 0,
-        };
-
-        // 2. Play sound
-        EmitSoundOn('Hero_Invoker.LevelUp', hero);
-
-        // 3. Log
-
-        this.SendResult(player, true, targetTier, `突破成功！当前境界 Tier ${targetTier}`);
+        this.PerformBreakthrough(playerID, player, hero, targetTier);
     }
 
     /**
-     * Purchase a slot in the current tier (placeholder for actual shop logic)
+     * Perform the actual breakthrough with visual/audio feedback
      */
-    public PurchaseSlot(playerID: PlayerID): boolean {
+    private PerformBreakthrough(
+        playerID: PlayerID, 
+        player: CDOTAPlayerController, 
+        hero: CDOTA_BaseNPC_Hero, 
+        newTier: number
+    ) {
+        const currentTierConfig = UpgradeSystem.GetTierConfig(this.shopData[playerID].current_tier);
+        const newTierConfig = UpgradeSystem.GetTierConfig(newTier);
+
+        // 1. Increment tier and reset slots
+        this.shopData[playerID] = {
+            current_tier: newTier,
+            slots_purchased: DEFAULT_SLOTS(),
+        };
+
+        // 2. Play breakthrough sound (Thunder!)
+        EmitSoundOn('Hero_Zeus.GodsWrath.Target', hero);
+        
+        // 3. Create breakthrough particle effect
+        const particleId = ParticleManager.CreateParticle(
+            'particles/econ/items/effigies/status_fx_effigies/gold_effigy_ambient_radiant.vpcf',
+            ParticleAttachment.ABSORIGIN_FOLLOW,
+            hero
+        );
+        ParticleManager.SetParticleControl(particleId, 0, hero.GetAbsOrigin());
+        
+        // Cleanup particle after 3 seconds
+        Timers.CreateTimer(3.0, () => {
+            ParticleManager.DestroyParticle(particleId, false);
+            ParticleManager.ReleaseParticleIndex(particleId);
+        });
+
+        // 4. Screen shake for dramatic effect
+        ScreenShake(hero.GetAbsOrigin(), 5, 100, 0.5, 2000, 0, true);
+
+        // 5. Log breakthrough
+        print(`[UpgradeSystem] Player ${playerID} breakthrough to Tier ${newTier} (${newTierConfig?.name || 'Unknown'})`);
+
+        // 6. Sync to client and notify
+        this.SyncShopDataToClient(playerID);
+        
+        // 7. Send event to client to refresh UI
+        print(`[UpgradeSystem] Sending refresh_merchant_ui event to player ${playerID}`);
+        CustomGameEventManager.Send_ServerToPlayer(player, 'refresh_merchant_ui', {
+            new_tier: newTier,
+            tier_name: newTierConfig?.name || '',
+        });
+
+        // 8. Send success result
+        this.SendResult(player, true, newTier, `突破成功！进入${newTierConfig?.name || `Tier ${newTier}`}！`);
+    }
+
+    /**
+     * Purchase a specific slot in the current tier
+     */
+    public PurchaseSlot(playerID: PlayerID, slotIndex: number): boolean {
         const shopData = this.GetShopData(playerID);
         
-        if (shopData.slots_purchased >= 8) {
-            return false;
-        }
+        if (slotIndex < 0 || slotIndex >= 8) return false;
+        if (shopData.slots_purchased[slotIndex]) return false;
 
-        this.shopData[playerID].slots_purchased++;
+        shopData.slots_purchased[slotIndex] = true;
+        
+        // Check for auto-breakthrough
+        if (this.AllSlotsPurchased(shopData.slots_purchased)) {
+            this.TriggerBreakthrough(playerID);
+        }
+        
+        this.SyncShopDataToClient(playerID);
         return true;
     }
 
+    /**
+     * Sync shop data to client via NetTable
+     */
+    private SyncShopDataToClient(playerID: PlayerID) {
+        const shopData = this.GetShopData(playerID);
+        const tierConfig = UpgradeSystem.GetTierConfig(shopData.current_tier);
+        
+        // 将 slots 数组转换为 Lua 风格的 1-indexed 对象
+        const slotsObject: { [key: number]: boolean } = {};
+        for (let i = 0; i < shopData.slots_purchased.length; i++) {
+            slotsObject[i + 1] = shopData.slots_purchased[i];  // Lua 从 1 开始
+        }
+        
+        // 将 slots_config 转换为 Lua 风格的 1-indexed 对象
+        const slotsConfigObject: { [key: number]: any } = {};
+        if (tierConfig?.slots) {
+            for (let i = 0; i < tierConfig.slots.length; i++) {
+                slotsConfigObject[i + 1] = tierConfig.slots[i];  // Lua 从 1 开始
+            }
+        }
+        
+        const netTableData = {
+            current_tier: shopData.current_tier,
+            tier_name: tierConfig?.name || '',
+            cost_per_slot: tierConfig?.cost_per_slot || 200,
+            slots_purchased: slotsObject,
+            slots_config: slotsConfigObject,
+        };
+        
+        print(`[UpgradeSystem] SyncShopDataToClient: tier=${shopData.current_tier}, cost=${tierConfig?.cost_per_slot}, slots_count=${Object.keys(slotsConfigObject).length}`);
+        print(`[UpgradeSystem] Writing to NetTable key: player_${playerID}`);
+        
+        // 使用 as any 确保类型检查不会阻止写入
+        CustomNetTables.SetTableValue('upgrade_system' as any, `player_${playerID}`, netTableData as any);
+        
+        // 验证写入是否成功
+        const verifyData = CustomNetTables.GetTableValue('upgrade_system' as any, `player_${playerID}`);
+        if (verifyData) {
+            print(`[UpgradeSystem] NetTable write verified! tier=${(verifyData as any).current_tier}`);
+        } else {
+            print(`[UpgradeSystem] ERROR: NetTable write verification failed!`);
+        }
+    }
+
+    /**
+     * Send result to player
+     */
     private SendResult(player: CDOTAPlayerController, success: boolean, newTier: number, message: string) {
         CustomGameEventManager.Send_ServerToPlayer(player, 'breakthrough_result', {
             success,

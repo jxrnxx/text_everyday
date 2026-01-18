@@ -31,4 +31,20 @@ declare interface CustomNetTableDeclarations {
             nextWaveTime: number;
         };
     };
+    upgrade_system: {
+        [key: string]: {
+            current_tier: number;
+            tier_name: string;
+            cost_per_slot: number;
+            slots_purchased: { [key: number]: boolean };
+            slots_config: {
+                [key: number]: {
+                    stat_type: string;
+                    name: string;
+                    value: number;
+                    is_percent?: boolean;
+                };
+            };
+        };
+    };
 }

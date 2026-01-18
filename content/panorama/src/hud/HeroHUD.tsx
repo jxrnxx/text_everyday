@@ -674,7 +674,7 @@ const HeroHUD: FC = () => {
                             src="file://{resources}/images/icon_attack.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
-                        <Label text="攻击2" style={statLabelStyle} />
+                        <Label text="攻击1" style={statLabelStyle} />
                         <Label text={String(stats.attack)} style={statValueStyle} />
                     </Panel>
                     
