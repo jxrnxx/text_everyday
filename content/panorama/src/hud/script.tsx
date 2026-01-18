@@ -72,10 +72,10 @@ const cmdDashName = 'cmd_dash_' + Math.floor(Math.random() * 10000);
 Game.AddCommand(cmdDashName, () => {
     // 获取鼠标屏幕坐标
     const cursorPos = GameUI.GetCursorPosition();
-    
+
     // 转换为世界坐标
     const worldPos = GameUI.GetScreenWorldPosition(cursorPos);
-    
+
     if (worldPos) {
         // 发送冲刺事件到服务端，包含鼠标世界坐标
         GameEvents.SendCustomGameEventToServer('cmd_c2s_blink_dash', {

@@ -4,6 +4,8 @@ import { CustomStats } from './systems/CustomStats';
 import { RankSystem } from './systems/RankSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
 import { WaveManager } from './systems/WaveManager';
+import { InitGameStateManager, GetGameStateManager } from './systems/state_manager';
+import './enhance';  // CDOTA_BaseNPC 扩展方法 + 全局工具函数
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
 import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
@@ -22,6 +24,13 @@ export class GameMode {
     }
 
     public static Activate() {
+        // 注意: Event 和 Pool 工具已经移植但需要手动加载
+        // 可以通过在 addon_game_mode.lua 中添加 require 或其他方式加载
+
+        // 初始化游戏状态管理器
+        const gameStateManager = InitGameStateManager('LoadingState');
+        print('[GameMode] 状态管理器已初始化');
+
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.GOODGUYS, 4);
         GameRules.SetCustomGameTeamMaxPlayers(DotaTeam.BADGUYS, 0);
         SendToConsole('sv_cheats 1'); // 确保 restart 指令可用
@@ -51,29 +60,29 @@ export class GameMode {
         GameRules.SetHeroSelectionTime(0);  // 跳过原生英雄选择界面
         GameRules.SetStrategyTime(0);
         GameRules.SetShowcaseTime(0);
-        
+
         // 英雄选择流程说明：
         // 1. ForceHero 设置默认英雄（剑圣），跳过原生选择界面
         // 2. 验证码界面输入 1=剑圣, 2=玛西
         // 3. 如果选择不同英雄，RestartGame 后生成正确英雄
-        
+
         const gameMode = GameRules.GetGameModeEntity();
         gameMode.SetCustomGameForceHero('npc_dota_hero_juggernaut');
         gameMode.SetFogOfWarDisabled(true);
         gameMode.SetCameraDistanceOverride(1450);
-        
+
         // [Economy] Disable native gold & XP
         GameRules.SetGoldTickTime(99999);
         GameRules.SetGoldPerTick(0);
-        
+
         // [XP] 使用自定义经验值系统
         GameRules.SetUseCustomHeroXPValues(true);
-        
+
         // [Level Cap] 解锁最高50级 (Dota2默认最高30级)
         // 需要通过 GameMode 设置自定义等级表
         gameMode.SetUseCustomHeroLevels(true);
         gameMode.SetCustomHeroMaxLevel(50);
-        
+
         // 设置自定义经验表 (每级所需经验)
         // 索引从0开始，表示从1级升到2级所需的经验
         const customXPPerLevel = [
@@ -131,7 +140,7 @@ export class GameMode {
 
         // [Economy] Initialize Custom Economy System
         EconomySystem.GetInstance();
-        
+
         // [Stats] Initialize Custom Server Event Listeners
         try {
             CustomStats.Init();
@@ -155,14 +164,14 @@ export class GameMode {
             const playerId = event.player_id;
             const player = PlayerResource.GetPlayer(playerId);
             if (!player) return;
-            
+
             const hero = player.GetAssignedHero();
             if (!hero) return;
-            
+
             const stats = CustomStats.GetAllStats(hero);
             const rawLevel = hero.GetLevel();
             const currentMaxLevel = (stats.rank + 1) * 10;
-            
+
             // 只有当实际等级没超过当前阶位最大等级时，才更新显示等级
             if (rawLevel <= currentMaxLevel && rawLevel > stats.display_level) {
                 CustomStats.SetDisplayLevel(hero, rawLevel);
@@ -183,9 +192,9 @@ export class GameMode {
 
 
         // [Merchant] Listen for NPC interactions (Interaction Security)
-        ListenToGameEvent('dota_player_used_ability', () => {}, undefined); // Placeholder
-        ListenToGameEvent('dota_player_update_hero_selection', () => {}, undefined); // Placeholder
-        
+        ListenToGameEvent('dota_player_used_ability', () => { }, undefined); // Placeholder
+        ListenToGameEvent('dota_player_update_hero_selection', () => { }, undefined); // Placeholder
+
         // Actually listen to entity interactions via console command workaround
         // Since dota_player_interact_npc isn't a standard event, we use custom command
         Convars.RegisterCommand(
@@ -262,7 +271,7 @@ export class GameMode {
                         if (enemy && !enemy.IsNull()) {
                             const unit = enemy as CDOTA_BaseNPC;
                             if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
-                                unit.ForceKill(false);
+                                unit.SafetyRemoveSelf();
                                 killCount++;
                             }
                         }
@@ -308,19 +317,19 @@ export class GameMode {
         CustomGameEventManager.RegisterListener('to_server_chat_message' as any, (_, event) => {
             const playerId = (event as any).PlayerID as PlayerID;
             const message = (event as any).message as string;
-            
+
             if (!message) return;
-            
+
             const text = message.toLowerCase().trim();
             const player = PlayerResource.GetPlayer(playerId);
             const hero = player?.GetAssignedHero();
-            
+
             // 处理调试命令
             if (text === '-skip') {
                 WaveManager.GetInstance().SkipToNextWave();
                 return;
             }
-            
+
             if (text.startsWith('-wave ')) {
                 const waveNum = parseInt(text.substring(6));
                 if (!isNaN(waveNum) && waveNum >= 1 && waveNum <= 20) {
@@ -328,7 +337,7 @@ export class GameMode {
                 }
                 return;
             }
-            
+
             if (text === '-killall') {
                 const enemies = Entities.FindAllByClassname('npc_dota_creature');
                 let killCount = 0;
@@ -336,14 +345,14 @@ export class GameMode {
                     if (enemy && !enemy.IsNull()) {
                         const unit = enemy as CDOTA_BaseNPC;
                         if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
-                            unit.ForceKill(false);
+                            unit.SafetyRemoveSelf();
                             killCount++;
                         }
                     }
                 }
                 return;
             }
-            
+
             if (text.startsWith('-lvlup')) {
                 if (!hero) return;
                 const parts = text.split(' ');
@@ -355,7 +364,7 @@ export class GameMode {
                 }
                 return;
             }
-            
+
             if (text.startsWith('-gold ')) {
                 const amount = parseInt(text.substring(6));
                 if (!isNaN(amount) && amount > 0) {
@@ -363,7 +372,7 @@ export class GameMode {
                 }
                 return;
             }
-            
+
             if (text.startsWith('-faith ')) {
                 const amount = parseInt(text.substring(7));
                 if (!isNaN(amount) && amount > 0) {
@@ -371,7 +380,7 @@ export class GameMode {
                 }
                 return;
             }
-            
+
             // 普通聊天消息 - 广播给所有玩家
         });
 
@@ -432,7 +441,7 @@ export class GameMode {
                 if (enemy && !enemy.IsNull()) {
                     const unit = enemy as CDOTA_BaseNPC;
                     if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
-                        unit.ForceKill(false);
+                        unit.SafetyRemoveSelf();
                         killCount++;
                     }
                 }
@@ -499,20 +508,20 @@ export class GameMode {
                     '2': 'npc_dota_hero_marci',        // 玛西
                     '669571': 'npc_dota_hero_juggernaut',  // 旧验证码兼容
                 };
-                
+
                 const selectedHero = heroMap[code];
-                
+
                 if (selectedHero) {
                     // 保存玩家选择的英雄
                     this.selectedHeroes[playerID] = selectedHero;
-                    
+
                     // 设置 ForceHero（游戏尚未开始时有效）
                     const game = GameRules.GetGameModeEntity();
                     game.SetCustomGameForceHero(selectedHero);
-                    
+
                     // 检查玩家是否已有英雄
                     const existingHero = player.GetAssignedHero();
-                    
+
                     if (!existingHero) {
                         // 没有英雄，创建新英雄
                         CreateHeroForPlayer(selectedHero, player);
@@ -520,7 +529,7 @@ export class GameMode {
                         // 英雄不匹配，需要替换
                         this.RestartGame();
                     }
-                    
+
                     CustomGameEventManager.Send_ServerToPlayer(player, 'from_server_verify_result', {
                         success: true,
                         message: '验证成功，正在加载...',
@@ -573,8 +582,7 @@ export class GameMode {
         for (const enemy of enemies) {
             if (enemy && !enemy.IsNull() && enemy.IsAlive()) {
                 const npc = enemy as CDOTA_BaseNPC;
-                npc.ForceKill(false);
-                npc.AddNoDraw();
+                npc.SafetyRemoveSelf();
             }
         }
 
@@ -583,31 +591,31 @@ export class GameMode {
             const playerID = i as PlayerID; // 显式转换
             const player = PlayerResource.GetPlayer(playerID);
             const hero = PlayerResource.GetSelectedHeroEntity(playerID);
-            
+
             // 检查是否需要替换英雄
             const selectedHero = this.selectedHeroes[playerID];
-            
+
             if (hero && player) {
                 const currentHeroName = hero.GetUnitName();
-                
+
                 // 如果选择的英雄与当前英雄不同，需要创建新英雄
                 if (selectedHero && currentHeroName !== selectedHero) {
-                    
+
                     // 保存位置
                     const spawnPointName = `start_player_${i + 1}`;
                     const spawnPoint = Entities.FindByName(undefined, spawnPointName);
-                    
+
                     // 清除旧英雄的 NetTable 数据
                     const oldIndex = tostring(hero.GetEntityIndex());
                     CustomNetTables.SetTableValue('custom_stats' as any, oldIndex, null as any);
-                    
+
                     // 移除旧英雄
                     hero.RemoveSelf();
-                    
+
                     // 设置 ForceHero
                     const game = GameRules.GetGameModeEntity();
                     game.SetCustomGameForceHero(selectedHero);
-                    
+
                     // 预加载并创建新英雄
                     PrecacheUnitByNameAsync(selectedHero, () => {
                         const newHero = CreateHeroForPlayer(selectedHero, player) as CDOTA_BaseNPC_Hero;
@@ -618,13 +626,13 @@ export class GameMode {
                                 newHero.SetAbsOrigin(origin);
                                 FindClearSpaceForUnit(newHero, origin, true);
                             }
-                            
+
                             // 确保玩家可以控制新英雄
                             newHero.SetControllableByPlayer(playerID, true);
-                            
+
                             // 选中新英雄（让玩家控制）
                             player.SetAssignedHeroEntity(newHero);
-                            
+
                             // 通知客户端刷新英雄数据
                             CustomGameEventManager.Send_ServerToPlayer(player, 'hero_changed', {
                                 newHeroIndex: newHero.GetEntityIndex(),
@@ -657,7 +665,7 @@ export class GameMode {
         // 这里我们选择立即重新开始，方便测试
         this.StartGame();
     }
-    
+
 
 
     // NPC出生事件处理
@@ -675,11 +683,11 @@ export class GameMode {
             const hero = unit as CDOTA_BaseNPC_Hero;
             const heroName = hero.GetUnitName();
             const playerId = hero.GetPlayerOwnerID();
-            
+
             // 从 JSON 配置读取英雄数据
             // @ts-ignore
             const heroData = json_heroes[heroName];
-            
+
             // 添加配置中的技能（不再硬编码剑圣）
             if (heroData && heroData.Ability1 && playerId >= 0) {
                 const abilityName = heroData.Ability1;
@@ -691,13 +699,13 @@ export class GameMode {
                     }
                 }
             }
-            
+
             // 设置基础移速
             if (heroData && heroData.MovementSpeed) {
                 const configMoveSpeed = Number(heroData.MovementSpeed);
                 unit.SetBaseMoveSpeed(configMoveSpeed);
             }
-            
+
             // [Stats] Initialize Custom Stats
             CustomStats.InitializeHeroStats(hero);
 
@@ -781,7 +789,7 @@ export class GameMode {
                             const unitName = unit.GetUnitName();
                             const kvData = GetUnitKeyValuesByName(unitName);
                             const statLabel = kvData ? (kvData['StatLabel'] as number || 0) : 0;
-                            
+
                             CustomNetTables.SetTableValue('entity_kv' as any, String(unit.entindex()), {
                                 StatLabel: statLabel,
                                 Profession: "妖兽",  // 可从 KV 读取
@@ -905,7 +913,7 @@ export class GameMode {
      */
     private static DamageFilter(event: DamageFilterEvent): boolean {
         if (event.damage <= 0) return true;
-        
+
         // 只处理物理伤害
         if (event.damagetype_const !== DamageTypes.PHYSICAL) {
             return true;
@@ -913,23 +921,23 @@ export class GameMode {
 
         const attackerIndex = event.entindex_attacker_const;
         const victimIndex = event.entindex_victim_const;
-        
+
         if (!attackerIndex || !victimIndex) return true;
-        
+
         const attacker = EntIndexToHScript(attackerIndex) as CDOTA_BaseNPC;
         const victim = EntIndexToHScript(victimIndex) as CDOTA_BaseNPC;
-        
+
         if (!attacker || attacker.IsNull() || !victim || victim.IsNull()) {
             return true;
         }
-        
+
         // 仅处理玩家英雄或其召唤物的攻击
         const playerOwner = attacker.GetPlayerOwnerID();
         if (playerOwner < 0) return true;
-        
+
         // 获取攻击者的破势值
         let armorPen = 0;
-        
+
         // 如果是英雄，直接获取属性
         if (attacker.IsRealHero()) {
             armorPen = CustomStats.GetStat(attacker as CDOTA_BaseNPC_Hero, 'armor_pen') || 0;
@@ -940,31 +948,31 @@ export class GameMode {
                 armorPen = CustomStats.GetStat(ownerHero, 'armor_pen') || 0;
             }
         }
-        
+
         if (armorPen <= 0) return true;
-        
+
         // 获取目标当前护甲
         const victimArmor = victim.GetPhysicalArmorValue(false);
-        
+
         // 计算有效护甲 (最低为0)
         const effectiveArmor = Math.max(0, victimArmor - armorPen);
-        
+
         // Dota2护甲公式: Damage Reduction = (armor * 0.052) / (1 + armor * 0.052)
         // 我们需要计算伤害乘数来模拟护甲差异
-        
+
         // 原护甲的伤害乘数
         const originalMultiplier = 1 - (victimArmor * 0.052) / (1 + Math.abs(victimArmor) * 0.052);
         // 有效护甲的伤害乘数
         const newMultiplier = 1 - (effectiveArmor * 0.052) / (1 + Math.abs(effectiveArmor) * 0.052);
-        
+
         // 计算需要调整的伤害比例
         if (originalMultiplier > 0) {
             const damageBonus = newMultiplier / originalMultiplier;
             event.damage = event.damage * damageBonus;
-            
+
             // Debug log (可选)
         }
-        
+
         return true;
     }
 
@@ -986,7 +994,7 @@ export class GameMode {
         }
 
         // Valid interaction - open the merchant panel
-        
+
         const player = PlayerResource.GetPlayer(playerID);
         if (player) {
             CustomGameEventManager.Send_ServerToPlayer(player, 'open_merchant_panel', {

@@ -1,36 +1,59 @@
-interface CreateTimerOptions {
-    callback?: (this: void) => void | number;
+/**
+ * Timers 类型定义
+ * 用于为已存在的 timers.lua 提供 TypeScript 类型支持
+ */
+
+/** 计时器回调函数类型 */
+type TimerCallback = () => number | void | undefined;
+
+/** 计时器配置对象 */
+interface TimerConfig {
+    /** 延迟时间(秒)，不填则立即执行 */
     endTime?: number;
+    /** 回调函数 */
+    callback: TimerCallback;
+    /** 是否使用游戏时间，默认true，false则使用实时时间(不受暂停影响) */
     useGameTime?: boolean;
-    useOldStyle?: boolean;
 }
 
-type CreateTimerOptionsContext<TThis> = CreateTimerOptions & {
-    callback?: (this: TThis) => void | number;
-};
+/** 计时器系统接口 */
+interface ITimers {
+    /**
+     * 创建计时器
+     * @param callback 立即执行的回调函数，返回数字则循环执行
+     */
+    CreateTimer(callback: TimerCallback): string;
 
-declare interface Timers {
-    CreateTimer(callback: (this: void) => void | number): string;
-    CreateTimer<T>(callback: (this: T) => void | number, context: T): string;
+    /**
+     * 创建计时器
+     * @param delay 延迟时间(秒)
+     * @param callback 回调函数
+     */
+    CreateTimer(delay: number, callback: TimerCallback): string;
 
-    CreateTimer(name: string, options: CreateTimerOptions): string;
-    CreateTimer<T>(name: string, options: CreateTimerOptionsContext<T>, context: T): string;
+    /**
+     * 创建计时器
+     * @param config 计时器配置对象
+     */
+    CreateTimer(config: TimerConfig): string;
 
-    CreateTimer(options: CreateTimerOptions): string;
-    CreateTimer<T>(options: CreateTimerOptionsContext<T>, context: T): string;
+    /**
+     * 下一帧执行回调
+     * @param callback 回调函数
+     */
+    NextTick(callback: () => void): void;
 
-    CreateTimer(delay: number, callback: (this: void) => void | number): string;
-    CreateTimer<T>(delay: number, callback: (this: T) => void | number, context: T): string;
-
-    RemoveTimer(name: string): void;
-    RemoveTimers(killAll: boolean): void;
+    /**
+     * 移除计时器
+     * @param timerId 计时器ID
+     */
+    RemoveTimer(timerId: string): void;
 }
 
-declare global {
-    var Timers: Timers;
-    interface CDOTAGameRules {
-        Timers: Timers;
-    }
-}
+/** 全局计时器实例 */
+declare const Timers: ITimers;
 
-export {};
+/** GameRules 上的计时器引用 */
+declare interface CDOTAGameRules {
+    Timers: ITimers;
+}
