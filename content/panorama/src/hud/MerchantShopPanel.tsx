@@ -22,9 +22,26 @@ const DEFAULT_SLOT_COST = 200;
 
 // Tier 名称映射 (用于显示)
 const TIER_NAMES: Record<number, string> = {
-    1: '入门期',
-    2: '觉醒期',
-    3: '凝丹期',
+    1: '入门境',
+    2: '觉醒境',
+    3: '宗师境',
+    4: '破绽境',
+    5: '超凡境',
+    6: '入圣境',
+    7: '神座境',
+    8: '禁忌境',
+};
+
+// Tier 名称颜色映射 (从白色到紫色渐变)
+const TIER_COLORS: Record<number, string> = {
+    1: '#ffffff',  // 入门境 - 白色
+    2: '#88ff88',  // 觉醒境 - 绿色
+    3: '#55aaff',  // 宗师境 - 蓝色
+    4: '#aa88ff',  // 破绽境 - 紫色
+    5: '#ffaa55',  // 超凡境 - 橙色
+    6: '#ff5588',  // 入圣境 - 粉红
+    7: '#ffd700',  // 神座境 - 金色
+    8: '#ff3333',  // 禁忌境 - 红色
 };
 
 // 默认技能配置 (会被 NetTable 覆盖)
@@ -41,14 +58,14 @@ const DEFAULT_SKILL_CONFIG: SkillSlot[] = [
 
 // 技能描述 (用于悬浮窗) - key 需要匹配技能的 name 字段
 const SKILL_DESC: Record<string, string> = {
-    '根骨': '肉身根基，气血充沛（+生命值）',
-    '武道': '武学造诣，勇猛精进（+物理伤害）',
-    '神念': '神魂凝练，法力深厚（+魔法值）',
-    '戒守': '金刚不坏，刀枪不入（+护甲）',
-    '回能': '内息运转，灵力回复（+回蓝）',
-    '极速': '出手如电，迅捷无双（+攻速）',
-    '饮血': '以战养战，攻击回血（+吸血%）',
-    '破军': '力量增幅，攻击提升（+攻击力）',
+    '根骨': '肉身根基，气血充沛',
+    '武道': '武学造诣，勇猛精进',
+    '神念': '神魂凝练，法力深厚',
+    '戒守': '金刚不坏，刀枪不入',
+    '回能': '内息运转，灵力回复',
+    '极速': '出手如电，迅捷无双',
+    '饮血': '以战养战，攻击回血',
+    '破军': '力量增幅，攻击提升',
 };
 
 // 槽位图片路径 (100x100px 填满版本)
@@ -153,13 +170,13 @@ const MerchantShopPanel: React.FC = () => {
                     for (let i = 0; i < 8; i++) {
                         const luaIndex = i + 1;
                         const slotConfig = upgradeData.slots_config[luaIndex];
-                        const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
+                        const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === 1 : false;
 
                         if (slotConfig && slotConfig.name) {
                             newSkills.push({
                                 id: i + 1,
                                 name: slotConfig.name,
-                                stat: `+${slotConfig.value}${slotConfig.is_percent ? '%' : ''}`,
+                                stat: `+${slotConfig.value}${slotConfig.is_percent === 1 ? '%' : ''}`,
                                 bonus: slotConfig.name,
                                 purchased: isPurchased,
                             });
@@ -208,13 +225,13 @@ const MerchantShopPanel: React.FC = () => {
                         for (let i = 0; i < 8; i++) {
                             const luaIndex = i + 1;
                             const slotConfig = upgradeData.slots_config[luaIndex];
-                            const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
+                            const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === 1 : false;
 
                             if (slotConfig && slotConfig.name) {
                                 newSkills.push({
                                     id: i + 1,
                                     name: slotConfig.name,
-                                    stat: `+${slotConfig.value}${slotConfig.is_percent ? '%' : ''}`,
+                                    stat: `+${slotConfig.value}${slotConfig.is_percent === 1 ? '%' : ''}`,
                                     bonus: slotConfig.name,
                                     purchased: isPurchased,
                                 });
@@ -273,13 +290,13 @@ const MerchantShopPanel: React.FC = () => {
                         for (let i = 0; i < 8; i++) {
                             const luaIndex = i + 1;
                             const slotConfig = upgradeData.slots_config[luaIndex];
-                            const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === true : false;
+                            const isPurchased = upgradeData.slots_purchased ? upgradeData.slots_purchased[luaIndex] === 1 : false;
 
                             if (slotConfig && slotConfig.name) {
                                 newSkills.push({
                                     id: i + 1,
                                     name: slotConfig.name,
-                                    stat: `+${slotConfig.value}${slotConfig.is_percent ? '%' : ''}`,
+                                    stat: `+${slotConfig.value}${slotConfig.is_percent === 1 ? '%' : ''}`,
                                     bonus: slotConfig.name,
                                     purchased: isPurchased,
                                 });
@@ -419,6 +436,13 @@ const MerchantShopPanel: React.FC = () => {
     };
 
     const handlePurchase = (skill: SkillSlot) => {
+        // 如果已经全部购买完毕（达到境界上限），显示提示
+        if (allPurchased) {
+            Game.EmitSound('General.CastFail_NoMana');
+            showToast('先去沉淀沉淀自己吧');
+            return;
+        }
+
         if (skill.purchased) return;
 
         // 检查余额 (使用动态 slotCost)
@@ -447,8 +471,15 @@ const MerchantShopPanel: React.FC = () => {
     };
 
     const handlePurchaseAll = () => {
+        // 如果已经全部购买完毕（达到境界上限），显示提示
+        if (unpurchasedCount === 0) {
+            Game.EmitSound('General.CastFail_NoMana');
+            showToast('先去沉淀沉淀自己吧');
+            return;
+        }
+
         // 检查余额是否足够购买所有 (使用动态 cost)
-        if (playerGold < dynamicTotalCost || unpurchasedCount === 0) {
+        if (playerGold < dynamicTotalCost) {
             Game.EmitSound('General.CastFail_NoMana');
             showToast(`灵石不足，需要 ${dynamicTotalCost} 灵石`);
             return;
@@ -513,10 +544,14 @@ const MerchantShopPanel: React.FC = () => {
                         style={styles.background}
                     />
 
-                    {/* 标题 - 显示 Tier 名称 */}
+                    {/* 标题 - 显示 Tier 名称 (带动态颜色) */}
                     <Label
                         text={`修炼境界 · ${tierName}`}
-                        style={styles.title}
+                        style={{
+                            ...styles.title,
+                            color: TIER_COLORS[currentTier] || '#ffd700',
+                            textShadow: `0px 0px 10px ${TIER_COLORS[currentTier] || '#ffd700'}`,
+                        }}
                     />
 
                     {/* 技能槽位网格 (使用图片) */}
@@ -860,18 +895,17 @@ const styles = {
         letterSpacing: '3px',
     },
 
-    // NPC容器 - 包含对话气泡和胸像
+    // NPC容器 - 固定高度避免气泡影响布局
     npcContainer: {
-        flowChildren: 'down' as const,
         width: '350px',
+        height: '500px',  // 固定高度
         marginRight: '-40px',
     },
 
-    // 气泡包装器 - 用于整体定位和动画
+    // 气泡包装器 - 绝对定位避免影响布局
     speechBubbleWrapper: {
         flowChildren: 'down' as const,
-        marginLeft: '140px',
-        marginBottom: '-15px',
+        position: '80px 0px 0px' as const,  // 绝对定位在NPC头顶
         horizontalAlign: 'center' as const,
     },
 

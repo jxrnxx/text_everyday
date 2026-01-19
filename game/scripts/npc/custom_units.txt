@@ -63,7 +63,7 @@
 		"ChaseDistance" "1000"
 		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
 		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
-		"CustomDrop_Coin" "15000"
+		"CustomDrop_Coin" "15"
 		"CustomDrop_Faith" "1"
 		"StatLabel" "0"
 		"HaveLevel" "30"
@@ -352,6 +352,41 @@
 	"npc_cultivation_merchant" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl"
+		"ModelScale" "1"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"HealthBarOffset" "0"
+		"MovementSpeed" "0"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
+		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
+		"ArmorPhysical" "99"
+		"StatusHealth" "9999"
+		"StatusHealthRegen" "0"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
+		"AttackDamageMin" "0"
+		"AttackDamageMax" "0"
+		"AttackRate" "1"
+		"AttackAnimationPoint" "0"
+		"AttackRange" "0"
+		"BoundsHullName" "DOTA_HULL_SIZE_HERO"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "0"
+		"CustomDrop_Coin" "0"
+		"CustomDrop_DefenderPoints" "10"
+	}
+	"npc_ability_merchant" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/courier/smeevil_magic_carpet/smeevil_magic_carpet.vmdl"
 		"ModelScale" "1"
 		"Creature" {
 			"AttachWearables" {

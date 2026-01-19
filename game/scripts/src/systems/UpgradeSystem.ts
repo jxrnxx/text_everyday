@@ -33,12 +33,14 @@ export interface TierConfig {
 
 // ========================
 // UPGRADE TIER CONFIGURATION
+// 8个境界：入门境、觉醒境、宗师境、破绽境、超凡境、入圣境、神座境、禁忌境
+// 价格：200、800、2500、6500、18000、50000、150000、500000
 // ========================
 export const UPGRADE_TIER_CONFIG: TierConfig[] = [
-    // Tier 1: 入门期 (Wave 1-4)
+    // Tier 1: 入门境
     {
         tier: 1,
-        name: '入门期',
+        name: '入门境',
         cost_per_slot: 200,
         slots: [
             { stat_type: 'constitution', name: '根骨', value: 5 },
@@ -47,31 +49,31 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'armor', name: '戒守', value: 2 },
             { stat_type: 'mana_regen', name: '回能', value: 2 },
             { stat_type: 'attack_speed', name: '极速', value: 15 },
-            { stat_type: 'life_on_hit', name: '饮血', value: 10 },  // Flat HP on hit
+            { stat_type: 'life_on_hit', name: '饮血', value: 10 },
             { stat_type: 'base_damage', name: '破军', value: 15 },
         ]
     },
-    // Tier 2: 觉醒期 (Wave 5-8) - EXPLOSIVE growth to handle difficulty spike
+    // Tier 2: 觉醒境
     {
         tier: 2,
-        name: '觉醒期',
+        name: '觉醒境',
         cost_per_slot: 800,
         slots: [
-            { stat_type: 'constitution', name: '根骨', value: 40 },   // ~1200 HP gain
+            { stat_type: 'constitution', name: '根骨', value: 40 },
             { stat_type: 'martial', name: '武道', value: 40 },
             { stat_type: 'divinity', name: '神念', value: 40 },
-            { stat_type: 'armor', name: '戒守', value: 8 },          // Crucial for damage mitigation
+            { stat_type: 'armor', name: '戒守', value: 8 },
             { stat_type: 'mana_regen', name: '回能', value: 5 },
-            { stat_type: 'attack_speed', name: '极速', value: 50 },   // Flat Agility
-            { stat_type: 'lifesteal_pct', name: '饮血', value: 5, is_percent: true },  // 5% lifesteal
-            { stat_type: 'base_damage', name: '破军', value: 80 },   // Flat Damage
+            { stat_type: 'attack_speed', name: '极速', value: 50 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 5, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 80 },
         ]
     },
-    // Tier 3: 凝丹期 (Wave 9+)
+    // Tier 3: 宗师境
     {
         tier: 3,
-        name: '凝丹期',
-        cost_per_slot: 2000,
+        name: '宗师境',
+        cost_per_slot: 2500,
         slots: [
             { stat_type: 'constitution', name: '根骨', value: 100 },
             { stat_type: 'martial', name: '武道', value: 100 },
@@ -81,6 +83,86 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 80 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 10, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 150 },
+        ]
+    },
+    // Tier 4: 破绽境 (待设计具体技能)
+    {
+        tier: 4,
+        name: '破绽境',
+        cost_per_slot: 6500,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 200 },
+            { stat_type: 'martial', name: '武道', value: 200 },
+            { stat_type: 'divinity', name: '神念', value: 200 },
+            { stat_type: 'armor', name: '戒守', value: 25 },
+            { stat_type: 'mana_regen', name: '回能', value: 20 },
+            { stat_type: 'attack_speed', name: '极速', value: 120 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 15, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 300 },
+        ]
+    },
+    // Tier 5: 超凡境 (待设计具体技能)
+    {
+        tier: 5,
+        name: '超凡境',
+        cost_per_slot: 18000,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 400 },
+            { stat_type: 'martial', name: '武道', value: 400 },
+            { stat_type: 'divinity', name: '神念', value: 400 },
+            { stat_type: 'armor', name: '戒守', value: 40 },
+            { stat_type: 'mana_regen', name: '回能', value: 35 },
+            { stat_type: 'attack_speed', name: '极速', value: 180 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 20, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 600 },
+        ]
+    },
+    // Tier 6: 入圣境 (待设计具体技能)
+    {
+        tier: 6,
+        name: '入圣境',
+        cost_per_slot: 50000,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 800 },
+            { stat_type: 'martial', name: '武道', value: 800 },
+            { stat_type: 'divinity', name: '神念', value: 800 },
+            { stat_type: 'armor', name: '戒守', value: 60 },
+            { stat_type: 'mana_regen', name: '回能', value: 50 },
+            { stat_type: 'attack_speed', name: '极速', value: 250 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 25, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 1000 },
+        ]
+    },
+    // Tier 7: 神座境 (待设计具体技能)
+    {
+        tier: 7,
+        name: '神座境',
+        cost_per_slot: 150000,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 1500 },
+            { stat_type: 'martial', name: '武道', value: 1500 },
+            { stat_type: 'divinity', name: '神念', value: 1500 },
+            { stat_type: 'armor', name: '戒守', value: 100 },
+            { stat_type: 'mana_regen', name: '回能', value: 80 },
+            { stat_type: 'attack_speed', name: '极速', value: 350 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 30, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 1800 },
+        ]
+    },
+    // Tier 8: 禁忌境 (待设计具体技能)
+    {
+        tier: 8,
+        name: '禁忌境',
+        cost_per_slot: 500000,
+        slots: [
+            { stat_type: 'constitution', name: '根骨', value: 3000 },
+            { stat_type: 'martial', name: '武道', value: 3000 },
+            { stat_type: 'divinity', name: '神念', value: 3000 },
+            { stat_type: 'armor', name: '戒守', value: 150 },
+            { stat_type: 'mana_regen', name: '回能', value: 120 },
+            { stat_type: 'attack_speed', name: '极速', value: 500 },
+            { stat_type: 'lifesteal_pct', name: '饮血', value: 40, is_percent: true },
+            { stat_type: 'base_damage', name: '破军', value: 3000 },
         ]
     },
 ];
@@ -119,7 +201,7 @@ export class UpgradeSystem {
             const targetTier = (event as any).target_tier as number;
             this.AttemptBreakthrough(playerID, targetTier);
         });
-        
+
         // Note: cmd_merchant_purchase is handled in CustomStats.ts, which calls MarkSlotPurchased()
     }
 
@@ -195,20 +277,20 @@ export class UpgradeSystem {
      */
     public MarkSlotPurchased(playerID: PlayerID, slotIndex: number) {
         const shopData = this.GetShopData(playerID);
-        
+
         if (slotIndex < 0 || slotIndex >= 8) return;
-        
+
         shopData.slots_purchased[slotIndex] = true;
-        
+
         const purchasedCount = this.GetPurchasedCount(shopData.slots_purchased);
         print(`[UpgradeSystem] Slot ${slotIndex} purchased. Total: ${purchasedCount}/8, Tier: ${shopData.current_tier}`);
-        
+
         // Check if all 8 slots are purchased - trigger auto breakthrough
         if (this.AllSlotsPurchased(shopData.slots_purchased)) {
             print(`[UpgradeSystem] All slots purchased! Triggering breakthrough...`);
             this.TriggerBreakthrough(playerID);
         }
-        
+
         // Sync to client
         this.SyncShopDataToClient(playerID);
     }
@@ -316,9 +398,9 @@ export class UpgradeSystem {
      * Perform the actual breakthrough with visual/audio feedback
      */
     private PerformBreakthrough(
-        playerID: PlayerID, 
-        player: CDOTAPlayerController, 
-        hero: CDOTA_BaseNPC_Hero, 
+        playerID: PlayerID,
+        player: CDOTAPlayerController,
+        hero: CDOTA_BaseNPC_Hero,
         newTier: number
     ) {
         const currentTierConfig = UpgradeSystem.GetTierConfig(this.shopData[playerID].current_tier);
@@ -332,7 +414,7 @@ export class UpgradeSystem {
 
         // 2. Play breakthrough sound (Thunder!)
         EmitSoundOn('Hero_Zeus.GodsWrath.Target', hero);
-        
+
         // 3. Create breakthrough particle effect
         const particleId = ParticleManager.CreateParticle(
             'particles/econ/items/effigies/status_fx_effigies/gold_effigy_ambient_radiant.vpcf',
@@ -340,7 +422,7 @@ export class UpgradeSystem {
             hero
         );
         ParticleManager.SetParticleControl(particleId, 0, hero.GetAbsOrigin());
-        
+
         // Cleanup particle after 3 seconds
         Timers.CreateTimer(3.0, () => {
             ParticleManager.DestroyParticle(particleId, false);
@@ -355,7 +437,7 @@ export class UpgradeSystem {
 
         // 6. Sync to client and notify
         this.SyncShopDataToClient(playerID);
-        
+
         // 7. Send event to client to refresh UI
         print(`[UpgradeSystem] Sending refresh_merchant_ui event to player ${playerID}`);
         CustomGameEventManager.Send_ServerToPlayer(player, 'refresh_merchant_ui', {
@@ -372,17 +454,17 @@ export class UpgradeSystem {
      */
     public PurchaseSlot(playerID: PlayerID, slotIndex: number): boolean {
         const shopData = this.GetShopData(playerID);
-        
+
         if (slotIndex < 0 || slotIndex >= 8) return false;
         if (shopData.slots_purchased[slotIndex]) return false;
 
         shopData.slots_purchased[slotIndex] = true;
-        
+
         // Check for auto-breakthrough
         if (this.AllSlotsPurchased(shopData.slots_purchased)) {
             this.TriggerBreakthrough(playerID);
         }
-        
+
         this.SyncShopDataToClient(playerID);
         return true;
     }
@@ -393,21 +475,29 @@ export class UpgradeSystem {
     private SyncShopDataToClient(playerID: PlayerID) {
         const shopData = this.GetShopData(playerID);
         const tierConfig = UpgradeSystem.GetTierConfig(shopData.current_tier);
-        
+
         // 将 slots 数组转换为 Lua 风格的 1-indexed 对象
-        const slotsObject: { [key: number]: boolean } = {};
+        // 注意：NetTable 不支持 boolean，需要使用 1/0
+        const slotsObject: { [key: number]: number } = {};
         for (let i = 0; i < shopData.slots_purchased.length; i++) {
-            slotsObject[i + 1] = shopData.slots_purchased[i];  // Lua 从 1 开始
+            slotsObject[i + 1] = shopData.slots_purchased[i] ? 1 : 0;  // true -> 1, false -> 0
         }
-        
+
         // 将 slots_config 转换为 Lua 风格的 1-indexed 对象
+        // 注意：NetTable 不支持 boolean，需要将 is_percent 转换为 1/0
         const slotsConfigObject: { [key: number]: any } = {};
         if (tierConfig?.slots) {
             for (let i = 0; i < tierConfig.slots.length; i++) {
-                slotsConfigObject[i + 1] = tierConfig.slots[i];  // Lua 从 1 开始
+                const slot = tierConfig.slots[i];
+                slotsConfigObject[i + 1] = {
+                    stat_type: slot.stat_type,
+                    name: slot.name,
+                    value: slot.value,
+                    is_percent: slot.is_percent ? 1 : 0,  // boolean -> 1/0
+                };
             }
         }
-        
+
         const netTableData = {
             current_tier: shopData.current_tier,
             tier_name: tierConfig?.name || '',
@@ -415,17 +505,21 @@ export class UpgradeSystem {
             slots_purchased: slotsObject,
             slots_config: slotsConfigObject,
         };
-        
-        print(`[UpgradeSystem] SyncShopDataToClient: tier=${shopData.current_tier}, cost=${tierConfig?.cost_per_slot}, slots_count=${Object.keys(slotsConfigObject).length}`);
+
+        // 打印 slots_purchased 状态
+        const purchasedCount = Object.values(slotsObject).filter(v => v === 1).length;
+        print(`[UpgradeSystem] SyncShopDataToClient: tier=${shopData.current_tier}, cost=${tierConfig?.cost_per_slot}, slots_purchased=${purchasedCount}/8`);
         print(`[UpgradeSystem] Writing to NetTable key: player_${playerID}`);
-        
+
         // 使用 as any 确保类型检查不会阻止写入
         CustomNetTables.SetTableValue('upgrade_system' as any, `player_${playerID}`, netTableData as any);
-        
+
         // 验证写入是否成功
         const verifyData = CustomNetTables.GetTableValue('upgrade_system' as any, `player_${playerID}`);
         if (verifyData) {
-            print(`[UpgradeSystem] NetTable write verified! tier=${(verifyData as any).current_tier}`);
+            const verifyPurchased = (verifyData as any).slots_purchased;
+            const verifyCount = verifyPurchased ? Object.values(verifyPurchased).filter((v: any) => v === 1).length : 0;
+            print(`[UpgradeSystem] NetTable write verified! tier=${(verifyData as any).current_tier}, slots_purchased=${verifyCount}/8`);
         } else {
             print(`[UpgradeSystem] ERROR: NetTable write verification failed!`);
         }
