@@ -38,40 +38,40 @@ const EnemyPanel: FC = () => {
         // 定期检查选中的敌人
         const updateSelectedEnemy = () => {
             const localPlayer = Players.GetLocalPlayer();
-            
+
             // 使用 Players.GetQueryUnit 获取当前查询的单位（点击选中的单位）
             // @ts-ignore
             const queryUnit = Players.GetQueryUnit(localPlayer);
-            
+
             // 如果没有选中单位，尝试获取 LocalPlayerPortraitUnit
             // @ts-ignore
             const selectedUnit = queryUnit !== -1 ? queryUnit : Players.GetLocalPlayerPortraitUnit();
-            
+
             if (selectedUnit && selectedUnit !== -1) {
                 const localHero = Players.GetPlayerHeroEntityIndex(localPlayer);
-                
+
                 // 检查是否为有效的敌对单位
                 // @ts-ignore
                 const isEnemy = Entities.IsEnemy(selectedUnit);
                 // @ts-ignore
                 const isAlive = Entities.IsAlive(selectedUnit);
-                
+
                 // 只显示敌对单位的面板 (不是自己的英雄，且是敌对单位)
                 if (selectedUnit !== localHero && isEnemy && isAlive) {
                     // 获取单位信息
                     // @ts-ignore
                     const unitName = Entities.GetUnitName(selectedUnit);
                     const displayName = $.Localize(`#UnitNameCn_${unitName}`) || unitName || "未知敌人";
-                    
+
                     // 从 CustomNetTables 获取单位的 KV 数据 (包括 StatLabel)
                     // 单位的 KV 数据通常需要从服务器同步，这里使用 entity_kv 表
                     const kvData = CustomNetTables.GetTableValue('entity_kv' as any, String(selectedUnit));
                     const kv = kvData as any || {};
-                    
+
                     // 获取 StatLabel (阶位等级 0-5)
                     const statLabel = kv.StatLabel !== undefined ? kv.StatLabel : 0;
                     const rankName = RANK_NAME_MAP[statLabel] || "凡胎";
-                    
+
                     // 获取攻击力和防御
                     // @ts-ignore
                     const damageMin = Entities.GetDamageMin(selectedUnit) || 0;
@@ -80,7 +80,7 @@ const EnemyPanel: FC = () => {
                     const attack = Math.floor((damageMin + damageMax) / 2);
                     // @ts-ignore
                     const defense = Math.floor(Entities.GetPhysicalArmorValue(selectedUnit) || 0);
-                    
+
                     // 获取血量
                     // @ts-ignore
                     const hp = Entities.GetHealth(selectedUnit);
@@ -97,7 +97,7 @@ const EnemyPanel: FC = () => {
                         hp: hp,
                         maxHp: maxHp,
                     };
-                    
+
                     setEnemy(enemyInfo);
                     setIsVisible(true);
                 } else {
@@ -108,10 +108,10 @@ const EnemyPanel: FC = () => {
                 setIsVisible(false);
                 setEnemy(null);
             }
-            
+
             $.Schedule(0.1, updateSelectedEnemy);
         };
-        
+
         updateSelectedEnemy();
     }, []);
 
@@ -151,7 +151,7 @@ const EnemyPanel: FC = () => {
                     marginRight: '15px',
                     verticalAlign: 'center' as const,
                 }}>
-                    <Image 
+                    <Image
                         src="file://{resources}/images/enemy_portrait_generic.png"
                         style={{
                             width: '65px',
@@ -169,7 +169,7 @@ const EnemyPanel: FC = () => {
                     verticalAlign: 'center' as const,
                 }}>
                     {/* 第一行：名称 */}
-                    <Label 
+                    <Label
                         text={enemy.name}
                         style={{
                             fontSize: '24px',
@@ -179,10 +179,10 @@ const EnemyPanel: FC = () => {
                             marginBottom: '4px',
                         }}
                     />
-                    
+
                     {/* 第二行：职业 + 阶位 */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '6px' }}>
-                        <Label 
+                        <Label
                             text={enemy.profession}
                             style={{
                                 fontSize: '16px',
@@ -190,7 +190,7 @@ const EnemyPanel: FC = () => {
                                 marginRight: '15px',
                             }}
                         />
-                        <Label 
+                        <Label
                             text={enemy.rank}
                             style={{
                                 fontSize: '16px',
@@ -203,7 +203,7 @@ const EnemyPanel: FC = () => {
                     {/* 第三行：攻击 + 防御 */}
                     <Panel style={{ flowChildren: 'right' as const }}>
                         <Panel style={{ flowChildren: 'right' as const, marginRight: '25px' }}>
-                            <Label 
+                            <Label
                                 text="攻:"
                                 style={{
                                     fontSize: '14px',
@@ -211,7 +211,7 @@ const EnemyPanel: FC = () => {
                                     marginRight: '4px',
                                 }}
                             />
-                            <Label 
+                            <Label
                                 text={String(enemy.attack)}
                                 style={{
                                     fontSize: '16px',
@@ -222,7 +222,7 @@ const EnemyPanel: FC = () => {
                             />
                         </Panel>
                         <Panel style={{ flowChildren: 'right' as const }}>
-                            <Label 
+                            <Label
                                 text="防:"
                                 style={{
                                     fontSize: '14px',
@@ -230,7 +230,7 @@ const EnemyPanel: FC = () => {
                                     marginRight: '4px',
                                 }}
                             />
-                            <Label 
+                            <Label
                                 text={String(enemy.defense)}
                                 style={{
                                     fontSize: '16px',
@@ -264,7 +264,7 @@ const EnemyPanel: FC = () => {
                         height: '22px',
                         marginTop: '1px',
                         marginLeft: '1px',
-                        backgroundColor: hpPercent <= 25 
+                        backgroundColor: hpPercent <= 25
                             ? 'gradient(linear, 0% 0%, 0% 100%, from(#ff7070), to(#dd2525))'
                             : 'gradient(linear, 0% 0%, 0% 100%, from(#ee5050), color-stop(0.5, #dd3030), to(#bb2020))',
                         borderRadius: '4px',
@@ -293,7 +293,7 @@ const EnemyPanel: FC = () => {
                     </Panel>
                 </Panel>
                 {/* 血量文字 */}
-                <Label 
+                <Label
                     text={`${Math.floor(enemy.hp)} / ${Math.floor(enemy.maxHp)}`}
                     style={{
                         align: 'center center',

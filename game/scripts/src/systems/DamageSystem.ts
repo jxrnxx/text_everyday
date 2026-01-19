@@ -167,7 +167,7 @@ export class DamageSystem {
         if (RollPseudoRandomPercentage(critChance, PseudoRandom.CUSTOM_GAME_1, attacker)) {
             return {
                 multiplier: critDamage / 100,
-                isCrit: true
+                isCrit: true,
             };
         }
 
@@ -180,7 +180,7 @@ export class DamageSystem {
     private static HandleLifesteal(attacker: CDOTA_BaseNPC, damage: number, lifestealPercent: number): void {
         if (!attacker.IsAlive()) return;
 
-        const healAmount = damage * lifestealPercent / 100;
+        const healAmount = (damage * lifestealPercent) / 100;
         if (healAmount > 0) {
             attacker.Heal(healAmount, undefined);
 

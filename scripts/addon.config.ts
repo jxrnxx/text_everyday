@@ -79,7 +79,7 @@ function importAddonName() {
         const fileContent = fs.readFileSync(filePath, 'utf8');
         addon_name = fileContent;
         console.log(`使用开发模板时配置的项目名称：${addon_name}`);
-    } catch (e) {}
+    } catch (e) { }
 }
 
 // 同步调用导入函数

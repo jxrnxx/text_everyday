@@ -12,7 +12,7 @@ export class soldier_war_strike extends BaseAbility {
 
     Precache(context: CScriptPrecacheContext) {
         PrecacheResource('particle', 'particles/mars_shield_bash_crit_strike_text.vpcf', context);
-        PrecacheResource('particle', 'particles/units/heroes/hero_mars/mars_shield_bash_crit.vpcf', context);  // 原版 Mars
+        PrecacheResource('particle', 'particles/units/heroes/hero_mars/mars_shield_bash_crit.vpcf', context); // 原版 Mars
         PrecacheResource('particle', 'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf', context);
         PrecacheResource('particle', 'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf', context);
     }
@@ -56,7 +56,7 @@ export class modifier_soldier_war_strike extends BaseModifier {
 
     // 返回Buff的图标贴图
     GetTexture(): string {
-        return "soldier_war_strike";
+        return 'soldier_war_strike';
     }
 
     IsPurgable(): boolean {
@@ -183,7 +183,6 @@ export class modifier_soldier_war_strike extends BaseModifier {
         const damage = baseDamage * (this.damage_pct / 100);
 
         const angleThreshold = Math.cos((this.cleave_angle / 2) * (Math.PI / 180));
-
 
         for (const enemy of enemies) {
             if (enemy !== mainTarget && enemy.IsAlive()) {

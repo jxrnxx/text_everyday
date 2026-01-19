@@ -25,7 +25,8 @@ export class EconomySystem {
     }
 
     // Simplified KV cache for relevant keys
-    private unitKVCache: { [unitName: string]: { coin: number; faith: number; exp: number; defenderPoints: number } } = {};
+    private unitKVCache: { [unitName: string]: { coin: number; faith: number; exp: number; defenderPoints: number } } =
+        {};
 
     private Initialize() {
         // Load Unit KVs
@@ -33,14 +34,12 @@ export class EconomySystem {
 
         // Listen for Entity Killed
         ListenToGameEvent('entity_killed', event => this.OnEntityKilled(event), undefined);
-
     }
 
     private LoadUnitKVs() {
         // Try loading the custom units file directly
         const unitsKV = LoadKeyValues('scripts/npc/custom_units.txt');
         if (unitsKV && typeof unitsKV === 'object') {
-
             // Check if "XLSXContent" exists, otherwise assume root IS the units map
             let dotaUnits = (unitsKV as any)['XLSXContent'];
             if (!dotaUnits) {
@@ -54,7 +53,9 @@ export class EconomySystem {
                         const coin = data[this.KV_DROP_COIN] ? Number(data[this.KV_DROP_COIN]) : 0;
                         const faith = data[this.KV_DROP_FAITH] ? Number(data[this.KV_DROP_FAITH]) : 0;
                         const exp = data['HaveLevel'] ? Number(data['HaveLevel']) : 0;
-                        const defenderPoints = data[this.KV_DROP_DEFENDER_POINTS] ? Number(data[this.KV_DROP_DEFENDER_POINTS]) : 0;
+                        const defenderPoints = data[this.KV_DROP_DEFENDER_POINTS]
+                            ? Number(data[this.KV_DROP_DEFENDER_POINTS])
+                            : 0;
 
                         if (coin > 0 || faith > 0 || exp > 0 || defenderPoints > 0) {
                             this.unitKVCache[unitName] = { coin, faith, exp, defenderPoints };
@@ -117,7 +118,9 @@ export class EconomySystem {
     }
 
     private GetPlayerEconomy(playerId: PlayerID): { spirit_coin: number; faith: number; defender_points: number } {
-        const data = CustomNetTables.GetTableValue('economy', `player_${playerId}`) as { spirit_coin: number; faith: number; defender_points?: number } | undefined;
+        const data = CustomNetTables.GetTableValue('economy', `player_${playerId}`) as
+            | { spirit_coin: number; faith: number; defender_points?: number }
+            | undefined;
         return {
             spirit_coin: data?.spirit_coin ?? 0,
             faith: data?.faith ?? 0,
@@ -132,12 +135,16 @@ export class EconomySystem {
         // Instant Event Update to bypass NetTable throttling
         const player = PlayerResource.GetPlayer(playerId);
         if (player) {
-            CustomGameEventManager.Send_ServerToPlayer(player, 'economy_update' as never, {
-                player_id: playerId,
-                spirit_coin: coin,
-                faith: faith,
-                defender_points: defenderPoints,
-            } as never);
+            CustomGameEventManager.Send_ServerToPlayer(
+                player,
+                'economy_update' as never,
+                {
+                    player_id: playerId,
+                    spirit_coin: coin,
+                    faith: faith,
+                    defender_points: defenderPoints,
+                } as never
+            );
         }
     }
 
@@ -191,4 +198,3 @@ export class EconomySystem {
         SendOverheadEventMessage(player, msgType, unit, value, player);
     }
 }
-

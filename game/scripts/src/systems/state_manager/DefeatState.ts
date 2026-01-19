@@ -13,10 +13,14 @@ export class DefeatState extends BaseState {
         print('[DefeatState] 💀 游戏失败!');
 
         // 发送状态到客户端
-        CustomNetTables.SetTableValue('game_state' as never, 'current' as never, {
-            state: 'defeat',
-            message: '基地被摧毁!'
-        } as never);
+        CustomNetTables.SetTableValue(
+            'game_state' as never,
+            'current' as never,
+            {
+                state: 'defeat',
+                message: '基地被摧毁!',
+            } as never
+        );
 
         // 发送失败事件
         Event.send('游戏-失败');

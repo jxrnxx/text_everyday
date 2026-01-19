@@ -1,7 +1,7 @@
 /**
  * CDOTAPlayerController 扩展
  * 参考 zhanshen 实现
- * 
+ *
  * 提供:
  * - SetCustomValue/GetCustomValue/AddCustomValue: 临时键值对
  * - SyncCustomValue: 同步到 NetTable 给客户端
@@ -22,7 +22,7 @@ declare global {
         /** 清空临时值 (保留 _ 开头的持久值) */
         ClearCustomValue: () => void;
         /** 获取 Player 实例 */
-        GetAsset: () => any;  // 返回 Player 实例，使用 any 避免循环依赖
+        GetAsset: () => any; // 返回 Player 实例，使用 any 避免循环依赖
     }
 }
 

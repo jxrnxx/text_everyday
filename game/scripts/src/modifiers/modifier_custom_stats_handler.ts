@@ -4,7 +4,7 @@ import * as json_heroes from '../json/npc_heroes_custom.json';
 
 /**
  * 自定义属性处理器 - 修复版
- * 
+ *
  * 设计理念（参考 zhanshen）：
  * 1. 使用 EXTRA_HEALTH_BONUS 和 MANA_BONUS 通过 modifier 增加血量/蓝量上限
  *    这样就不会触发引擎的自动回血逻辑
@@ -12,13 +12,13 @@ import * as json_heroes from '../json/npc_heroes_custom.json';
  */
 
 // 目标配置值
-const CONFIGURED_STATUS_MANA = 100;   // npc_heroes_custom.txt 中配置的 StatusMana
-const CONFIGURED_STATUS_HEALTH = 1;   // npc_heroes_custom.txt 中配置的 StatusHealth
+const CONFIGURED_STATUS_MANA = 100; // npc_heroes_custom.txt 中配置的 StatusMana
+const CONFIGURED_STATUS_HEALTH = 1; // npc_heroes_custom.txt 中配置的 StatusHealth
 
 @registerModifier('modifier_custom_stats_handler')
 export class modifier_custom_stats_handler extends BaseModifier {
     mainStat: string = '';
-    engineBaseDamage: number = 0;  // 引擎原始攻击力（在 modifier 添加 bonus 前获取）
+    engineBaseDamage: number = 0; // 引擎原始攻击力（在 modifier 添加 bonus 前获取）
 
     // 缓存计算后的额外血量、蓝量和攻击力（用于 modifier 返回值）
     cachedExtraHealth: number = 0;
@@ -130,7 +130,10 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const currentLevel = stats.display_level ?? parent.GetLevel();
 
         // 计算目标生命值 = 根骨面板 × 30 + StatusHealth
-        const panelConstitution = Math.floor((stats.constitution_base + (currentLevel - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
+        const panelConstitution = Math.floor(
+            (stats.constitution_base + (currentLevel - 1) * stats.constitution_gain + stats.extra_constitution) *
+            (1 + stats.constitution_bonus)
+        );
         const targetHealth = panelConstitution * 30 + CONFIGURED_STATUS_HEALTH;
 
         // 获取引擎当前的基础最大血量（不含 modifier bonus）
@@ -149,17 +152,28 @@ export class modifier_custom_stats_handler extends BaseModifier {
         let mainStatValue = 0;
         switch (this.mainStat) {
             case 'Martial':
-                mainStatValue = Math.floor((stats.martial_base + (currentLevel - 1) * stats.martial_gain + stats.extra_martial) * (1 + stats.martial_bonus));
+                mainStatValue = Math.floor(
+                    (stats.martial_base + (currentLevel - 1) * stats.martial_gain + stats.extra_martial) *
+                    (1 + stats.martial_bonus)
+                );
                 break;
             case 'Divinity':
-                mainStatValue = Math.floor((stats.divinity_base + (currentLevel - 1) * stats.divinity_gain + stats.extra_divinity) * (1 + stats.divinity_bonus));
+                mainStatValue = Math.floor(
+                    (stats.divinity_base + (currentLevel - 1) * stats.divinity_gain + stats.extra_divinity) *
+                    (1 + stats.divinity_bonus)
+                );
                 break;
             case 'Agility':
-                mainStatValue = Math.floor((stats.agility_base + (currentLevel - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
+                mainStatValue = Math.floor(
+                    (stats.agility_base + (currentLevel - 1) * stats.agility_gain + stats.extra_agility) *
+                    (1 + stats.agility_bonus)
+                );
                 break;
         }
 
-        const baseDamage = Math.floor((stats.damage_base + (currentLevel - 1) * stats.damage_gain) * (1 + stats.damage_bonus));
+        const baseDamage = Math.floor(
+            (stats.damage_base + (currentLevel - 1) * stats.damage_gain) * (1 + stats.damage_bonus)
+        );
         const totalDamage = baseDamage + Math.floor(mainStatValue * 1.5) + (stats.extra_base_damage || 0);
 
         // 使用在 OnCreated 中获取的引擎原始攻击力
@@ -193,12 +207,12 @@ export class modifier_custom_stats_handler extends BaseModifier {
     // GetModifierPercentageExpRateBonus(): number {
     //     const parent = this.GetParent();
     //     if (!parent || parent.IsNull()) return 0;
-    //     
+    //
     //     const currentLevel = parent.GetLevel();
     //     const stats = CustomStats.GetAllStats(parent);
     //     const rank = stats.rank ?? 0;
     //     const levelCap = (rank + 1) * 10;
-    //     
+    //
     //     if (currentLevel >= levelCap) {
     //         return -100;
     //     }
@@ -225,7 +239,10 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
         const level = stats.display_level ?? parent.GetLevel();
-        const panelConstitution = Math.floor((stats.constitution_base + (level - 1) * stats.constitution_gain + stats.extra_constitution) * (1 + stats.constitution_bonus));
+        const panelConstitution = Math.floor(
+            (stats.constitution_base + (level - 1) * stats.constitution_gain + stats.extra_constitution) *
+            (1 + stats.constitution_bonus)
+        );
         return panelConstitution * 0.2;
     }
 
@@ -234,7 +251,9 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
         const level = stats.display_level ?? parent.GetLevel();
-        const panelAgility = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
+        const panelAgility = Math.floor(
+            (stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus)
+        );
         return panelAgility + (stats.extra_attack_speed || 0);
     }
 
@@ -258,7 +277,9 @@ export class modifier_custom_stats_handler extends BaseModifier {
         const parent = this.GetParent();
         const stats = CustomStats.GetAllStats(parent);
         const level = stats.display_level ?? parent.GetLevel();
-        const panelAgility = Math.floor((stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus));
+        const panelAgility = Math.floor(
+            (stats.agility_base + (level - 1) * stats.agility_gain + stats.extra_agility) * (1 + stats.agility_bonus)
+        );
         const bonusSpeed = Math.floor(panelAgility * 0.4) + (stats.extra_move_speed || 0);
         return bonusSpeed;
     }
@@ -296,4 +317,3 @@ export class modifier_custom_stats_handler extends BaseModifier {
         }
     }
 }
-

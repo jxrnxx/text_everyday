@@ -2,10 +2,10 @@ import { Player } from '../player/Player';
 
 /**
  * InvitationModule - 验证码和英雄选择模块
- * 
+ *
  * 监听 'to_server_verify_code' 事件
  * 验证码同时作为英雄选择：1=剑圣，2=玛西
- * 
+ *
  * 英雄创建委托给 Player.CreateHero()
  */
 export class InvitationModule {

@@ -1,7 +1,7 @@
 /**
  * CDOTA_BaseNPC 扩展方法
  * 从 zhanshen 项目移植，适配当前项目
- * 
+ *
  * 该文件用于扩展 CDOTA_BaseNPC 类，不允许内部有 enhance 以外的依赖
  */
 
@@ -18,7 +18,14 @@ declare global {
         ClearCustomValue(): void;
 
         // 移动相关
-        Mover(targetPosition: Vector, time: number, callback?: (pos: Vector) => void, noFix?: boolean, bounce?: boolean, ignoreNav?: boolean): void;
+        Mover(
+            targetPosition: Vector,
+            time: number,
+            callback?: (pos: Vector) => void,
+            noFix?: boolean,
+            bounce?: boolean,
+            ignoreNav?: boolean
+        ): void;
         Pause(time: number): void;
 
         // 目标选取
@@ -26,7 +33,13 @@ declare global {
         GetMinAngleUnit(range: number): CDOTA_BaseNPC | null;
 
         // 范围效果
-        RoundAOE(radius: number, position: Vector, callback: (unit: CDOTA_BaseNPC) => void, tag?: string, cooldown?: number): void;
+        RoundAOE(
+            radius: number,
+            position: Vector,
+            callback: (unit: CDOTA_BaseNPC) => void,
+            tag?: string,
+            cooldown?: number
+        ): void;
 
         // 安全操作
         SafetyRemoveSelf(): void;
@@ -51,7 +64,7 @@ declare global {
  */
 CDOTA_BaseNPC.GetCustomValue = function (key: string): any {
     const t = (this as any).CustomValue || {};
-    return t[key];  // 返回 undefined 如果 key 不存在
+    return t[key]; // 返回 undefined 如果 key 不存在
 };
 
 /**
@@ -145,11 +158,11 @@ CDOTA_BaseNPC.Mover = function (
         if (dist > 1000) return undefined;
 
         // 碰撞检测
-        const checkPos = ((newPosition as any).__add((forwardVector as any).__mul(60))) as Vector;
+        const checkPos = (newPosition as any).__add((forwardVector as any).__mul(60)) as Vector;
 
         if (!ignoreNav && (!GridNav.IsTraversable(newPosition) || !GridNav.IsTraversable(checkPos))) {
             // 碰到障碍物，尝试后退
-            const backPos = ((newPosition as any).__sub((forwardVector as any).__mul(60))) as Vector;
+            const backPos = (newPosition as any).__sub((forwardVector as any).__mul(60)) as Vector;
             if (GridNav.IsTraversable(backPos)) {
                 unit.SetAbsOrigin(backPos);
             }

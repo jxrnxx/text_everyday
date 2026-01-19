@@ -1,9 +1,9 @@
 /**
  * Player 类 - 封装单个玩家的所有逻辑
- * 
+ *
  * 通过 SetPlayerSys(id, 'assets', player) 注册
  * 通过 player.GetAsset() 或 GetPlayerSys(id, 'assets') 获取
- * 
+ *
  * 使用示例:
  *   const player = PlayerResource.GetPlayer(0);
  *   const assets = player.GetAsset();

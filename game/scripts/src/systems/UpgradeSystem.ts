@@ -1,11 +1,11 @@
 /**
  * UpgradeSystem.ts
  * Handles stat upgrade logic and tier breakthrough for the Cultivation Shop
- * 
+ *
  * Rules:
  * - Max_Shop_Tier = Rank + 2
  * - Cannot breakthrough to a tier higher than allowed
- * 
+ *
  * Tier Progression:
  * - Tier 1 (入门期): Basic stats, cost 200
  * - Tier 2 (觉醒期): Explosive stats for Wave 5+ difficulty, cost 800
@@ -17,17 +17,17 @@ import { CustomStats } from './CustomStats';
 
 // Slot configuration for each tier
 export interface TierSlotConfig {
-    stat_type: string;      // constitution, martial, etc.
-    name: string;           // 中文名称
-    value: number;          // 数值
-    is_percent?: boolean;   // 是否百分比
+    stat_type: string; // constitution, martial, etc.
+    name: string; // 中文名称
+    value: number; // 数值
+    is_percent?: boolean; // 是否百分比
 }
 
 // Tier configuration structure
 export interface TierConfig {
     tier: number;
-    name: string;           // Tier 名称
-    cost_per_slot: number;  // 每个槽位费用
+    name: string; // Tier 名称
+    cost_per_slot: number; // 每个槽位费用
     slots: TierSlotConfig[];
 }
 
@@ -51,7 +51,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 15 },
             { stat_type: 'life_on_hit', name: '饮血', value: 10 },
             { stat_type: 'base_damage', name: '破军', value: 15 },
-        ]
+        ],
     },
     // Tier 2: 觉醒境
     {
@@ -67,7 +67,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 50 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 5, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 80 },
-        ]
+        ],
     },
     // Tier 3: 宗师境
     {
@@ -83,7 +83,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 80 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 10, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 150 },
-        ]
+        ],
     },
     // Tier 4: 破绽境 (待设计具体技能)
     {
@@ -99,7 +99,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 120 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 15, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 300 },
-        ]
+        ],
     },
     // Tier 5: 超凡境 (待设计具体技能)
     {
@@ -115,7 +115,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 180 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 20, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 600 },
-        ]
+        ],
     },
     // Tier 6: 入圣境 (待设计具体技能)
     {
@@ -131,7 +131,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 250 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 25, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 1000 },
-        ]
+        ],
     },
     // Tier 7: 神座境 (待设计具体技能)
     {
@@ -147,7 +147,7 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 350 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 30, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 1800 },
-        ]
+        ],
     },
     // Tier 8: 禁忌境 (待设计具体技能)
     {
@@ -163,14 +163,14 @@ export const UPGRADE_TIER_CONFIG: TierConfig[] = [
             { stat_type: 'attack_speed', name: '极速', value: 500 },
             { stat_type: 'lifesteal_pct', name: '饮血', value: 40, is_percent: true },
             { stat_type: 'base_damage', name: '破军', value: 3000 },
-        ]
+        ],
     },
 ];
 
 // Shop tier data structure
 interface PlayerShopData {
     current_tier: number;
-    slots_purchased: boolean[];  // Array of 8 booleans for each slot
+    slots_purchased: boolean[]; // Array of 8 booleans for each slot
 }
 
 // Default empty slots array
@@ -283,7 +283,9 @@ export class UpgradeSystem {
         shopData.slots_purchased[slotIndex] = true;
 
         const purchasedCount = this.GetPurchasedCount(shopData.slots_purchased);
-        print(`[UpgradeSystem] Slot ${slotIndex} purchased. Total: ${purchasedCount}/8, Tier: ${shopData.current_tier}`);
+        print(
+            `[UpgradeSystem] Slot ${slotIndex} purchased. Total: ${purchasedCount}/8, Tier: ${shopData.current_tier}`
+        );
 
         // Check if all 8 slots are purchased - trigger auto breakthrough
         if (this.AllSlotsPurchased(shopData.slots_purchased)) {
@@ -433,7 +435,9 @@ export class UpgradeSystem {
         ScreenShake(hero.GetAbsOrigin(), 5, 100, 0.5, 2000, 0, true);
 
         // 5. Log breakthrough
-        print(`[UpgradeSystem] Player ${playerID} breakthrough to Tier ${newTier} (${newTierConfig?.name || 'Unknown'})`);
+        print(
+            `[UpgradeSystem] Player ${playerID} breakthrough to Tier ${newTier} (${newTierConfig?.name || 'Unknown'})`
+        );
 
         // 6. Sync to client and notify
         this.SyncShopDataToClient(playerID);
@@ -480,7 +484,7 @@ export class UpgradeSystem {
         // 注意：NetTable 不支持 boolean，需要使用 1/0
         const slotsObject: { [key: number]: number } = {};
         for (let i = 0; i < shopData.slots_purchased.length; i++) {
-            slotsObject[i + 1] = shopData.slots_purchased[i] ? 1 : 0;  // true -> 1, false -> 0
+            slotsObject[i + 1] = shopData.slots_purchased[i] ? 1 : 0; // true -> 1, false -> 0
         }
 
         // 将 slots_config 转换为 Lua 风格的 1-indexed 对象
@@ -493,7 +497,7 @@ export class UpgradeSystem {
                     stat_type: slot.stat_type,
                     name: slot.name,
                     value: slot.value,
-                    is_percent: slot.is_percent ? 1 : 0,  // boolean -> 1/0
+                    is_percent: slot.is_percent ? 1 : 0, // boolean -> 1/0
                 };
             }
         }
@@ -508,7 +512,9 @@ export class UpgradeSystem {
 
         // 打印 slots_purchased 状态
         const purchasedCount = Object.values(slotsObject).filter(v => v === 1).length;
-        print(`[UpgradeSystem] SyncShopDataToClient: tier=${shopData.current_tier}, cost=${tierConfig?.cost_per_slot}, slots_purchased=${purchasedCount}/8`);
+        print(
+            `[UpgradeSystem] SyncShopDataToClient: tier=${shopData.current_tier}, cost=${tierConfig?.cost_per_slot}, slots_purchased=${purchasedCount}/8`
+        );
         print(`[UpgradeSystem] Writing to NetTable key: player_${playerID}`);
 
         // 使用 as any 确保类型检查不会阻止写入
@@ -519,7 +525,10 @@ export class UpgradeSystem {
         if (verifyData) {
             const verifyPurchased = (verifyData as any).slots_purchased;
             const verifyCount = verifyPurchased ? Object.values(verifyPurchased).filter((v: any) => v === 1).length : 0;
-            print(`[UpgradeSystem] NetTable write verified! tier=${(verifyData as any).current_tier}, slots_purchased=${verifyCount}/8`);
+            print(
+                `[UpgradeSystem] NetTable write verified! tier=${(verifyData as any).current_tier
+                }, slots_purchased=${verifyCount}/8`
+            );
         } else {
             print(`[UpgradeSystem] ERROR: NetTable write verification failed!`);
         }

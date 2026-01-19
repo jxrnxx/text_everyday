@@ -15,10 +15,14 @@ export class LoadingState extends BaseState {
         print('[LoadingState] 游戏载入中...');
 
         // 发送状态到客户端
-        CustomNetTables.SetTableValue('game_state' as never, 'current' as never, {
-            state: 'loading',
-            message: '等待玩家加载...'
-        } as never);
+        CustomNetTables.SetTableValue(
+            'game_state' as never,
+            'current' as never,
+            {
+                state: 'loading',
+                message: '等待玩家加载...',
+            } as never
+        );
 
         // 监听游戏开始事件
         // 可以在这里初始化游戏系统

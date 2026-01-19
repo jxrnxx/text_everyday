@@ -1,7 +1,7 @@
 /**
  * state_manager.ts
  * 游戏状态管理器 - 从 zhanshen 项目移植
- * 
+ *
  * 管理游戏的不同阶段：载入 → 选难度 → 选英雄 → 防守 → 胜利/失败
  */
 
@@ -63,10 +63,10 @@ export class StateManager {
     static StateType: Record<string, any> = {};
 
     private currentState: IGameState | null = null;
-    private heartbeatRate = 0.1;  // 心跳频率（秒）
-    private count = 0;            // 心跳计数
-    private pause = false;        // 是否暂停
-    stateName: string = '';       // 当前状态名
+    private heartbeatRate = 0.1; // 心跳频率（秒）
+    private count = 0; // 心跳计数
+    private pause = false; // 是否暂停
+    stateName: string = ''; // 当前状态名
 
     constructor(initialState?: string) {
         this.remove = this.Init();

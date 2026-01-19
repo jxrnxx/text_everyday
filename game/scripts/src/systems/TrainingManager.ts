@@ -152,7 +152,14 @@ export class TrainingManager {
 
                 // Spawn full wave
                 for (let i = 0; i < data.spawnCount; i++) {
-                    const monster = CreateUnitByName(this.MONSTER_UNIT_NAME, spawnPos, true, undefined, undefined, DotaTeam.BADGUYS);
+                    const monster = CreateUnitByName(
+                        this.MONSTER_UNIT_NAME,
+                        spawnPos,
+                        true,
+                        undefined,
+                        undefined,
+                        DotaTeam.BADGUYS
+                    );
                     if (monster) {
                         monster.SetAcquisitionRange(1000);
                         data.liveMonsters.push(monster.entindex()); // Store Index
@@ -216,14 +223,14 @@ export class TrainingManager {
     }
 
     // ===== MERCHANT MANAGEMENT =====
-    
+
     /**
      * Spawn a merchant NPC for the player at their designated shop point
      * Only spawns if merchant doesn't already exist
      */
     private SpawnMerchant(playerId: PlayerID) {
         const data = this.GetPlayerData(playerId);
-        
+
         // Check if merchant already exists
         if (data.merchantIndex !== null) {
             const existingMerchant = EntIndexToHScript(data.merchantIndex) as CDOTA_BaseNPC;
@@ -254,7 +261,7 @@ export class TrainingManager {
         if (merchant) {
             // Set entity name for interaction security: shop_1, shop_2, etc.
             merchant.SetEntityName(`shop_${playerId + 1}`);
-            
+
             // Make merchant face a reasonable direction (toward center or player)
             const hero = PlayerResource.GetSelectedHeroEntity(playerId);
             if (hero) {
@@ -264,13 +271,17 @@ export class TrainingManager {
             }
 
             // Persistent idle animation loop (survives alt-tab)
-            merchant.SetContextThink('MerchantIdleAnim', () => {
-                if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
-                    merchant.StartGesture(GameActivity.DOTA_IDLE);
-                    return 3.0; // Refresh animation every 3 seconds
-                }
-                return undefined; // Stop if merchant is gone
-            }, 0);
+            merchant.SetContextThink(
+                'MerchantIdleAnim',
+                () => {
+                    if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
+                        merchant.StartGesture(GameActivity.DOTA_IDLE);
+                        return 3.0; // Refresh animation every 3 seconds
+                    }
+                    return undefined; // Stop if merchant is gone
+                },
+                0
+            );
 
             // Store reference
             data.merchantIndex = merchant.entindex();
@@ -282,7 +293,7 @@ export class TrainingManager {
      */
     private RemoveMerchant(playerId: PlayerID) {
         const data = this.GetPlayerData(playerId);
-        
+
         if (data.merchantIndex !== null) {
             const merchant = EntIndexToHScript(data.merchantIndex) as CDOTA_BaseNPC;
             if (merchant && !merchant.IsNull()) {

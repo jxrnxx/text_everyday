@@ -1,7 +1,7 @@
 /**
  * PlayerRegister - 玩家注册接口
  * 参考 zhanshen 的 PlayerRegister 实现
- * 
+ *
  * 职责:
  * - 监听玩家连接/断开事件
  * - 创建和管理 Player 实例

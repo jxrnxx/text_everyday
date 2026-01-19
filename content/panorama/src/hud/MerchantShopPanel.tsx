@@ -68,6 +68,18 @@ const SKILL_DESC: Record<string, string> = {
     '破军': '力量增幅，攻击提升',
 };
 
+// 技能效果名称映射 (技能名称 -> 效果名称)
+const SKILL_EFFECT_NAME: Record<string, string> = {
+    '根骨': '生命',
+    '武道': '伤害',
+    '神念': '魔法',
+    '戒守': '护甲',
+    '回能': '回蓝',
+    '极速': '攻速',
+    '饮血': '吸血',
+    '破军': '攻击',
+};
+
 // 槽位图片路径 (100x100px 填满版本)
 const SLOT_IMAGES = [
     "file://{resources}/images/slot_1_new.png",

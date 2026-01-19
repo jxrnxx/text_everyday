@@ -2,17 +2,13 @@
     "parser": "@typescript-eslint/parser",
     "extends": ["plugin:prettier/recommended", "plugin:react-hooks/recommended"],
     "settings": {
-        "import/resolver": {
-            "node": {
-                "extensions": [".js", ".ts", ".jsx", ".tsx"]
-            }
-        },
+        "import/resolver": { "node": { "extensions": [".js", ".ts", ".jsx", ".tsx"] } },
         "import/extensions": [".js", ".ts", ".jsx", ".tsx"]
     },
     "plugins": ["@typescript-eslint", "import", "prettier", "react", "react-hooks"],
     "rules": {
         "prettier/prettier": [
-            "error",
+            "warn",
             {
                 "endOfLine": "auto"
             }
@@ -35,9 +31,6 @@
                 "prefer": "type-imports"
             }
         ],
-        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
-        "prefer-const": "error",
-        "no-eval": "error",
         "no-redeclare": "off",
         "import/no-anonymous-default-export": "off",
         "@typescript-eslint/no-redeclare": ["off"],

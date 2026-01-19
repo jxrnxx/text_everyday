@@ -1,7 +1,7 @@
 /**
  * RankSystem.ts
  * Handles player rank progression ("境界突破")
- * 
+ *
  * Rules:
  * - MaxLevel = (Rank + 1) * 10
  * - Faith Cost = 100 * (Rank + 1)
@@ -42,7 +42,7 @@ export class RankSystem {
             const playerID = (event as any).PlayerID as PlayerID;
             this.AttemptRankUp(playerID);
         });
-        
+
         // 测试用：快速升阶（绕过信仰和等级检查）
         CustomGameEventManager.RegisterListener('cmd_test_rank_up', (_, event) => {
             const playerID = (event as any).PlayerID as PlayerID;
@@ -59,7 +59,7 @@ export class RankSystem {
      */
     public static GetMaxLevelForRank(rank: number): number {
         const calculatedMax = (rank + 1) * 10;
-        return Math.min(calculatedMax, 50);  // 最高50级
+        return Math.min(calculatedMax, 50); // 最高50级
     }
 
     /**
@@ -75,11 +75,11 @@ export class RankSystem {
      */
     public static IsAtLevelCap(hero: CDOTA_BaseNPC_Hero): boolean {
         if (!hero || hero.IsNull()) return false;
-        
+
         const currentLevel = hero.GetLevel();
         const rank = CustomStats.GetStat(hero, 'rank') || 0;
         const maxLevel = this.GetMaxLevelForRank(rank);
-        
+
         return currentLevel >= maxLevel;
     }
 
@@ -145,7 +145,7 @@ export class RankSystem {
 
         // 5. Log and notify
         const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
-        
+
         this.SendResult(player, true, newRank, `突破成功！晋升${rankName}`);
 
         // 6. Notify all clients for UI updates (NetTable already updated by CustomStats)
@@ -163,7 +163,7 @@ export class RankSystem {
         if (!hero) return;
 
         const currentRank = CustomStats.GetStat(hero, 'rank') || 0;
-        
+
         // rank=5 是禁忌，最高阶位
         if (currentRank >= 5) {
             this.SendResult(player, false, currentRank, '已达最高境界');
@@ -172,11 +172,11 @@ export class RankSystem {
 
         // 记录升阶前的阶位最大等级
         const prevMaxLevel = RankSystem.GetMaxLevelForRank(currentRank);
-        
+
         // 直接升阶
         const newRank = currentRank + 1;
         CustomStats.AddStat(hero, 'rank', 1);
-        
+
         // 根据新阶位处理显示等级和经验
         if (newRank === 5) {
             // 禁忌阶位：保持50级，经验条直接满
@@ -187,7 +187,7 @@ export class RankSystem {
             CustomStats.SetDisplayLevel(hero, prevMaxLevel);
             CustomStats.ResetCustomExp(hero);
         }
-        
+
         // 播放特效
         EmitSoundOn('Hero_Juggernaut.OmniSlash.Arcana', hero);
         const particle = ParticleManager.CreateParticle(
@@ -198,10 +198,15 @@ export class RankSystem {
         ParticleManager.ReleaseParticleIndex(particle);
 
         const RANK_NAMES: { [key: number]: string } = {
-            0: '凡胎', 1: '觉醒', 2: '宗师', 3: '半神', 4: '神话', 5: '禁忌'
+            0: '凡胎',
+            1: '觉醒',
+            2: '宗师',
+            3: '半神',
+            4: '神话',
+            5: '禁忌',
         };
         const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
-        
+
         this.SendResult(player, true, newRank, `晋升${rankName}`);
         CustomStats.SendStatsToClient(hero);
     }

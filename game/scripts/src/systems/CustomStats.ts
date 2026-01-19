@@ -8,78 +8,106 @@ import { EconomySystem } from '../mechanics/EconomySystem';
 interface HeroStats {
     // ===== 基础属性 (从英雄配置读取) =====
     // 根骨系统
-    constitution_base: number;   // 基础根骨
-    constitution_gain: number;   // 根骨成长
-    constitution_bonus: number;  // 根骨加成百分比
+    constitution_base: number; // 基础根骨
+    constitution_gain: number; // 根骨成长
+    constitution_bonus: number; // 根骨加成百分比
     // 武道系统
-    martial_base: number;        // 基础武道
-    martial_gain: number;        // 武道成长
-    martial_bonus: number;       // 武道加成百分比
+    martial_base: number; // 基础武道
+    martial_gain: number; // 武道成长
+    martial_bonus: number; // 武道加成百分比
     // 神念系统
-    divinity_base: number;       // 基础神念
-    divinity_gain: number;       // 神念成长
-    divinity_bonus: number;      // 神念加成百分比
+    divinity_base: number; // 基础神念
+    divinity_gain: number; // 神念成长
+    divinity_bonus: number; // 神念加成百分比
     // 身法系统
-    agility_base: number;        // 基础身法
-    agility_gain: number;        // 身法成长
-    agility_bonus: number;       // 身法加成百分比
+    agility_base: number; // 基础身法
+    agility_gain: number; // 身法成长
+    agility_bonus: number; // 身法加成百分比
     // 攻击力系统
-    damage_base: number;         // 基础攻击力
-    damage_gain: number;         // 攻击力成长
-    damage_bonus: number;        // 攻击力加成百分比
+    damage_base: number; // 基础攻击力
+    damage_gain: number; // 攻击力成长
+    damage_bonus: number; // 攻击力加成百分比
 
     // ===== 计算后的面板属性 (用于显示) =====
-    constitution: number;        // 面板根骨
-    martial: number;             // 面板武道
-    divinity: number;            // 面板神念
+    constitution: number; // 面板根骨
+    martial: number; // 面板武道
+    divinity: number; // 面板神念
 
     // ===== 其他属性 =====
     rank: number;
-    display_level: number;       // 显示等级 (由服务端控制)
-    custom_exp: number;          // 自定义经验值 (绕过Dota2的30级限制)
+    display_level: number; // 显示等级 (由服务端控制)
+    custom_exp: number; // 自定义经验值 (绕过Dota2的30级限制)
     custom_exp_required: number; // 升级所需经验
     crit_chance: number;
     crit_damage: number;
-    main_stat: string;           // 主属性: 'Martial' 或 'Divinity'
+    main_stat: string; // 主属性: 'Martial' 或 'Divinity'
     profession?: string;
 
     // ===== 额外获得的属性 (商人/游戏奖励/装备等) =====
-    extra_constitution: number;      // 额外根骨
-    extra_martial: number;           // 额外武道
-    extra_divinity: number;          // 额外神念
-    extra_agility: number;           // 额外身法
-    extra_attack_speed: number;      // 额外攻速
-    extra_mana_regen: number;        // 额外回蓝
-    extra_armor: number;             // 额外护甲
-    extra_max_mana: number;          // 额外最大法力
-    extra_move_speed: number;        // 额外移速
-    extra_base_damage: number;       // 额外攻击力
-    extra_life_on_hit: number;       // 额外攻击回血（商店购买）
-    lifesteal: number;               // 吸血百分比
-    armor_pen: number;               // 护甲穿透(破势)
-    base_move_speed: number;         // 基础移速（从配置读取）
-    life_on_hit_base: number;        // 基础攻击回血（从配置读取）
-    life_on_hit: number;             // 攻击回血面板值 = 基础 + 额外
+    extra_constitution: number; // 额外根骨
+    extra_martial: number; // 额外武道
+    extra_divinity: number; // 额外神念
+    extra_agility: number; // 额外身法
+    extra_attack_speed: number; // 额外攻速
+    extra_mana_regen: number; // 额外回蓝
+    extra_armor: number; // 额外护甲
+    extra_max_mana: number; // 额外最大法力
+    extra_move_speed: number; // 额外移速
+    extra_base_damage: number; // 额外攻击力
+    extra_life_on_hit: number; // 额外攻击回血（商店购买）
+    lifesteal: number; // 吸血百分比
+    armor_pen: number; // 护甲穿透(破势)
+    base_move_speed: number; // 基础移速（从配置读取）
+    life_on_hit_base: number; // 基础攻击回血（从配置读取）
+    life_on_hit: number; // 攻击回血面板值 = 基础 + 额外
 }
 
 const DEFAULT_STATS: HeroStats = {
     // 基础属性
-    constitution_base: 5, constitution_gain: 0, constitution_bonus: 0,
-    martial_base: 5, martial_gain: 0, martial_bonus: 0,
-    divinity_base: 5, divinity_gain: 0, divinity_bonus: 0,
-    agility_base: 0, agility_gain: 0, agility_bonus: 0,
-    damage_base: 1, damage_gain: 0, damage_bonus: 0,
+    constitution_base: 5,
+    constitution_gain: 0,
+    constitution_bonus: 0,
+    martial_base: 5,
+    martial_gain: 0,
+    martial_bonus: 0,
+    divinity_base: 5,
+    divinity_gain: 0,
+    divinity_bonus: 0,
+    agility_base: 0,
+    agility_gain: 0,
+    agility_bonus: 0,
+    damage_base: 1,
+    damage_gain: 0,
+    damage_bonus: 0,
     // 面板属性
-    constitution: 5, martial: 5, divinity: 5,
+    constitution: 5,
+    martial: 5,
+    divinity: 5,
     // 其他
-    rank: 0, display_level: 1, custom_exp: 0, custom_exp_required: 230, crit_chance: 0, crit_damage: 150,
+    rank: 0,
+    display_level: 1,
+    custom_exp: 0,
+    custom_exp_required: 230,
+    crit_chance: 0,
+    crit_damage: 150,
     main_stat: 'Martial',
     // 额外属性
-    extra_constitution: 0, extra_martial: 0, extra_divinity: 0, extra_agility: 0,
-    extra_attack_speed: 0, extra_mana_regen: 0, extra_armor: 0,
-    extra_max_mana: 0, extra_move_speed: 0, extra_base_damage: 0, extra_life_on_hit: 0,
-    lifesteal: 0, armor_pen: 0, base_move_speed: 300,
-    life_on_hit_base: 0, life_on_hit: 0,
+    extra_constitution: 0,
+    extra_martial: 0,
+    extra_divinity: 0,
+    extra_agility: 0,
+    extra_attack_speed: 0,
+    extra_mana_regen: 0,
+    extra_armor: 0,
+    extra_max_mana: 0,
+    extra_move_speed: 0,
+    extra_base_damage: 0,
+    extra_life_on_hit: 0,
+    lifesteal: 0,
+    armor_pen: 0,
+    base_move_speed: 300,
+    life_on_hit_base: 0,
+    life_on_hit: 0,
 };
 
 @reloadable
@@ -133,7 +161,6 @@ export class CustomStats {
         // 基础攻击回血
         const lifeOnHitBase = Number(heroConfig.LifeOnHit) || 0;
 
-
         const initialStats: HeroStats = {
             // 基础属性
             constitution_base: constitutionBase,
@@ -156,10 +183,10 @@ export class CustomStats {
             martial: martialBase,
             divinity: divinityBase,
             // 其他
-            rank: 0,  // 初始阶位为凡胎
-            display_level: 1,  // 初始显示等级
-            custom_exp: 0,  // 初始自定义经验
-            custom_exp_required: 230,  // 1级升2级所需经验
+            rank: 0, // 初始阶位为凡胎
+            display_level: 1, // 初始显示等级
+            custom_exp: 0, // 初始自定义经验
+            custom_exp_required: 230, // 1级升2级所需经验
             crit_chance: 0,
             crit_damage: 150,
             main_stat: mainStat,
@@ -180,7 +207,7 @@ export class CustomStats {
             armor_pen: 0,
             base_move_speed: baseMoveSpeed,
             life_on_hit_base: lifeOnHitBase,
-            life_on_hit: lifeOnHitBase,  // 初始面板值 = 基础值
+            life_on_hit: lifeOnHitBase, // 初始面板值 = 基础值
         };
 
         // 1. Write to CustomValue (Source of Truth)
@@ -204,7 +231,8 @@ export class CustomStats {
 
         const unitIndex = tostring(unit.GetEntityIndex());
         // Read from CustomValue -> Fallback to NetTable -> Fallback to Default
-        const currentStats = unit.GetCustomValue('_heroStats') || CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
+        const currentStats = unit.GetCustomValue('_heroStats') ||
+            CustomNetTables.GetTableValue('custom_stats' as any, unitIndex) || { ...DEFAULT_STATS };
 
         if (currentStats[statType] !== undefined && typeof currentStats[statType] === 'number') {
             (currentStats as any)[statType] += value;
@@ -388,7 +416,7 @@ export class CustomStats {
             return false;
         }
 
-        const maxLevel = Math.min((rank + 1) * 10, 50);  // 最高50级
+        const maxLevel = Math.min((rank + 1) * 10, 50); // 最高50级
 
         // 如果已经达到当前阶位的等级上限，不添加经验
         if (currentLevel >= maxLevel) {
@@ -483,14 +511,14 @@ export class CustomStats {
         // Use explicit, or fetch from Cache via GetAllStats
         const stats = explicitStats || this.GetAllStats(unit);
 
-        CustomGameEventManager.Send_ServerToPlayer(player, "custom_stats_update", {
+        CustomGameEventManager.Send_ServerToPlayer(player, 'custom_stats_update', {
             entindex: unit.GetEntityIndex(),
-            stats: stats
+            stats: stats,
         });
     }
 
     public static Init() {
-        CustomGameEventManager.RegisterListener("request_custom_stats", (_, event) => {
+        CustomGameEventManager.RegisterListener('request_custom_stats', (_, event) => {
             const playerId = event.PlayerID;
             const player = PlayerResource.GetPlayer(playerId);
             if (!player) return;
@@ -502,7 +530,7 @@ export class CustomStats {
         });
 
         // 商人购买属性事件处理
-        CustomGameEventManager.RegisterListener("cmd_merchant_purchase", (_, event: any) => {
+        CustomGameEventManager.RegisterListener('cmd_merchant_purchase', (_, event: any) => {
             const playerId = event.PlayerID;
             const player = PlayerResource.GetPlayer(playerId);
             if (!player) return;
@@ -510,15 +538,15 @@ export class CustomStats {
             if (!hero) return;
 
             const statType = event.stat_type as string;
-            const amount = event.amount as number || 0;
+            const amount = (event.amount as number) || 0;
             const slotIndex = event.slot_index as number;
 
             // 从 UpgradeSystem 获取当前 Tier 的费用
             const { UpgradeSystem } = require('./UpgradeSystem');
             const upgradeSystem = UpgradeSystem.GetInstance();
-            upgradeSystem.InitPlayer(playerId);  // 确保玩家数据已初始化
+            upgradeSystem.InitPlayer(playerId); // 确保玩家数据已初始化
             const shopData = upgradeSystem.GetShopData(playerId);
-            const tierConfig = UpgradeSystem.GetTierConfig(shopData.current_tier);  // 使用静态方法而非 .find()
+            const tierConfig = UpgradeSystem.GetTierConfig(shopData.current_tier); // 使用静态方法而非 .find()
             const cost = tierConfig?.cost_per_slot || 200;
 
             // 检查灵石是否足够
@@ -533,17 +561,17 @@ export class CustomStats {
 
             // 属性映射表 - 将前端属性名映射到 HeroStats 字段
             const statMap: { [key: string]: { stat: keyof HeroStats; defaultAmount: number } } = {
-                'constitution': { stat: 'extra_constitution', defaultAmount: 5 },
-                'martial': { stat: 'extra_martial', defaultAmount: 5 },
-                'divinity': { stat: 'extra_divinity', defaultAmount: 5 },
-                'agility': { stat: 'extra_agility', defaultAmount: 5 },
-                'armor': { stat: 'extra_armor', defaultAmount: 2 },
-                'mana_regen': { stat: 'extra_mana_regen', defaultAmount: 2 },
-                'attack_speed': { stat: 'extra_attack_speed', defaultAmount: 15 },
-                'life_on_hit': { stat: 'extra_life_on_hit', defaultAmount: 10 },
-                'lifesteal_pct': { stat: 'lifesteal', defaultAmount: 5 },  // 百分比吸血
-                'base_damage': { stat: 'extra_base_damage', defaultAmount: 15 },
-                'armor_pen': { stat: 'armor_pen', defaultAmount: 10 },
+                constitution: { stat: 'extra_constitution', defaultAmount: 5 },
+                martial: { stat: 'extra_martial', defaultAmount: 5 },
+                divinity: { stat: 'extra_divinity', defaultAmount: 5 },
+                agility: { stat: 'extra_agility', defaultAmount: 5 },
+                armor: { stat: 'extra_armor', defaultAmount: 2 },
+                mana_regen: { stat: 'extra_mana_regen', defaultAmount: 2 },
+                attack_speed: { stat: 'extra_attack_speed', defaultAmount: 15 },
+                life_on_hit: { stat: 'extra_life_on_hit', defaultAmount: 10 },
+                lifesteal_pct: { stat: 'lifesteal', defaultAmount: 5 }, // 百分比吸血
+                base_damage: { stat: 'extra_base_damage', defaultAmount: 15 },
+                armor_pen: { stat: 'armor_pen', defaultAmount: 10 },
             };
 
             const mapping = statMap[statType];
@@ -569,6 +597,5 @@ export class CustomStats {
                 print(`[CustomStats] Unknown stat type: ${statType}`);
             }
         });
-
     }
 }

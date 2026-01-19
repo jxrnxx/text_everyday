@@ -30,15 +30,15 @@ const RankUpButton: React.FC = () => {
     const checkLevelCap = () => {
         const localPlayer = Players.GetLocalPlayer();
         const heroIndex = Players.GetPlayerHeroEntityIndex(localPlayer);
-        
+
         if (heroIndex === -1) return;
 
         const level = Entities.GetLevel(heroIndex);
-        
+
         // Get rank from NetTable
         const netTableData = CustomNetTables.GetTableValue('custom_stats' as any, String(heroIndex));
         const rank = netTableData ? (netTableData as any).rank || 0 : 0;
-        
+
         const max = getMaxLevelForRank(rank);
 
         setCurrentLevel(level);
@@ -55,7 +55,7 @@ const RankUpButton: React.FC = () => {
         const updateLoop = () => {
             checkLevelCap();
         };
-        
+
         const interval = $.Schedule(0.5, function loop() {
             updateLoop();
             $.Schedule(0.5, loop);
@@ -89,7 +89,7 @@ const RankUpButton: React.FC = () => {
 
     const handleRankUp = () => {
         if (isProcessing) return;
-        
+
         setIsProcessing(true);
         Game.EmitSound('ui_menu_activate');
         GameEvents.SendCustomGameEventToServer('cmd_attempt_rank_up', {});
@@ -98,12 +98,12 @@ const RankUpButton: React.FC = () => {
     // 暂时禁用境界突破按钮，只用经验条金色提醒
     // TODO: 后续可以用其他方式触发升阶
     return null;
-    
+
     // 原来的显示逻辑
     // if (!isVisible) return null;
 
     const nextRankName = RANK_DATA[currentRank + 1]?.title || '???';
-    
+
     // 测试升阶按钮 - 绕过检查
     const handleTestRankUp = () => {
         Game.EmitSound('ui_menu_activate');
@@ -126,11 +126,11 @@ const RankUpButton: React.FC = () => {
             </Button>
 
             {/* Level Info */}
-            <Label 
-                text={`等级 ${currentLevel}/${maxLevel} (已达上限)`} 
-                style={styles.levelInfo} 
+            <Label
+                text={`等级 ${currentLevel}/${maxLevel} (已达上限)`}
+                style={styles.levelInfo}
             />
-            
+
             {/* 测试按钮 - 绕过检查 */}
             <Button
                 onactivate={handleTestRankUp}

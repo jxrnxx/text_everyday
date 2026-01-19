@@ -3,7 +3,7 @@ module.exports = {
     bracketSpacing: true,
     jsxBracketSameLine: false,
     jsxSingleQuote: false,
-    printWidth: 150,
+    printWidth: 120,
     quoteProps: 'as-needed',
     rangeStart: 0,
     rangeEnd: Infinity,
@@ -11,5 +11,13 @@ module.exports = {
     singleQuote: true,
     tabWidth: 4,
     trailingComma: 'es5',
-    useTabs: false
-}
+    useTabs: false,
+    overrides: [
+        {
+            files: '*.less',
+            options: {
+                parser: 'less',
+            },
+        },
+    ],
+};

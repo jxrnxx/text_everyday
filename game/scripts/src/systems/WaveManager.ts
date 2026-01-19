@@ -1,7 +1,7 @@
 /**
  * WaveManager.ts
  * 波次管理系统 - 控制游戏中怪物波次的生成
- * 
+ *
  * 时间轴:
  * - 准备期: 2:30 (150秒)
  * - 波次间隔: 90秒
@@ -34,9 +34,9 @@ export const WAVE_CONFIG = {
 
     /** 备用出生点坐标 (如果地图上找不到出生点实体，使用这些坐标) */
     FALLBACK_SPAWN_POSITIONS: [
-        { x: 5500, y: 5500, z: 256 },   // 右上角 Lane 1
-        { x: 6000, y: 5000, z: 256 },   // 右上角 Lane 2 (中路Boss)
-        { x: 5000, y: 6000, z: 256 },   // 右上角 Lane 3
+        { x: 5500, y: 5500, z: 256 }, // 右上角 Lane 1
+        { x: 6000, y: 5000, z: 256 }, // 右上角 Lane 2 (中路Boss)
+        { x: 5000, y: 6000, z: 256 }, // 右上角 Lane 3
     ],
 } as const;
 
@@ -49,10 +49,10 @@ export enum WaveType {
 
 // ===== 波次状态 =====
 export enum WaveState {
-    Preparation = 'preparation',  // 准备期
-    Spawning = 'spawning',        // 出怪中
-    Break = 'break',              // 休整期
-    Completed = 'completed',      // 所有波次完成
+    Preparation = 'preparation', // 准备期
+    Spawning = 'spawning', // 出怪中
+    Break = 'break', // 休整期
+    Completed = 'completed', // 所有波次完成
 }
 
 // ===== 波次配置接口 =====
@@ -179,7 +179,6 @@ export class WaveManager {
 
         // 设置准备期定时器
         this.ScheduleNextWave(WAVE_CONFIG.PREP_TIME);
-
     }
 
     /**
@@ -335,7 +334,6 @@ export class WaveManager {
      * 在所有路线生成小怪
      */
     private SpawnCreepsAtAllLanes(unitName: string): void {
-
         for (let i = 0; i < WAVE_CONFIG.SPAWN_POINTS.length; i++) {
             const spawnPointName = WAVE_CONFIG.SPAWN_POINTS[i];
             const spawnPoint = Entities.FindByName(undefined, spawnPointName);
@@ -350,108 +348,100 @@ export class WaveManager {
             }
 
             // 使用 Async 版本（与旧代码保持一致）
-            CreateUnitByNameAsync(
-                unitName,
-                origin,
-                true,
-                undefined,
-                undefined,
-                DotaTeam.BADGUYS,
-                (unit) => {
-                    if (unit) {
-                        this.spawnedUnits.push(unit);
+            CreateUnitByNameAsync(unitName, origin, true, undefined, undefined, DotaTeam.BADGUYS, unit => {
+                if (unit) {
+                    this.spawnedUnits.push(unit);
 
-                        // 设置仇恨范围
-                        unit.SetAcquisitionRange(700);
+                    // 设置仇恨范围
+                    unit.SetAcquisitionRange(700);
 
-                        // 获取目标位置
-                        const targetPos = this.GetTargetPosition();
+                    // 获取目标位置
+                    const targetPos = this.GetTargetPosition();
 
-                        // 延迟一帧后下达移动命令
-                        Timers.CreateTimer(0.1, () => {
-                            ExecuteOrderFromTable({
-                                UnitIndex: unit.entindex(),
-                                OrderType: UnitOrder.ATTACK_MOVE,
-                                Position: targetPos,
-                                Queue: false,
-                            });
-                            return undefined;
+                    // 延迟一帧后下达移动命令
+                    Timers.CreateTimer(0.1, () => {
+                        ExecuteOrderFromTable({
+                            UnitIndex: unit.entindex(),
+                            OrderType: UnitOrder.ATTACK_MOVE,
+                            Position: targetPos,
+                            Queue: false,
                         });
+                        return undefined;
+                    });
 
-                        // 设置 AI 思考能力（与旧代码一致的仇恨逻辑）
-                        unit.SetContextThink(
-                            'CreepThink',
-                            () => {
-                                if (unit && !unit.IsNull() && unit.IsAlive()) {
-                                    const origin = unit.GetAbsOrigin();
-                                    const currentTarget = unit.GetAggroTarget();
+                    // 设置 AI 思考能力（与旧代码一致的仇恨逻辑）
+                    unit.SetContextThink(
+                        'CreepThink',
+                        () => {
+                            if (unit && !unit.IsNull() && unit.IsAlive()) {
+                                const origin = unit.GetAbsOrigin();
+                                const currentTarget = unit.GetAggroTarget();
 
-                                    // 1. Leash 机制（防风筝/脱战）
-                                    // 追英雄超过 1000 距离就放弃，继续去打基地
-                                    if (currentTarget && currentTarget.IsHero()) {
-                                        const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
-                                        if (dist > 1000) {
-                                            ExecuteOrderFromTable({
-                                                UnitIndex: unit.entindex(),
-                                                OrderType: UnitOrder.ATTACK_MOVE,
-                                                Position: targetPos,
-                                                Queue: false,
-                                            });
-                                            return 1.0;
-                                        }
-                                        return 0.5; // 正在追英雄，检查频率稍高
-                                    }
-
-                                    // 2. 转火机制
-                                    // 攻击建筑时，如果附近 800 范围有英雄，就转火
-                                    if (currentTarget && currentTarget.IsBuilding()) {
-                                        const enemies = FindUnitsInRadius(
-                                            unit.GetTeamNumber(),
-                                            origin,
-                                            undefined,
-                                            800,
-                                            UnitTargetTeam.ENEMY,
-                                            UnitTargetType.HERO,
-                                            UnitTargetFlags.NONE,
-                                            FindOrder.CLOSEST,
-                                            false
-                                        );
-
-                                        if (enemies.length > 0) {
-                                            ExecuteOrderFromTable({
-                                                UnitIndex: unit.entindex(),
-                                                OrderType: UnitOrder.ATTACK_TARGET,
-                                                TargetIndex: enemies[0].entindex(),
-                                                Queue: false,
-                                            });
-                                            return 1.0;
-                                        }
-                                    }
-
-                                    // 3. 发呆补救
-                                    // 如果单位 Idle，重新下达移动命令
-                                    if (unit.IsIdle()) {
-                                        const canFindPath = GridNav.CanFindPath(origin, targetPos);
-                                        if (!canFindPath) {
-                                            FindClearSpaceForUnit(unit, origin, true);
-                                        }
+                                // 1. Leash 机制（防风筝/脱战）
+                                // 追英雄超过 1000 距离就放弃，继续去打基地
+                                if (currentTarget && currentTarget.IsHero()) {
+                                    const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
+                                    if (dist > 1000) {
                                         ExecuteOrderFromTable({
                                             UnitIndex: unit.entindex(),
                                             OrderType: UnitOrder.ATTACK_MOVE,
                                             Position: targetPos,
                                             Queue: false,
                                         });
+                                        return 1.0;
                                     }
-                                    return 1.0;
+                                    return 0.5; // 正在追英雄，检查频率稍高
                                 }
-                                return undefined;
-                            },
-                            0.1
-                        );
-                    } else {
-                    }
+
+                                // 2. 转火机制
+                                // 攻击建筑时，如果附近 800 范围有英雄，就转火
+                                if (currentTarget && currentTarget.IsBuilding()) {
+                                    const enemies = FindUnitsInRadius(
+                                        unit.GetTeamNumber(),
+                                        origin,
+                                        undefined,
+                                        800,
+                                        UnitTargetTeam.ENEMY,
+                                        UnitTargetType.HERO,
+                                        UnitTargetFlags.NONE,
+                                        FindOrder.CLOSEST,
+                                        false
+                                    );
+
+                                    if (enemies.length > 0) {
+                                        ExecuteOrderFromTable({
+                                            UnitIndex: unit.entindex(),
+                                            OrderType: UnitOrder.ATTACK_TARGET,
+                                            TargetIndex: enemies[0].entindex(),
+                                            Queue: false,
+                                        });
+                                        return 1.0;
+                                    }
+                                }
+
+                                // 3. 发呆补救
+                                // 如果单位 Idle，重新下达移动命令
+                                if (unit.IsIdle()) {
+                                    const canFindPath = GridNav.CanFindPath(origin, targetPos);
+                                    if (!canFindPath) {
+                                        FindClearSpaceForUnit(unit, origin, true);
+                                    }
+                                    ExecuteOrderFromTable({
+                                        UnitIndex: unit.entindex(),
+                                        OrderType: UnitOrder.ATTACK_MOVE,
+                                        Position: targetPos,
+                                        Queue: false,
+                                    });
+                                }
+                                return 1.0;
+                            }
+                            return undefined;
+                        },
+                        0.1
+                    );
+                } else {
                 }
-            );
+            });
         }
     }
 
@@ -471,14 +461,7 @@ export class WaveManager {
             origin = Vector(fallback.x, fallback.y, fallback.z);
         }
 
-        const boss = CreateUnitByName(
-            bossName,
-            origin,
-            true,
-            undefined,
-            undefined,
-            DotaTeam.BADGUYS
-        );
+        const boss = CreateUnitByName(bossName, origin, true, undefined, undefined, DotaTeam.BADGUYS);
 
         if (boss) {
             this.spawnedUnits.push(boss);
@@ -581,7 +564,6 @@ export class WaveManager {
     private OnAllWavesCompleted(): void {
         this.currentState = WaveState.Completed;
         this.SendStateUpdate();
-
     }
 
     /**
@@ -629,7 +611,7 @@ export class WaveManager {
             }
 
             // 更新到NetTable
-            const currentData = CustomNetTables.GetTableValue('wave_state', 'current') as any || {};
+            const currentData = (CustomNetTables.GetTableValue('wave_state', 'current') as any) || {};
             currentData.aliveCount = aliveCount;
             CustomNetTables.SetTableValue('wave_state', 'current', currentData);
 

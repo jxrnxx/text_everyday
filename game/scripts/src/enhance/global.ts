@@ -126,7 +126,7 @@ FindNearestWalkablePoint = function (pos: Vector, searchRadius: number): Vector 
     const step = 64;
     for (let radius = step; radius <= searchRadius; radius += step) {
         for (let angle = 0; angle < 360; angle += 30) {
-            const checkPos = ((pos as any).__add(AngleToVector(angle).__mul(radius))) as Vector;
+            const checkPos = (pos as any).__add(AngleToVector(angle).__mul(radius)) as Vector;
             if (GridNav.IsTraversable(checkPos)) {
                 return GetGroundPosition(checkPos, undefined);
             }

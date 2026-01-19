@@ -13,10 +13,14 @@ export class VictoryState extends BaseState {
         print('[VictoryState] 🎉 游戏胜利!');
 
         // 发送状态到客户端
-        CustomNetTables.SetTableValue('game_state' as never, 'current' as never, {
-            state: 'victory',
-            message: '恭喜通关!'
-        } as never);
+        CustomNetTables.SetTableValue(
+            'game_state' as never,
+            'current' as never,
+            {
+                state: 'victory',
+                message: '恭喜通关!',
+            } as never
+        );
 
         // 发送胜利事件
         Event.send('游戏-胜利');

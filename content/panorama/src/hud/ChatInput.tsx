@@ -14,7 +14,7 @@ const ChatInput: FC = () => {
     useEffect(() => {
         const panelId = 'ChatInputPanel';
         const panel = $.GetContextPanel();
-        
+
         // 注册按键事件
         Game.AddCommand('custom_chat_toggle', () => {
             setIsOpen(prev => !prev);
@@ -35,17 +35,17 @@ const ChatInput: FC = () => {
         }
 
         const text = inputValue.trim();
-        
+
         // 发送聊天消息到服务器
-        GameEvents.SendCustomGameEventToServer('to_server_chat_message' as any, { 
-            message: text 
+        GameEvents.SendCustomGameEventToServer('to_server_chat_message' as any, {
+            message: text
         });
-        
+
         // 添加到本地消息列表
         setMessages(prev => [...prev.slice(-4), text]);
         setInputValue('');
         setIsOpen(false);
-        
+
         // 释放焦点
         $.DispatchEvent('DropInputFocus');
     };
@@ -66,7 +66,7 @@ const ChatInput: FC = () => {
             }}>
                 {/* 显示最近的消息 */}
                 {messages.map((msg, i) => (
-                    <Label 
+                    <Label
                         key={i}
                         text={msg}
                         style={{
@@ -79,7 +79,7 @@ const ChatInput: FC = () => {
                         }}
                     />
                 ))}
-                <Label 
+                <Label
                     text="按 F5 打开聊天"
                     style={{
                         fontSize: '14px',
@@ -92,7 +92,7 @@ const ChatInput: FC = () => {
     }
 
     return (
-        <Panel 
+        <Panel
             hittest={true}
             style={{
                 position: '20px 0px 0px' as const,

@@ -6,13 +6,12 @@ import { UpgradeSystem } from './systems/UpgradeSystem';
 import { WaveManager } from './systems/WaveManager';
 import { DamageSystem } from './systems/DamageSystem';
 import { InitGameStateManager, GetGameStateManager } from './systems/state_manager';
-import './enhance';  // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
+import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
 import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
 import * as json_heroes from './json/npc_heroes_custom.json';
 import { PlayerRegister } from './player/PlayerRegister';
-
 
 // 游戏模式类
 export class GameMode {
@@ -42,25 +41,29 @@ export class GameMode {
         SendToConsole('sv_cheats 1'); // 确保 restart 指令可用
 
         // 监听游戏状态变化，自动分配玩家到队伍
-        ListenToGameEvent('game_rules_state_change', () => {
-            const state = GameRules.State_Get();
-            // 在队伍选择阶段自动分配玩家
-            if (state === GameState.CUSTOM_GAME_SETUP) {
-                // 自动将所有玩家分配到天辉队伍
-                for (let i = 0; i < 4; i++) {
-                    const playerId = i as PlayerID;
-                    if (PlayerResource.IsValidPlayer(playerId)) {
-                        PlayerResource.SetCustomTeamAssignment(playerId, DotaTeam.GOODGUYS);
+        ListenToGameEvent(
+            'game_rules_state_change',
+            () => {
+                const state = GameRules.State_Get();
+                // 在队伍选择阶段自动分配玩家
+                if (state === GameState.CUSTOM_GAME_SETUP) {
+                    // 自动将所有玩家分配到天辉队伍
+                    for (let i = 0; i < 4; i++) {
+                        const playerId = i as PlayerID;
+                        if (PlayerResource.IsValidPlayer(playerId)) {
+                            PlayerResource.SetCustomTeamAssignment(playerId, DotaTeam.GOODGUYS);
+                        }
                     }
+                    // 锁定队伍并开始游戏
+                    Timers.CreateTimer(0.1, () => {
+                        GameRules.LockCustomGameSetupTeamAssignment(true);
+                        GameRules.FinishCustomGameSetup();
+                        return undefined;
+                    });
                 }
-                // 锁定队伍并开始游戏
-                Timers.CreateTimer(0.1, () => {
-                    GameRules.LockCustomGameSetupTeamAssignment(true);
-                    GameRules.FinishCustomGameSetup();
-                    return undefined;
-                });
-            }
-        }, undefined);
+            },
+            undefined
+        );
 
         // 注意: 游戏规则配置已移至 GameConfig.ts
         // 这里只初始化 GameMode 特有的逻辑
@@ -71,39 +74,40 @@ export class GameMode {
         // [Stats] Initialize Custom Server Event Listeners
         try {
             CustomStats.Init();
-        } catch (e) {
-        }
+        } catch (e) { }
 
         // [Rank] Initialize Rank System
         try {
             RankSystem.GetInstance();
-        } catch (e) {
-        }
+        } catch (e) { }
 
         // [Upgrade] Initialize Upgrade System
         try {
             UpgradeSystem.GetInstance();
-        } catch (e) {
-        }
+        } catch (e) { }
 
         // [Level] 监听英雄升级事件，更新显示等级
-        ListenToGameEvent('dota_player_gained_level', (event) => {
-            const playerId = event.player_id;
-            const player = PlayerResource.GetPlayer(playerId);
-            if (!player) return;
+        ListenToGameEvent(
+            'dota_player_gained_level',
+            event => {
+                const playerId = event.player_id;
+                const player = PlayerResource.GetPlayer(playerId);
+                if (!player) return;
 
-            const hero = player.GetAssignedHero();
-            if (!hero) return;
+                const hero = player.GetAssignedHero();
+                if (!hero) return;
 
-            const stats = CustomStats.GetAllStats(hero);
-            const rawLevel = hero.GetLevel();
-            const currentMaxLevel = (stats.rank + 1) * 10;
+                const stats = CustomStats.GetAllStats(hero);
+                const rawLevel = hero.GetLevel();
+                const currentMaxLevel = (stats.rank + 1) * 10;
 
-            // 只有当实际等级没超过当前阶位最大等级时，才更新显示等级
-            if (rawLevel <= currentMaxLevel && rawLevel > stats.display_level) {
-                CustomStats.SetDisplayLevel(hero, rawLevel);
-            }
-        }, undefined);
+                // 只有当实际等级没超过当前阶位最大等级时，才更新显示等级
+                if (rawLevel <= currentMaxLevel && rawLevel > stats.display_level) {
+                    CustomStats.SetDisplayLevel(hero, rawLevel);
+                }
+            },
+            undefined
+        );
 
         // [XP Filter] Block XP gain if at level cap (Rule A)
         GameRules.GetGameModeEntity().SetModifyExperienceFilter(
@@ -117,7 +121,6 @@ export class GameMode {
             this
         );
         DamageSystem.Init();
-
 
         // [Merchant] Listen for NPC interactions (Interaction Security)
         ListenToGameEvent('dota_player_used_ability', () => { }, undefined); // Placeholder
@@ -351,49 +354,79 @@ export class GameMode {
         );
 
         // [Debug] 调试控制台命令 - 用 ~ 键打开控制台执行
-        Convars.RegisterCommand('debug_skip', () => {
-            WaveManager.GetInstance().SkipToNextWave();
-        }, 'Skip to next wave', 0);
+        Convars.RegisterCommand(
+            'debug_skip',
+            () => {
+                WaveManager.GetInstance().SkipToNextWave();
+            },
+            'Skip to next wave',
+            0
+        );
 
-        Convars.RegisterCommand('debug_wave', (_, waveNum) => {
-            const num = parseInt(waveNum);
-            if (!isNaN(num) && num >= 1 && num <= 20) {
-                WaveManager.GetInstance().JumpToWave(num);
-            }
-        }, 'Jump to specific wave', 0);
+        Convars.RegisterCommand(
+            'debug_wave',
+            (_, waveNum) => {
+                const num = parseInt(waveNum);
+                if (!isNaN(num) && num >= 1 && num <= 20) {
+                    WaveManager.GetInstance().JumpToWave(num);
+                }
+            },
+            'Jump to specific wave',
+            0
+        );
 
-        Convars.RegisterCommand('debug_killall', () => {
-            const enemies = Entities.FindAllByClassname('npc_dota_creature');
-            let killCount = 0;
-            for (const enemy of enemies) {
-                if (enemy && !enemy.IsNull()) {
-                    const unit = enemy as CDOTA_BaseNPC;
-                    if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
-                        unit.SafetyRemoveSelf();
-                        killCount++;
+        Convars.RegisterCommand(
+            'debug_killall',
+            () => {
+                const enemies = Entities.FindAllByClassname('npc_dota_creature');
+                let killCount = 0;
+                for (const enemy of enemies) {
+                    if (enemy && !enemy.IsNull()) {
+                        const unit = enemy as CDOTA_BaseNPC;
+                        if (unit.GetTeamNumber() === DotaTeam.BADGUYS && unit.IsAlive()) {
+                            unit.SafetyRemoveSelf();
+                            killCount++;
+                        }
                     }
                 }
-            }
-        }, 'Kill all enemy units', 0);
+            },
+            'Kill all enemy units',
+            0
+        );
 
-        Convars.RegisterCommand('debug_lvlup', (_, levels) => {
-            const hero = PlayerResource.GetSelectedHeroEntity(0 as PlayerID);
-            if (!hero) return;
-            const num = parseInt(levels) || 1;
-            for (let i = 0; i < num; i++) {
-                hero.HeroLevelUp(false);
-            }
-        }, 'Level up hero', 0);
+        Convars.RegisterCommand(
+            'debug_lvlup',
+            (_, levels) => {
+                const hero = PlayerResource.GetSelectedHeroEntity(0 as PlayerID);
+                if (!hero) return;
+                const num = parseInt(levels) || 1;
+                for (let i = 0; i < num; i++) {
+                    hero.HeroLevelUp(false);
+                }
+            },
+            'Level up hero',
+            0
+        );
 
-        Convars.RegisterCommand('debug_gold', (_, amount) => {
-            const num = parseInt(amount) || 9999;
-            EconomySystem.GetInstance().AddSpiritCoin(0 as PlayerID, num);
-        }, 'Add spirit coins', 0);
+        Convars.RegisterCommand(
+            'debug_gold',
+            (_, amount) => {
+                const num = parseInt(amount) || 9999;
+                EconomySystem.GetInstance().AddSpiritCoin(0 as PlayerID, num);
+            },
+            'Add spirit coins',
+            0
+        );
 
-        Convars.RegisterCommand('debug_faith', (_, amount) => {
-            const num = parseInt(amount) || 9999;
-            EconomySystem.GetInstance().AddFaith(0 as PlayerID, num);
-        }, 'Add faith', 0);
+        Convars.RegisterCommand(
+            'debug_faith',
+            (_, amount) => {
+                const num = parseInt(amount) || 9999;
+                EconomySystem.GetInstance().AddFaith(0 as PlayerID, num);
+            },
+            'Add faith',
+            0
+        );
 
         // [Training] Listen for F3/F4 Key Events from Panorama
         CustomGameEventManager.RegisterListener('cmd_c2s_train_enter', (_, event) => {
@@ -511,8 +544,6 @@ export class GameMode {
         this.StartGame();
     }
 
-
-
     // NPC出生事件处理
     private static OnNpcSpawned(event: NpcSpawnedEvent) {
         // ... (保持原有逻辑不变，只展示部分)
@@ -521,7 +552,7 @@ export class GameMode {
             // [Economy] Disable native gold & XP bounty for all units
             unit.SetMaximumGoldBounty(0);
             unit.SetMinimumGoldBounty(0);
-            unit.SetDeathXP(0);  // 禁用击杀经验奖励
+            unit.SetDeathXP(0); // 禁用击杀经验奖励
         }
 
         if (unit.IsRealHero()) {
@@ -577,7 +608,9 @@ export class GameMode {
 
         // ... (目标获取逻辑)
         // 优先寻找自定义基地 "npc_dota_home_base"
-        let targetEntity = Entities.FindAllByClassname('npc_dota_building').find(e => (e as CDOTA_BaseNPC).GetUnitName() === 'npc_dota_home_base');
+        let targetEntity = Entities.FindAllByClassname('npc_dota_building').find(
+            e => (e as CDOTA_BaseNPC).GetUnitName() === 'npc_dota_home_base'
+        );
 
         // 如果找不到，尝试找默认基地
         if (!targetEntity) {
@@ -626,94 +659,102 @@ export class GameMode {
                 const spawner = Entities.FindByName(undefined, spawnerName);
                 if (spawner) {
                     const spawnerPos = spawner.GetAbsOrigin();
-                    CreateUnitByNameAsync('npc_enemy_zombie_lvl1', spawnerPos, true, undefined, undefined, DotaTeam.BADGUYS, unit => {
-                        if (unit) {
-                            unit.SetAcquisitionRange(700); // 仇恨范围 700
+                    CreateUnitByNameAsync(
+                        'npc_enemy_zombie_lvl1',
+                        spawnerPos,
+                        true,
+                        undefined,
+                        undefined,
+                        DotaTeam.BADGUYS,
+                        unit => {
+                            if (unit) {
+                                unit.SetAcquisitionRange(700); // 仇恨范围 700
 
-                            // [EnemyPanel] 同步单位 KV 数据到 NetTable，供客户端读取
-                            const unitName = unit.GetUnitName();
-                            const kvData = GetUnitKeyValuesByName(unitName);
-                            const statLabel = kvData ? (kvData['StatLabel'] as number || 0) : 0;
+                                // [EnemyPanel] 同步单位 KV 数据到 NetTable，供客户端读取
+                                const unitName = unit.GetUnitName();
+                                const kvData = GetUnitKeyValuesByName(unitName);
+                                const statLabel = kvData ? (kvData['StatLabel'] as number) || 0 : 0;
 
-                            CustomNetTables.SetTableValue('entity_kv' as any, String(unit.entindex()), {
-                                StatLabel: statLabel,
-                                Profession: "妖兽",  // 可从 KV 读取
-                            });
+                                CustomNetTables.SetTableValue('entity_kv' as any, String(unit.entindex()), {
+                                    StatLabel: statLabel,
+                                    Profession: '妖兽', // 可从 KV 读取
+                                });
 
-                            // 强制赋予 AI 思考能力 (优化版：只在必要时干预)
-                            unit.SetContextThink(
-                                'ZombieThink',
-                                () => {
-                                    if (unit && !unit.IsNull() && unit.IsAlive()) {
-                                        const origin = unit.GetAbsOrigin();
-                                        const currentTarget = unit.GetAggroTarget();
+                                // 强制赋予 AI 思考能力 (优化版：只在必要时干预)
+                                unit.SetContextThink(
+                                    'ZombieThink',
+                                    () => {
+                                        if (unit && !unit.IsNull() && unit.IsAlive()) {
+                                            const origin = unit.GetAbsOrigin();
+                                            const currentTarget = unit.GetAggroTarget();
 
-                                        // 1. Leash 机制 (防风筝/脱战)
-                                        // 引擎自带的 ChaseDistance 往往对自定义单位无效，所以保留这个简单的距离检查
-                                        if (currentTarget && currentTarget.IsHero()) {
-                                            const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
-                                            if (dist > 1000) {
-                                                // 追太远了，放弃追击，继续去打基地
+                                            // 1. Leash 机制 (防风筝/脱战)
+                                            // 引擎自带的 ChaseDistance 往往对自定义单位无效，所以保留这个简单的距离检查
+                                            if (currentTarget && currentTarget.IsHero()) {
+                                                const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
+                                                if (dist > 1000) {
+                                                    // 追太远了，放弃追击，继续去打基地
+                                                    ExecuteOrderFromTable({
+                                                        UnitIndex: unit.entindex(),
+                                                        OrderType: UnitOrder.ATTACK_MOVE,
+                                                        Position: targetPos,
+                                                        Queue: false,
+                                                    });
+                                                    return 1.0;
+                                                }
+                                                return 0.5; // 正在追英雄，检查频率稍微高一点
+                                            }
+
+                                            // 2. 只有在攻击基地(建筑)时，才去检测周围有没有英雄
+                                            // 这样避免了走路时也一直在搜敌(原生 AttackMove 走路时会自动搜敌)
+                                            if (currentTarget && currentTarget.IsBuilding()) {
+                                                const enemies = FindUnitsInRadius(
+                                                    unit.GetTeamNumber(),
+                                                    origin,
+                                                    undefined,
+                                                    800, // 就在这个时候看一眼周围有没有人
+                                                    UnitTargetTeam.ENEMY,
+                                                    UnitTargetType.HERO, // 只找英雄
+                                                    UnitTargetFlags.NONE,
+                                                    FindOrder.CLOSEST,
+                                                    false
+                                                );
+
+                                                if (enemies.length > 0) {
+                                                    // 既然在打塔的时候旁边有人，那肯定是玩家来守塔了，转火！
+                                                    ExecuteOrderFromTable({
+                                                        UnitIndex: unit.entindex(),
+                                                        OrderType: UnitOrder.ATTACK_TARGET,
+                                                        TargetIndex: enemies[0].entindex(),
+                                                        Queue: false,
+                                                    });
+                                                    return 1.0;
+                                                }
+                                            }
+
+                                            // 3. 断线重连/发呆补救
+                                            // 如果单位当前没有在做什么 (Idle)，才下达命令
+                                            if (unit.IsIdle()) {
+                                                const canFindPath = GridNav.CanFindPath(origin, targetPos);
+                                                if (!canFindPath) {
+                                                    FindClearSpaceForUnit(unit, origin, true);
+                                                }
                                                 ExecuteOrderFromTable({
                                                     UnitIndex: unit.entindex(),
                                                     OrderType: UnitOrder.ATTACK_MOVE,
                                                     Position: targetPos,
                                                     Queue: false,
                                                 });
-                                                return 1.0;
                                             }
-                                            return 0.5; // 正在追英雄，检查频率稍微高一点
+                                            return 1.0;
                                         }
-
-                                        // 2. 只有在攻击基地(建筑)时，才去检测周围有没有英雄
-                                        // 这样避免了走路时也一直在搜敌(原生 AttackMove 走路时会自动搜敌)
-                                        if (currentTarget && currentTarget.IsBuilding()) {
-                                            const enemies = FindUnitsInRadius(
-                                                unit.GetTeamNumber(),
-                                                origin,
-                                                undefined,
-                                                800, // 就在这个时候看一眼周围有没有人
-                                                UnitTargetTeam.ENEMY,
-                                                UnitTargetType.HERO, // 只找英雄
-                                                UnitTargetFlags.NONE,
-                                                FindOrder.CLOSEST,
-                                                false
-                                            );
-
-                                            if (enemies.length > 0) {
-                                                // 既然在打塔的时候旁边有人，那肯定是玩家来守塔了，转火！
-                                                ExecuteOrderFromTable({
-                                                    UnitIndex: unit.entindex(),
-                                                    OrderType: UnitOrder.ATTACK_TARGET,
-                                                    TargetIndex: enemies[0].entindex(),
-                                                    Queue: false,
-                                                });
-                                                return 1.0;
-                                            }
-                                        }
-
-                                        // 3. 断线重连/发呆补救
-                                        // 如果单位当前没有在做什么 (Idle)，才下达命令
-                                        if (unit.IsIdle()) {
-                                            const canFindPath = GridNav.CanFindPath(origin, targetPos);
-                                            if (!canFindPath) {
-                                                FindClearSpaceForUnit(unit, origin, true);
-                                            }
-                                            ExecuteOrderFromTable({
-                                                UnitIndex: unit.entindex(),
-                                                OrderType: UnitOrder.ATTACK_MOVE,
-                                                Position: targetPos,
-                                                Queue: false,
-                                            });
-                                        }
-                                        return 1.0;
-                                    }
-                                    return undefined;
-                                },
-                                0.1
-                            );
+                                        return undefined;
+                                    },
+                                    0.1
+                                );
+                            }
                         }
-                    });
+                    );
                 }
             }
 
