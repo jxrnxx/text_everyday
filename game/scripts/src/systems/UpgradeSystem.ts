@@ -221,10 +221,10 @@ export class UpgradeSystem {
 
     /**
      * Get the maximum shop tier allowed for a given rank
-     * Formula: Max_Shop_Tier = Rank + 2
+     * Formula: Max_Shop_Tier = Rank + 3
      */
     public static GetMaxTierForRank(rank: number): number {
-        return rank + 2;
+        return rank + 3;
     }
 
     /**
@@ -282,19 +282,27 @@ export class UpgradeSystem {
 
         shopData.slots_purchased[slotIndex] = true;
 
-        const purchasedCount = this.GetPurchasedCount(shopData.slots_purchased);
-        print(
-            `[UpgradeSystem] Slot ${slotIndex} purchased. Total: ${purchasedCount}/8, Tier: ${shopData.current_tier}`
-        );
-
         // Check if all 8 slots are purchased - trigger auto breakthrough
         if (this.AllSlotsPurchased(shopData.slots_purchased)) {
-            print(`[UpgradeSystem] All slots purchased! Triggering breakthrough...`);
             this.TriggerBreakthrough(playerID);
         }
 
         // Sync to client
         this.SyncShopDataToClient(playerID);
+    }
+
+    /**
+     * Called after player ranks up to check if they can now breakthrough
+     * If all 8 slots were purchased but couldn't breakthrough before due to tier cap,
+     * this will trigger the breakthrough now.
+     */
+    public CheckBreakthroughAfterRankUp(playerID: PlayerID) {
+        const shopData = this.GetShopData(playerID);
+
+        // If all 8 slots are purchased, try to breakthrough
+        if (this.AllSlotsPurchased(shopData.slots_purchased)) {
+            this.TriggerBreakthrough(playerID);
+        }
     }
 
     /**
@@ -342,12 +350,22 @@ export class UpgradeSystem {
 
         // Check if can progress to next tier
         if (nextTier > maxTier) {
-            // Can't breakthrough, but stats are already applied
-            // Just notify the player
+            // Can't breakthrough - at tier cap, show special message
+            const capMessage = '你的灵魂太轻，承载不了这份重量。去历练吧。';
+
+            // Send refresh event with cap message (for toast display)
+            CustomGameEventManager.Send_ServerToPlayer(player, 'refresh_merchant_ui', {
+                new_tier: shopData.current_tier,
+                tier_name: '',
+                message: capMessage,
+                at_tier_cap: true,
+            });
+
+            // Also send result
             CustomGameEventManager.Send_ServerToPlayer(player, 'breakthrough_result', {
                 success: false,
                 new_tier: shopData.current_tier,
-                message: '需提升阶位才能突破到下一境界',
+                message: capMessage,
             });
             return;
         }
@@ -434,19 +452,15 @@ export class UpgradeSystem {
         // 4. Screen shake for dramatic effect
         ScreenShake(hero.GetAbsOrigin(), 5, 100, 0.5, 2000, 0, true);
 
-        // 5. Log breakthrough
-        print(
-            `[UpgradeSystem] Player ${playerID} breakthrough to Tier ${newTier} (${newTierConfig?.name || 'Unknown'})`
-        );
-
-        // 6. Sync to client and notify
+        // 5. Sync to client and notify
         this.SyncShopDataToClient(playerID);
 
-        // 7. Send event to client to refresh UI
-        print(`[UpgradeSystem] Sending refresh_merchant_ui event to player ${playerID}`);
+        // 6. Send event to client to refresh UI
         CustomGameEventManager.Send_ServerToPlayer(player, 'refresh_merchant_ui', {
             new_tier: newTier,
             tier_name: newTierConfig?.name || '',
+            message: `突破成功！进入${newTierConfig?.name || `Tier ${newTier}`}！`,
+            at_tier_cap: false,
         });
 
         // 8. Send success result
@@ -510,28 +524,8 @@ export class UpgradeSystem {
             slots_config: slotsConfigObject,
         };
 
-        // 打印 slots_purchased 状态
-        const purchasedCount = Object.values(slotsObject).filter(v => v === 1).length;
-        print(
-            `[UpgradeSystem] SyncShopDataToClient: tier=${shopData.current_tier}, cost=${tierConfig?.cost_per_slot}, slots_purchased=${purchasedCount}/8`
-        );
-        print(`[UpgradeSystem] Writing to NetTable key: player_${playerID}`);
-
-        // 使用 as any 确保类型检查不会阻止写入
+        // 写入 NetTable
         CustomNetTables.SetTableValue('upgrade_system' as any, `player_${playerID}`, netTableData as any);
-
-        // 验证写入是否成功
-        const verifyData = CustomNetTables.GetTableValue('upgrade_system' as any, `player_${playerID}`);
-        if (verifyData) {
-            const verifyPurchased = (verifyData as any).slots_purchased;
-            const verifyCount = verifyPurchased ? Object.values(verifyPurchased).filter((v: any) => v === 1).length : 0;
-            print(
-                `[UpgradeSystem] NetTable write verified! tier=${(verifyData as any).current_tier
-                }, slots_purchased=${verifyCount}/8`
-            );
-        } else {
-            print(`[UpgradeSystem] ERROR: NetTable write verification failed!`);
-        }
     }
 
     /**

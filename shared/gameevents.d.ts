@@ -53,14 +53,14 @@ declare interface CustomGameEventDeclarations {
         entindex: number;
         stats: any; // Using any to avoid sharing complex HeroStats interface for now
     };
-    
+
     /** Request Custom Stats (Client -> Server) */
     request_custom_stats: {};
 
     // ===== Progression Constraints System Events =====
     /** Request rank up (Client -> Server) */
     cmd_attempt_rank_up: {};
-    
+
     /** Test rank up - bypass checks (Client -> Server) */
     cmd_test_rank_up: {};
 
@@ -73,6 +73,11 @@ declare interface CustomGameEventDeclarations {
 
     /** Open merchant panel for specific shop (Server -> Client) */
     open_merchant_panel: {
+        shop_id: number;
+    };
+
+    /** Open ability shop panel (Server -> Client) */
+    open_ability_shop: {
         shop_id: number;
     };
 
@@ -99,6 +104,8 @@ declare interface CustomGameEventDeclarations {
     refresh_merchant_ui: {
         new_tier: number;
         tier_name: string;
+        message?: string;
+        at_tier_cap?: boolean;
     };
 
     /** End game (Client -> Server) */
@@ -115,6 +122,7 @@ declare interface CustomGameEventDeclarations {
         totalWaves: number;
         state: string;
         nextWaveTime: number;
+        countdownEndTime: number; // 倒计时结束的绝对游戏时间
         isSpawning: boolean;
         canPause: boolean;
     };

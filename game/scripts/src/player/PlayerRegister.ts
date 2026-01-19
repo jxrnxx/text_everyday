@@ -31,8 +31,6 @@ export class PlayerRegister {
      * 初始化 - 注册事件监听
      */
     Init(): void {
-        print('[PlayerRegister] 初始化');
-
         // 监听玩家完全连接
         ListenToGameEvent('player_connect_full', events => this.OnPlayerConnect(events), this);
 
@@ -54,7 +52,6 @@ export class PlayerRegister {
         const controller = PlayerResource.GetPlayer(playerId);
 
         if (!controller) {
-            print(`[PlayerRegister] 玩家 ${playerId} 控制器不存在`);
             return;
         }
 
@@ -63,19 +60,14 @@ export class PlayerRegister {
 
         if (existingAssets) {
             // 重连 - 数据已存在
-            print(`[PlayerRegister] 玩家 ${playerId} 重连，恢复数据`);
-
-            // 检查是否需要重新创建英雄
             const heroName = existingAssets.GetCustomValue('_selectedHero');
             if (heroName && !controller.GetAssignedHero()) {
-                print(`[PlayerRegister] 玩家 ${playerId} 需要重新创建英雄: ${heroName}`);
                 // 英雄创建由 InvitationModule 处理
             }
         } else {
             // 新玩家 - 创建新的 Player 实例
             const assets = new Player(playerId);
             SetPlayerSys(playerId, 'assets', assets);
-            print(`[PlayerRegister] 玩家 ${playerId} 首次连接，初始化完成`);
         }
     }
 
@@ -84,8 +76,6 @@ export class PlayerRegister {
      * 注意: 不删除数据，保留以便重连恢复
      */
     OnPlayerDisconnect(event: PlayerDisconnectEvent): void {
-        const playerId = event.PlayerID;
-        print(`[PlayerRegister] 玩家 ${playerId} 断线，保留数据等待重连`);
         // 不删除 PlayerSys 和 PlayerCustomValue 中的数据
     }
 

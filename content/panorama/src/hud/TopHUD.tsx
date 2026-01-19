@@ -9,21 +9,19 @@ import { useNetTableKey } from 'react-panorama-x';
 const TopHUD: FC = () => {
     const waveState = useNetTableKey('wave_state', 'current');
     const economyData = useNetTableKey('economy', `player_${Players.GetLocalPlayer()}`);
-    
+
     const [countdown, setCountdown] = useState(0);
     const [gameTime, setGameTime] = useState(0);
     const [showEndConfirm, setShowEndConfirm] = useState(false);
     const [showWarningFlash, setShowWarningFlash] = useState(false);
-    
-    const lastUpdateTime = useRef(Game.Time());
-    const lastServerTime = useRef(0);
+
     const lastWave = useRef(0);
-    
+
     const wave = (waveState as any)?.wave || 0;
     const state = (waveState as any)?.state || '';
     const nextWaveTime = (waveState as any)?.nextWaveTime || 0;
     const aliveCount = (waveState as any)?.aliveCount || 0;
-    
+
     // 检测波次开始，触发3秒警告闪烁
     useEffect(() => {
         if (state === 'spawning' && wave !== lastWave.current) {
@@ -32,30 +30,35 @@ const TopHUD: FC = () => {
             $.Schedule(3.0, () => setShowWarningFlash(false));
         }
     }, [state, wave]);
-    
+
     // 货币数据
     const spiritCoin = (economyData as any)?.spirit_coin ?? 0;
     const faith = (economyData as any)?.faith ?? 0;
     const defenderPoints = (economyData as any)?.defender_points ?? 0;
-    
-    // 波次倒计时
+
+    // 波次倒计时 - 使用服务端发送的目标结束时间
+    const countdownEndTime = (waveState as any)?.countdownEndTime || 0;
+
     useEffect(() => {
-        if (nextWaveTime !== lastServerTime.current) {
-            lastServerTime.current = nextWaveTime;
-            lastUpdateTime.current = Game.Time();
-            setCountdown(nextWaveTime);
+        if (countdownEndTime <= 0) {
+            setCountdown(0);
+            return;
         }
-    }, [nextWaveTime]);
-    
-    useEffect(() => {
+
+        // 立即计算并更新一次
+        const remaining = Math.max(0, countdownEndTime - Game.GetGameTime());
+        setCountdown(remaining);
+
+        // 持续更新
         $.Schedule(0.1, function tick() {
-            const elapsed = Game.Time() - lastUpdateTime.current;
-            const remaining = Math.max(0, lastServerTime.current - elapsed);
+            const remaining = Math.max(0, countdownEndTime - Game.GetGameTime());
             setCountdown(remaining);
-            if (remaining > 0) $.Schedule(0.1, tick);
+            if (remaining > 0) {
+                $.Schedule(0.1, tick);
+            }
         });
-    }, [nextWaveTime]);
-    
+    }, [countdownEndTime]);
+
     // 游戏时长
     useEffect(() => {
         $.Schedule(1, function timeTick() {
@@ -63,7 +66,7 @@ const TopHUD: FC = () => {
             $.Schedule(1, timeTick);
         });
     }, []);
-    
+
     // ESC键监听 - 弹出结束确认框
     useEffect(() => {
         const panel = $.GetContextPanel();
@@ -71,14 +74,14 @@ const TopHUD: FC = () => {
             setShowEndConfirm(prev => !prev);
         });
     }, []);
-    
+
     const formatTime = (seconds: number): string => {
         if (seconds <= 0) return '00:00';
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
-    
+
     const formatGameTime = (seconds: number): string => {
         const hrs = Math.floor(seconds / 3600);
         const mins = Math.floor((seconds % 3600) / 60);
@@ -88,40 +91,40 @@ const TopHUD: FC = () => {
         }
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
-    
+
     const isSpawning = state === 'spawning';
     const isUrgent = countdown <= 10 && countdown > 0;
-    
+
     // 样式
     const jadeBg = 'gradient(linear, 0% 0%, 0% 100%, from(rgba(40, 90, 70, 0.95)), to(rgba(30, 70, 55, 0.95)))';
     const jadeBorder = '2px solid rgba(80, 180, 140, 0.6)';
     const textColor = '#a0e8d0';
     const valueColor = '#d0ffe8';
     const goldColor = '#e8c868';
-    
+
     // 按钮事件
     const handleBack = () => {
         Game.EmitSound('ui_click');
-        try { $.DispatchEvent('DOTAShowDashboard'); } catch (e) {}
-        try { $.DispatchEvent('DOTAHUDShowDashboard'); } catch (e) {}
+        try { $.DispatchEvent('DOTAShowDashboard'); } catch (e) { }
+        try { $.DispatchEvent('DOTAHUDShowDashboard'); } catch (e) { }
     };
-    
+
     const handleSettings = () => {
         Game.EmitSound('ui_click');
-        try { $.DispatchEvent('DOTAShowSettingsPopup'); } catch (e) {}
+        try { $.DispatchEvent('DOTAShowSettingsPopup'); } catch (e) { }
     };
-    
+
     const handleEndGame = () => {
         Game.EmitSound('ui_click');
         setShowEndConfirm(true);
     };
-    
+
     const confirmEndGame = () => {
         Game.EmitSound('ui_click');
         GameEvents.SendCustomGameEventToServer('cmd_end_game' as never, {} as never);
         setShowEndConfirm(false);
     };
-    
+
     const cancelEndGame = () => {
         Game.EmitSound('ui_click');
         setShowEndConfirm(false);
@@ -130,8 +133,8 @@ const TopHUD: FC = () => {
     return (
         <>
             {/* 左上角菜单：深色底图 + 图标 */}
-            <Panel style={{ 
-                flowChildren: 'right' as const, 
+            <Panel style={{
+                flowChildren: 'right' as const,
                 position: '10px 5px 0px 0px',
             }}>
                 {[
@@ -144,9 +147,9 @@ const TopHUD: FC = () => {
                     { icon: 'icon_rank', label: '排行', action: () => Game.EmitSound('ui_click') },
                     { icon: 'icon_shop', label: '商店', action: () => Game.EmitSound('ui_click') },
                 ].map((btn, i) => (
-                    <Panel 
+                    <Panel
                         key={`menu-${btn.icon}`}
-                        style={{ 
+                        style={{
                             flowChildren: 'down' as const,
                             horizontalAlign: 'center' as const,
                             marginRight: '10px',
@@ -158,7 +161,7 @@ const TopHUD: FC = () => {
                             width: '55px',
                             height: '55px',
                         }}>
-                            <Image 
+                            <Image
                                 src="file://{resources}/images/menu_button_dark.png"
                                 style={{
                                     width: '55px',
@@ -166,7 +169,7 @@ const TopHUD: FC = () => {
                                     position: '0px 0px 0px 0px',
                                 } as any}
                             />
-                            <Image 
+                            <Image
                                 src={`file://{resources}/images/${btn.icon}.png`}
                                 style={{
                                     width: '34px',
@@ -177,17 +180,17 @@ const TopHUD: FC = () => {
                         </Panel>
                         {/* 文字标签在下方 */}
                         {!btn.hideLabel && (
-                            <Label 
-                                text={btn.label} 
-                                style={{ 
-                                    color: '#c0b090', 
+                            <Label
+                                text={btn.label}
+                                style={{
+                                    color: '#c0b090',
                                     fontSize: '18px',
                                     fontWeight: 'bold' as const,
                                     fontFamily: 'SimSun, 宋体, serif',
                                     marginTop: '2px',
                                     horizontalAlign: 'center' as const,
                                     textShadow: '0px 1px 3px #000000, 0px 1px 1px #000000',
-                                } as any} 
+                                } as any}
                             />
                         )}
                     </Panel>
@@ -221,7 +224,7 @@ const TopHUD: FC = () => {
                 flowChildren: 'right',
             } as any}>
                 {/* 难度 */}
-                <Label 
+                <Label
                     text="N1 · 凡人"
                     style={{
                         fontFamily: 'Radiance, serif',
@@ -234,9 +237,9 @@ const TopHUD: FC = () => {
                         marginRight: '30px',
                     } as any}
                 />
-                
+
                 {/* 波次 */}
-                <Label 
+                <Label
                     text={`第 ${wave || 1} / 20 波`}
                     style={{
                         fontFamily: 'Radiance, serif',
@@ -248,7 +251,7 @@ const TopHUD: FC = () => {
                         marginRight: '30px',
                     } as any}
                 />
-                
+
                 {/* 中间区域：倒计时 + 总时长 (垂直布局) */}
                 <Panel style={{
                     flowChildren: 'down',
@@ -257,7 +260,7 @@ const TopHUD: FC = () => {
                     width: '150px',
                 } as any}>
                     {/* 倒计时 (主焦点) */}
-                    <Label 
+                    <Label
                         text={isSpawning ? '灾厄来袭' : formatTime(countdown)}
                         style={{
                             fontFamily: 'Radiance, Arial',
@@ -269,7 +272,7 @@ const TopHUD: FC = () => {
                         } as any}
                     />
                     {/* 总游戏时长 */}
-                    <Label 
+                    <Label
                         text={formatGameTime(gameTime)}
                         style={{
                             fontFamily: 'Radiance, Arial',
@@ -282,9 +285,9 @@ const TopHUD: FC = () => {
                         } as any}
                     />
                 </Panel>
-                
+
                 {/* 怪物数量 */}
-                <Label 
+                <Label
                     text={`☠ ${aliveCount}`}
                     style={{
                         fontFamily: 'Radiance, Arial',
@@ -299,14 +302,14 @@ const TopHUD: FC = () => {
             </Panel>
 
             {/* 右侧：资源面板 - 仙侠风格 */}
-            <Panel style={{ 
-                flowChildren: 'down', 
+            <Panel style={{
+                flowChildren: 'down',
                 horizontalAlign: 'right',
                 // marginTop: '20px',
                 marginRight: '0px',
             } as any}>
                 {/* 灵石 */}
-                <Panel style={{ 
+                <Panel style={{
                     flowChildren: 'right',
                     width: '170px',
                     height: '40px',
@@ -316,7 +319,7 @@ const TopHUD: FC = () => {
                     marginBottom: '6px',
                     verticalAlign: 'center',
                 } as any}>
-                    <Image 
+                    <Image
                         src="file://{resources}/images/icon_spirit_stone.png"
                         style={{ width: '32px', height: '32px', marginRight: '8px', verticalAlign: 'center' } as any}
                     />
@@ -324,7 +327,7 @@ const TopHUD: FC = () => {
                     <Label text={String(spiritCoin)} style={{ color: '#78e4eeff', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
                 </Panel>
                 {/* 信仰 */}
-                <Panel style={{ 
+                <Panel style={{
                     flowChildren: 'right',
                     width: '170px',
                     height: '40px',
@@ -334,7 +337,7 @@ const TopHUD: FC = () => {
                     marginBottom: '6px',
                     verticalAlign: 'center',
                 } as any}>
-                    <Image 
+                    <Image
                         src="file://{resources}/images/icon_faith.png"
                         style={{ width: '32px', height: '32px', marginRight: '8px', verticalAlign: 'center' } as any}
                     />
@@ -342,7 +345,7 @@ const TopHUD: FC = () => {
                     <Label text={String(faith)} style={{ color: '#e85ce4ff', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
                 </Panel>
                 {/* 护佑 */}
-                <Panel style={{ 
+                <Panel style={{
                     flowChildren: 'right',
                     width: '170px',
                     height: '40px',
@@ -351,7 +354,7 @@ const TopHUD: FC = () => {
                     borderRadius: '4px',
                     verticalAlign: 'center',
                 } as any}>
-                    <Image 
+                    <Image
                         src="file://{resources}/images/icon_huyu.png"
                         style={{ width: '32px', height: '32px', marginRight: '8px', verticalAlign: 'center' } as any}
                     />
@@ -359,7 +362,7 @@ const TopHUD: FC = () => {
                     <Label text={String(defenderPoints)} style={{ color: '#e6cfa0', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
                 </Panel>
             </Panel>
-            
+
             {/* 结束游戏确认对话框 */}
             {showEndConfirm && (
                 <Panel style={{

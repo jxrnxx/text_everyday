@@ -584,17 +584,10 @@ export class CustomStats {
                 CustomStats.AddStat(hero, mapping.stat, actualAmount);
                 hero.EmitSound('Item.TomeOfKnowledge');
 
-                print(`[CustomStats] Purchased: ${statType} +${actualAmount}, slot_index=${slotIndex}, cost=${cost}`);
-
                 // 通知 UpgradeSystem 槽位已购买 (用于触发自动突破)
                 if (typeof slotIndex === 'number' && slotIndex >= 0 && slotIndex < 8) {
-                    print(`[CustomStats] Calling MarkSlotPurchased(${playerId}, ${slotIndex})`);
                     upgradeSystem.MarkSlotPurchased(playerId, slotIndex);
-                } else {
-                    print(`[CustomStats] WARNING: Invalid slot_index: ${slotIndex}`);
                 }
-            } else {
-                print(`[CustomStats] Unknown stat type: ${statType}`);
             }
         });
     }

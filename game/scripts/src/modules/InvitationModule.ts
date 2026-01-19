@@ -1,4 +1,6 @@
 import { Player } from '../player/Player';
+import { WaveManager } from '../systems/WaveManager';
+import { AbilityShopManager } from '../systems/AbilityShopManager';
 
 /**
  * InvitationModule - 验证码和英雄选择模块
@@ -15,22 +17,17 @@ export class InvitationModule {
             const playerID = (event as any).PlayerID as PlayerID;
             this.OnVerifyCode(playerID, (event as any).code);
         });
-        print('[InvitationModule] 初始化完成');
     }
 
     private OnVerifyCode(playerID: PlayerID, code: string) {
-        print(`[InvitationModule] 收到验证码: playerID=${playerID}, code=${code}`);
-
         const controller = PlayerResource.GetPlayer(playerID);
         if (!controller) {
-            print(`[InvitationModule] 玩家 ${playerID} 控制器不存在`);
             return;
         }
 
         // 获取或创建 Player 实例
         let player = controller.GetAsset() as Player;
         if (!player) {
-            print(`[InvitationModule] 玩家 ${playerID} 没有 Player 实例，自动创建`);
             player = new Player(playerID);
             SetPlayerSys(playerID, 'assets', player);
         }
@@ -46,10 +43,7 @@ export class InvitationModule {
 
         if (heroName) {
             // 通过 Player 创建英雄 (统一的英雄创建入口)
-            // 注意: 如果是替换英雄，返回 null (异步创建)
             const hero = player.CreateHero(heroName);
-
-            print(`[InvitationModule] CreateHero 返回: ${hero ? hero.GetUnitName() : 'null (异步替换)'}`);
 
             // 如果是同步创建/已存在的英雄，执行初始化
             if (hero) {
@@ -62,7 +56,6 @@ export class InvitationModule {
                     const origin = spawnPoint.GetAbsOrigin();
                     hero.SetAbsOrigin(origin);
                     FindClearSpaceForUnit(hero, origin, true);
-                    print(`[InvitationModule] 传送到出生点: ${spawnPointName}`);
                 }
 
                 // Set camera to the hero
@@ -71,12 +64,14 @@ export class InvitationModule {
                     PlayerResource.SetCameraTarget(playerID, undefined);
                 });
             }
-            // 否则是异步替换，Player.CreateHero 的回调会处理这些操作
 
             CustomGameEventManager.Send_ServerToPlayer(controller, 'from_server_verify_result', {
                 success: true,
                 message: `验证成功，选择英雄: ${heroName === 'npc_dota_hero_juggernaut' ? '剑圣' : '玛西'}`,
             });
+
+            // 启动波次系统 (第一个验证成功的玩家触发)
+            WaveManager.GetInstance().Initialize();
 
             // Stop Background Music and Interface Sounds
             CustomGameEventManager.Send_ServerToPlayer(controller, 'stop_custom_sounds', {});

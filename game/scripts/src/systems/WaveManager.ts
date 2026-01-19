@@ -570,13 +570,16 @@ export class WaveManager {
      * 发送状态更新到客户端
      */
     private SendStateUpdate(): void {
-        const nextWaveTime = this.CalculateNextWaveTime();
+        const duration = this.CalculateNextWaveTime();
+        // 发送倒计时结束的绝对游戏时间，客户端用 endTime - currentGameTime 计算剩余时间
+        const countdownEndTime = duration > 0 ? GameRules.GetGameTime() + duration : 0;
 
         CustomGameEventManager.Send_ServerToAllClients('wave_state_changed', {
             currentWave: this.currentWave,
             totalWaves: WAVE_CONFIG.TOTAL_WAVES,
             state: this.currentState,
-            nextWaveTime: nextWaveTime,
+            nextWaveTime: duration,
+            countdownEndTime: countdownEndTime,
             isSpawning: this.currentState === WaveState.Spawning,
             canPause: this.currentState === WaveState.Break || this.currentState === WaveState.Preparation,
         });
@@ -588,7 +591,8 @@ export class WaveManager {
             wave: this.currentWave,
             total: WAVE_CONFIG.TOTAL_WAVES,
             state: this.currentState,
-            nextWaveTime: nextWaveTime,
+            nextWaveTime: duration,
+            countdownEndTime: countdownEndTime,
             aliveCount: currentAliveCount,
         } as any);
     }

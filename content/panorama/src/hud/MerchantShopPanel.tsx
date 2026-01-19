@@ -115,6 +115,7 @@ const MerchantShopPanel: React.FC = () => {
     const [tierName, setTierName] = useState('入门期');
     const [slotCost, setSlotCost] = useState(DEFAULT_SLOT_COST);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [atTierCap, setAtTierCap] = useState(false); // 是否达到境界上限
     const toastTimerRef = React.useRef<number>(0); // 用于跟踪定时器
 
     // 显示浮动提示
@@ -124,7 +125,7 @@ const MerchantShopPanel: React.FC = () => {
         const currentTimer = toastTimerRef.current;
 
         setToastMessage(message);
-        $.Schedule(1.3, () => {
+        $.Schedule(1.7, () => {
             // 只有当版本号匹配时才清除（说明没有新的消息覆盖）
             if (toastTimerRef.current === currentTimer) {
                 setToastMessage(null);
@@ -164,6 +165,9 @@ const MerchantShopPanel: React.FC = () => {
     // 每次面板打开时强制刷新数据
     useEffect(() => {
         if (isVisible) {
+            // 清除之前的 toast 消息
+            setToastMessage(null);
+
             const localPlayer = Players.GetLocalPlayer();
             const netTableKey = `player_${localPlayer}`;
 
@@ -177,6 +181,33 @@ const MerchantShopPanel: React.FC = () => {
                 setTierName(upgradeData.tier_name || TIER_NAMES[upgradeData.current_tier] || '入门期');
                 setSlotCost(upgradeData.cost_per_slot || 200);
 
+                // 检查已购买槽位数量
+                let purchasedSlotCount = 0;
+                if (upgradeData.slots_purchased) {
+                    for (let i = 1; i <= 8; i++) {
+                        if (upgradeData.slots_purchased[i] === 1) {
+                            purchasedSlotCount++;
+                        }
+                    }
+                }
+
+                // 检查是否达到境界上限 (通过 custom_stats NetTable 读取 rank)
+                // custom_stats 使用英雄 EntityIndex 作为 key
+                const heroEntIndex = Players.GetPlayerHeroEntityIndex(localPlayer);
+                const customStatsData = CustomNetTables.GetTableValue('custom_stats' as any, `${heroEntIndex}` as any) as any;
+                const playerRank = customStatsData?.rank || 0;
+                const maxTierForRank = playerRank + 3; // Max_Shop_Tier = Rank + 3
+                const isAtCap = (upgradeData.current_tier || 1) >= maxTierForRank;
+
+                setAtTierCap(isAtCap);
+
+                // 如果所有8个技能都已购买且达到上限，显示提示
+                if (purchasedSlotCount >= 8 && isAtCap) {
+                    $.Schedule(0.1, () => {
+                        showToast('你的灵魂太轻，承载不了这份重量。去历练吧。');
+                    });
+                }
+
                 if (upgradeData.slots_config) {
                     const newSkills: SkillSlot[] = [];
                     for (let i = 0; i < 8; i++) {
@@ -189,7 +220,7 @@ const MerchantShopPanel: React.FC = () => {
                                 id: i + 1,
                                 name: slotConfig.name,
                                 stat: `+${slotConfig.value}${slotConfig.is_percent === 1 ? '%' : ''}`,
-                                bonus: slotConfig.name,
+                                bonus: SKILL_EFFECT_NAME[slotConfig.name] || slotConfig.name,
                                 purchased: isPurchased,
                             });
                         } else {
@@ -244,7 +275,7 @@ const MerchantShopPanel: React.FC = () => {
                                     id: i + 1,
                                     name: slotConfig.name,
                                     stat: `+${slotConfig.value}${slotConfig.is_percent === 1 ? '%' : ''}`,
-                                    bonus: slotConfig.name,
+                                    bonus: SKILL_EFFECT_NAME[slotConfig.name] || slotConfig.name,
                                     purchased: isPurchased,
                                 });
                             } else {
@@ -280,7 +311,7 @@ const MerchantShopPanel: React.FC = () => {
             const newTier = event.new_tier;
             const tierNameFromServer = event.tier_name || TIER_NAMES[newTier] || '';
 
-            showToast(`突破成功！进入${tierNameFromServer}！`);
+            showToast(event.message || `突破成功！进入${tierNameFromServer}！`);
             Game.EmitSound('Hero_Zeus.GodsWrath.Target');
 
             // 延迟 100ms 后读取 NetTable，确保数据已同步
@@ -309,7 +340,7 @@ const MerchantShopPanel: React.FC = () => {
                                     id: i + 1,
                                     name: slotConfig.name,
                                     stat: `+${slotConfig.value}${slotConfig.is_percent === 1 ? '%' : ''}`,
-                                    bonus: slotConfig.name,
+                                    bonus: SKILL_EFFECT_NAME[slotConfig.name] || slotConfig.name,
                                     purchased: isPurchased,
                                 });
                             } else {
@@ -416,6 +447,7 @@ const MerchantShopPanel: React.FC = () => {
 
     const handleClose = () => {
         setIsVisible(false);
+        setToastMessage(null); // 关闭时清除 toast
         Game.EmitSound('Shop.PanelDown');
         markPanelClosed('merchant_panel'); // 通知 PanelManager 面板已关闭，HeroHUD 会自动显示
 
@@ -912,23 +944,23 @@ const styles = {
         width: '350px',
         height: '500px',  // 固定高度
         marginRight: '-40px',
+        paddingTop: '80px',  // 为气泡腾出空间
     },
 
     // 气泡包装器 - 绝对定位避免影响布局
     speechBubbleWrapper: {
         flowChildren: 'down' as const,
-        position: '80px 0px 0px' as const,  // 绝对定位在NPC头顶
+        position: '20px -15px 0px' as const,  // 往上-20px，往右40px
         horizontalAlign: 'center' as const,
     },
 
     // 商人对话气泡
     speechBubble: {
-        width: '160px',
-        padding: '8px 14px',
-        backgroundColor: 'rgba(40, 30, 20, 0.92)',
-        border: '1px solid #c9a861',
+        width: '220px',  // 增加宽度以容纳更长的文字
+        padding: '10px 16px',
+        backgroundColor: 'rgba(40, 30, 20, 0.95)',
+        border: '2px solid #c9a861',  // 金色边框
         borderRadius: '8px',
-        boxShadow: '0px 0px 10px 2px rgba(180, 140, 80, 0.3)',
     },
 
     // 气泡小尾巴 - 倒三角

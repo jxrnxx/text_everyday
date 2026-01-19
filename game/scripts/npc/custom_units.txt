@@ -386,7 +386,7 @@
 	}
 	"npc_ability_merchant" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/courier/smeevil_magic_carpet/smeevil_magic_carpet.vmdl"
+		"Model" "models/heroes/shopkeeper/shopkeeper.vmdl"
 		"ModelScale" "1"
 		"Creature" {
 			"AttachWearables" {

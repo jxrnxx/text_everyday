@@ -3,7 +3,7 @@
  * 全局面板管理器 - 处理面板互斥显示和右键关闭
  */
 
-type PanelId = 'character_sheet' | 'merchant_panel' | 'none';
+type PanelId = 'character_sheet' | 'merchant_panel' | 'ability_panel' | 'none';
 
 interface PanelManagerState {
     currentPanel: PanelId;

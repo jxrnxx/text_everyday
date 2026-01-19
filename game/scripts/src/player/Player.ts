@@ -19,7 +19,6 @@ export class Player {
 
     constructor(id: PlayerID) {
         this.id = id;
-        print(`[Player] 玩家 ${id} 初始化`);
     }
 
     // ========== 控制器访问 ==========
@@ -126,13 +125,11 @@ export class Player {
 
     /**
      * 创建或替换英雄
-     * 参考 zhanshen 项目的实现：先 RemoveSelf，再 ReplaceHeroWith
      * @returns 创建的英雄
      */
     CreateHero(heroName: string): CDOTA_BaseNPC_Hero | null {
         const controller = this.GetController();
         if (!controller) {
-            print(`[Player] 玩家 ${this.id} 控制器不存在`);
             return null;
         }
 
@@ -143,19 +140,10 @@ export class Player {
         const existingHero = controller.GetAssignedHero();
 
         if (existingHero && !existingHero.IsNull()) {
-            const currentName = existingHero.GetUnitName();
-            if (currentName === heroName) {
-                print(`[Player] 英雄已存在: ${heroName}`);
-            } else {
-                // 已有不同英雄，由于引擎限制无法运行时替换
-                print(`[Player] 已有英雄 ${currentName}，由于引擎限制无法替换到 ${heroName}`);
-                print(`[Player] 如需更换英雄，请修改 DevConfig.ts 中的 DEV_HERO 设置并重启游戏`);
-            }
             return existingHero;
         }
 
         // 创建新英雄
-        print(`[Player] 创建新英雄: ${heroName}`);
         const hero = CreateHeroForPlayer(heroName, controller);
         return hero;
     }
@@ -166,7 +154,6 @@ export class Player {
      * 英雄出生时调用
      */
     OnHeroSpawned(): void {
-        print(`[Player] 玩家 ${this.id} 英雄出生`);
         // 可以在这里添加初始化逻辑
     }
 
@@ -174,7 +161,6 @@ export class Player {
      * 英雄死亡时调用
      */
     OnHeroDeath(): void {
-        print(`[Player] 玩家 ${this.id} 英雄死亡`);
         // 可以在这里添加死亡处理逻辑
     }
 
@@ -182,7 +168,6 @@ export class Player {
      * 回城时调用
      */
     OnReturn(): void {
-        print(`[Player] 玩家 ${this.id} 回城`);
         // 可以在这里添加回城逻辑
     }
 

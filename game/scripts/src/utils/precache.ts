@@ -51,6 +51,9 @@ export default function Precache(context: CScriptPrecacheContext) {
             // Cultivation Merchant
             'models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl',
 
+            // Ability Shop Merchant
+            'models/heroes/shopkeeper/shopkeeper.vmdl',
+
             // Blink Dash - 使用幽灵假人法，无需粒子特效
         ],
         context
@@ -67,7 +70,7 @@ export default function Precache(context: CScriptPrecacheContext) {
     precacheUnits(
         [
             // 单位名称
-            // 'npc_dota_hero_***',
+            'npc_enemy_zombie_lvl1', // 练功房怪物
         ],
         context
     );

@@ -11,6 +11,7 @@ import InvitationCode from './InvitationCode';
 import TrainingButtons from './TrainingButtons';
 import RankUpButton from './RankUpButton';
 import MerchantShopPanel from './MerchantShopPanel';
+import AbilityShopPanel from './AbilityShopPanel';
 import HeroHUD from './HeroHUD';
 import EnemyPanel from './EnemyPanel';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
@@ -23,6 +24,7 @@ const Root: FC = () => {
             <TrainingButtons />
             <RankUpButton />
             <MerchantShopPanel />
+            <AbilityShopPanel />
             <HeroHUD />
             <EnemyPanel />
         </>

@@ -5,6 +5,7 @@ import { RankSystem } from './systems/RankSystem';
 import { UpgradeSystem } from './systems/UpgradeSystem';
 import { WaveManager } from './systems/WaveManager';
 import { DamageSystem } from './systems/DamageSystem';
+import { AbilityShopManager } from './systems/AbilityShopManager';
 import { InitGameStateManager, GetGameStateManager } from './systems/state_manager';
 import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
@@ -84,6 +85,11 @@ export class GameMode {
         // [Upgrade] Initialize Upgrade System
         try {
             UpgradeSystem.GetInstance();
+        } catch (e) { }
+
+        // [AbilityShop] Initialize Ability Shop Merchants at game start
+        try {
+            AbilityShopManager.GetInstance().Initialize();
         } catch (e) { }
 
         // [Level] 监听英雄升级事件，更新显示等级
@@ -210,7 +216,7 @@ export class GameMode {
                     return;
                 }
 
-                // -lvlup <number>: 升级指定等级
+                // -lvlup <number>: 升级指定等级 (绕过等级限制)
                 if (text.startsWith('-lvlup')) {
                     if (!hero) return;
                     const parts = text.split(' ');
@@ -219,6 +225,9 @@ export class GameMode {
                         for (let i = 0; i < levels; i++) {
                             hero.HeroLevelUp(false);
                         }
+                        // 同步更新 display_level
+                        const newLevel = hero.GetLevel();
+                        CustomStats.SetDisplayLevel(hero, newLevel);
                     }
                     return;
                 }
@@ -237,6 +246,14 @@ export class GameMode {
                     const amount = parseInt(text.substring(7));
                     if (!isNaN(amount) && amount > 0) {
                         EconomySystem.GetInstance().AddFaith(playerId, amount);
+                    }
+                    return;
+                }
+
+                // -start: 强制启动游戏/波次系统 (调试用)
+                if (text === '-start') {
+                    if (!this.isGameStarted) {
+                        this.StartGame();
                     }
                     return;
                 }
@@ -292,6 +309,9 @@ export class GameMode {
                     for (let i = 0; i < levels; i++) {
                         hero.HeroLevelUp(false);
                     }
+                    // 同步更新 display_level
+                    const newLevel = hero.GetLevel();
+                    CustomStats.SetDisplayLevel(hero, newLevel);
                 }
                 return;
             }
@@ -308,6 +328,14 @@ export class GameMode {
                 const amount = parseInt(text.substring(7));
                 if (!isNaN(amount) && amount > 0) {
                     EconomySystem.GetInstance().AddFaith(playerId, amount);
+                }
+                return;
+            }
+
+            // -start: 强制启动游戏/波次系统 (调试用)
+            if (text === '-start') {
+                if (!this.isGameStarted) {
+                    this.StartGame();
                 }
                 return;
             }
@@ -537,11 +565,17 @@ export class GameMode {
         }
 
         // 4. 发送重置UI事件 (让时间归零)
+        CustomNetTables.SetTableValue('wave_state' as any, 'current', {
+            wave: 0,
+            total: 20,
+            state: 'waiting',
+            nextWaveTime: 0,
+            aliveCount: 0,
+        } as any);
         CustomGameEventManager.Send_ServerToAllClients('reset_game_timer', {});
 
-        // 5. 重新开始游戏 (可以直接开始，或者让玩家准备一下)
-        // 这里我们选择立即重新开始，方便测试
-        this.StartGame();
+        // 5. 等待验证成功后再开始游戏，不自动启动
+        // 波次系统会在用户点击验证码后由 StartGame() 启动
     }
 
     // NPC出生事件处理
@@ -872,20 +906,27 @@ export class GameMode {
             return;
         }
 
-        // Expected shop name for this player
+        // 修炼商人: shop_1, shop_2, etc.
         const expectedShopName = `shop_${playerID + 1}`;
-
-        if (entityName !== expectedShopName) {
+        if (entityName === expectedShopName) {
+            const player = PlayerResource.GetPlayer(playerID);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'open_merchant_panel', {
+                    shop_id: playerID + 1,
+                });
+            }
             return;
         }
 
-        // Valid interaction - open the merchant panel
-
-        const player = PlayerResource.GetPlayer(playerID);
-        if (player) {
-            CustomGameEventManager.Send_ServerToPlayer(player, 'open_merchant_panel', {
-                shop_id: playerID + 1,
-            });
+        // 技能商人: ability_shop_1, ability_shop_2, etc.
+        if (entityName.startsWith('ability_shop_')) {
+            const player = PlayerResource.GetPlayer(playerID);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'open_ability_shop', {
+                    shop_id: parseInt(entityName.replace('ability_shop_', '')),
+                });
+            }
+            return;
         }
     }
 }

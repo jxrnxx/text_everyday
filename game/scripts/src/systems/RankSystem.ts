@@ -10,6 +10,7 @@
 import { reloadable } from '../utils/tstl-utils';
 import { CustomStats } from './CustomStats';
 import { EconomySystem } from '../mechanics/EconomySystem';
+import { UpgradeSystem } from './UpgradeSystem';
 
 // Rank name mapping for display/sound
 const RANK_NAMES: { [key: number]: string } = {
@@ -150,6 +151,10 @@ export class RankSystem {
 
         // 6. Notify all clients for UI updates (NetTable already updated by CustomStats)
         CustomStats.SendStatsToClient(hero);
+
+        // 7. Check if can now breakthrough in shop (after rank up, tier cap increases)
+        const upgradeSystem = UpgradeSystem.GetInstance();
+        upgradeSystem.CheckBreakthroughAfterRankUp(playerID);
     }
 
     /**
@@ -209,6 +214,10 @@ export class RankSystem {
 
         this.SendResult(player, true, newRank, `晋升${rankName}`);
         CustomStats.SendStatsToClient(hero);
+
+        // Check if can now breakthrough in shop
+        const upgradeSystem = UpgradeSystem.GetInstance();
+        upgradeSystem.CheckBreakthroughAfterRankUp(playerID);
     }
 
     private SendResult(player: CDOTAPlayerController, success: boolean, newRank: number, message: string) {
