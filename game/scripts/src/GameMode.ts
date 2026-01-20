@@ -176,6 +176,77 @@ export class GameMode {
             undefined
         );
 
+        // [Respawn] Hero Respawn System
+        ListenToGameEvent(
+            'entity_killed',
+            event => {
+                const killedUnit = EntIndexToHScript(event.entindex_killed);
+
+                // Check if killed unit is a real hero
+                if (!killedUnit || !killedUnit.IsRealHero()) {
+                    return;
+                }
+
+                const hero = killedUnit as CDOTA_BaseNPC_Hero;
+                const playerID = hero.GetPlayerID();
+
+                if (!PlayerResource.IsValidPlayerID(playerID)) {
+                    return;
+                }
+
+                // Start 5-second respawn timer
+                Timers.CreateTimer(5.0, () => {
+                    // Check if hero still exists
+                    if (!hero || hero.IsNull()) {
+                        return;
+                    }
+
+                    // Determine respawn location
+                    let respawnPoint: Vector;
+                    const playerData = TrainingManager.GetInstance().GetPlayerData(playerID);
+
+                    if (playerData.roomState) {
+                        // Player is in training room - respawn in room
+                        const roomPointName = `point_room_${playerID + 1}`;
+                        const roomEntity = Entities.FindByName(undefined, roomPointName);
+
+                        if (roomEntity) {
+                            respawnPoint = roomEntity.GetAbsOrigin();
+                        } else {
+                            // Fallback to base if room point not found
+                            const basePointName = `start_player_${playerID + 1}`;
+                            const baseEntity = Entities.FindByName(undefined, basePointName);
+                            respawnPoint = baseEntity ? baseEntity.GetAbsOrigin() : hero.GetAbsOrigin();
+                        }
+                    } else {
+                        // Player is at base - respawn at base
+                        const basePointName = `start_player_${playerID + 1}`;
+                        const baseEntity = Entities.FindByName(undefined, basePointName);
+                        respawnPoint = baseEntity ? baseEntity.GetAbsOrigin() : hero.GetAbsOrigin();
+                    }
+
+                    // Respawn hero
+                    hero.RespawnHero(false, false);
+                    hero.SetAbsOrigin(respawnPoint);
+                    FindClearSpaceForUnit(hero, respawnPoint, true);
+
+                    // Heal hero to full
+                    hero.SetHealth(hero.GetMaxHealth());
+                    hero.SetMana(hero.GetMaxMana());
+
+                    // Move camera to respawned hero
+                    PlayerResource.SetCameraTarget(playerID, hero);
+                    Timers.CreateTimer(0.1, () => {
+                        PlayerResource.SetCameraTarget(playerID, undefined);
+                        return undefined;
+                    });
+
+                    return undefined;
+                });
+            },
+            undefined
+        );
+
         // [Debug] 调试命令监听器
         ListenToGameEvent(
             'player_chat',

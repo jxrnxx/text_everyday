@@ -183,13 +183,13 @@ const TopHUD: FC = () => {
                             <Label
                                 text={btn.label}
                                 style={{
-                                    color: '#c0b090',
+                                    color: '#f0e0c0',  // 更亮的颜色
                                     fontSize: '18px',
                                     fontWeight: 'bold' as const,
                                     fontFamily: 'SimSun, 宋体, serif',
                                     marginTop: '2px',
                                     horizontalAlign: 'center' as const,
-                                    textShadow: '0px 1px 3px #000000, 0px 1px 1px #000000',
+                                    textShadow: '0px 0px 8px 3.0 #000000, 0px 2px 4px 2.0 #000000, 0px 0px 3px 1.0 #000000',  // 更强的多重阴影
                                 } as any}
                             />
                         )}
@@ -324,7 +324,7 @@ const TopHUD: FC = () => {
                         style={{ width: '32px', height: '32px', marginRight: '8px', verticalAlign: 'center' } as any}
                     />
                     <Label text="灵石" style={{ color: '#78e4eeff', fontSize: '18px', fontFamily: 'Radiance, Arial', verticalAlign: 'center', marginRight: '8px', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
-                    <Label text={String(spiritCoin)} style={{ color: '#78e4eeff', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
+                    <Label text={String(spiritCoin)} style={{ color: '#a0f0ffff', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 0px 8px 3.0 #000000, 0px 2px 4px 2.0 #000000' } as any} />
                 </Panel>
                 {/* 信仰 */}
                 <Panel style={{
@@ -342,7 +342,7 @@ const TopHUD: FC = () => {
                         style={{ width: '32px', height: '32px', marginRight: '8px', verticalAlign: 'center' } as any}
                     />
                     <Label text="信仰" style={{ color: '#e85ce4ff', fontSize: '18px', fontFamily: 'Radiance, Arial', verticalAlign: 'center', marginRight: '8px', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
-                    <Label text={String(faith)} style={{ color: '#e85ce4ff', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
+                    <Label text={String(faith)} style={{ color: '#ff88f0ff', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 0px 8px 3.0 #000000, 0px 2px 4px 2.0 #000000' } as any} />
                 </Panel>
                 {/* 护佑 */}
                 <Panel style={{
@@ -359,7 +359,7 @@ const TopHUD: FC = () => {
                         style={{ width: '32px', height: '32px', marginRight: '8px', verticalAlign: 'center' } as any}
                     />
                     <Label text="护佑" style={{ color: '#e6cfa0', fontSize: '18px', fontFamily: 'Radiance, Arial', verticalAlign: 'center', marginRight: '8px', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
-                    <Label text={String(defenderPoints)} style={{ color: '#e6cfa0', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 1px 2px 1.0 #000000' } as any} />
+                    <Label text={String(defenderPoints)} style={{ color: '#ffe8b0', fontSize: '20px', fontWeight: 'bold', fontFamily: 'Radiance, Arial', verticalAlign: 'center', textShadow: '0px 0px 8px 3.0 #000000, 0px 2px 4px 2.0 #000000' } as any} />
                 </Panel>
             </Panel>
 
