@@ -35,7 +35,7 @@ export class TrainingManager {
         ListenToGameEvent('entity_killed', event => this.OnEntityKilled(event), undefined);
     }
 
-    private GetPlayerData(playerId: PlayerID): TrainingData {
+    public GetPlayerData(playerId: PlayerID): TrainingData {
         let data = this.playerData.get(playerId);
         if (!data) {
             data = {

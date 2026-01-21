@@ -180,7 +180,7 @@ export class GameMode {
         ListenToGameEvent(
             'entity_killed',
             event => {
-                const killedUnit = EntIndexToHScript(event.entindex_killed);
+                const killedUnit = EntIndexToHScript(event.entindex_killed) as CDOTA_BaseNPC;
 
                 // Check if killed unit is a real hero
                 if (!killedUnit || !killedUnit.IsRealHero()) {
