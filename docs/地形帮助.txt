@@ -1,0 +1,116 @@
+Active Material:材质 可以直接用 block tool工具直接引用
+tiles：宫殿地形，clip，防止移动工具
+实体：
+env_key :materials/skybox/sky_dota_000.vmat 天空
+
+light_dynamic  Light color - 光源颜色  Light brightness - 亮度（设为 100 - 150） Maximum distance - 范围（设为 2000 - 2500）
+1. env_fog_controller（雾效）
+作用：控制地图雾气
+关键参数：Fog Enable、颜色、起止距离、密度
+推荐值和调试技巧
+2. env_global_light（全局光）
+作用：主光源（太阳光）
+3.info_particle_system云  ：particles/ui/static_fog_cloud_contrast.vpcf
+
+
+
+光照：🏯 练功房视觉美化 - 终极整合版（实测可用）
+必须完成的 5 个步骤（缺一不可）
+第一步：天空盒（替换黑色背景）
+Shift + E → 搜索：env_sky
+随便放在地图某处
+双击 → Sky Material → 浏览 🔍
+搜索并选择：
+sky_dota_000 ✅ 推荐（蓝天白云）
+效果： 黑色虚空 → 蓝天白云
+
+第二步：全局雾效（制造仙气朦胧感）
+Shift + E → 搜索：env_fog_controller
+随便放置，双击属性
+设置：
+Fog Enable: ✅ 勾选
+Primary Fog Color: 淡青/白 (0 12  251 251 239 239)
+Secondary Fog Color: （240 19 252 233 233 252）
+Fog Start: 2000
+Fog End: 3000
+Fog Max Density: 0.3（越大越浓）
+效果： 远处朦胧，仙气飘飘
+
+第三步：主阳光（打光，产生阴影）
+Shift + E → 搜索：env_global_light
+随便放置，双击属性
+设置：
+Color: 暖白 (34 35 255 255 240 220)
+Light Scale: 3.2 （这是亮度）
+Ambient Angle (Y Z X): 可以保持默认 (0, 100, 0)
+之后想要更好的阴影可以调整角度
+效果： 物体有立体感，地面明亮
+
+第四步：底部灵光（神级技巧！）
+Shift + E → 搜索：light_dynamic ✅
+注意：用 light_dynamic 代替 light_omni
+在平台正下方 200 单位处放置
+用侧视图（Side View）确定高度
+双击属性设置：
+Color: 青色 (0 0 255,255 255 255)
+Range: 1000 
+Brightness: 10
+复制 4-6 个，均匀分布在平台底部 （我就搞了一个）
+效果： 平台底部泛出幽幽灵光，照亮云雾
+ 下面的没用了 没生效 不太好看
+第五步：云海效果（遮挡底部空洞）
+⚠️ 重要：使用浏览器选择粒子！
+Shift + E → 搜索：info_particle_system
+在平台下方放置（Z轴 800-900）
+双击打开属性
+点击 effect_name 旁边的 🔍 浏览按钮
+在浏览器搜索：cloud_ring
+选择粒子：
+razor_arcana_eye_of_the_storm_rain_cloud_ring.vpcf ✅ 推荐
+或 razor_arcana_eye_of_the_storm_rain_v2_cloud_ring.vpcf
+勾选 start_active
+布局（共5个）：
+平台正下方中心放 1 个 （Z轴 800-900）
+平台四个角下方各放 1 个 （共4个）
+总共 5 个 cloud_ring
+注意： cloud_layer 可能不存在，只用 cloud_ring 就够了！
+
+env_fog_controller（环境雾效控制器）
+作用
+控制整个地图的雾气效果，制造距离感和氛围。
+
+关键参数
+参数名称	作用	推荐值	说明
+Fog Enable	启用雾效	✅ 勾选	总开关
+Primary Fog Color	主雾颜色	(200, 220, 230)	淡青/白色有仙气感
+Secondary Fog Color	次雾颜色	同主雾色	通常和主雾色一样
+Fog Start	雾起始距离	1000-1500	距离这么远开始有雾
+Fog End	雾结束距离	5000-8000	距离这么远完全雾化
+Fog Max Density	最大雾密度	0.2-0.4	雾的浓度（0-1）
+
+雾太浓，遮挡UI → 降低 Fog Max Density（0.2以下）
+想要仙境感 → 用淡青色，密度 0.3-0.4
+不想要雾 → 取消勾选 Fog Enable
+ env_global_light（全局光照）
+作用
+整个地图的主光源（太阳光），决定整体亮度和阴影方向。 每个地图只需要1个！
+
+关键参数
+参数名称	作用	推荐值	说明
+Color	光源颜色	(255, 240, 220)	暖白色自然
+Light Scale	光照强度	1.5-3.0	就是亮度！
+Ambient Angle	光照角度	(0, 100, 0)	控制阴影方向
+Enable Shadows	启用阴影	✅ 勾选	让物体有阴影
+
+ light_dynamic（动态点光源）
+作用
+局部照明，可以放多个，照亮特定区域。 适合：基地光源、底部光效、装饰灯光。
+
+关键参数
+参数名称	作用	推荐值	说明
+Light color	光源颜色	按需设定	白色/金色/青色
+Light brightness	光照强度	100-200	数值越大越亮
+Maximum distance	光照范围	1500-2500	光能照多远
+Inner angle	内圈角度	30	核心光锥角度
+Outer angle	外圈角度	45	边缘光锥角度
+Spotlight end radius	聚光半径	50-100	聚光灯模式用

@@ -1,0 +1,27 @@
+信使：courier
+商人Shopkeeper
+物品：props_items
+
+关键词 2：tile
+专门的瓷砖地板模型
+关键词 3：floor
+
+地板相关模型
+关键词 4：arena
+
+竞技场相关
+关键词 5：temple
+
+神殿类建筑，通常有精致地板
+
+endcap 装饰雕塑
+
+
+gate（门）
+
+prop_static:静态模型
+prop_dynamic动态模型
+
+信使：courier
+小兵：creep
+英雄：hero
