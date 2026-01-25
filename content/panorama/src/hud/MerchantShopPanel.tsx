@@ -673,28 +673,30 @@ const MerchantShopPanel: React.FC = () => {
                         </Panel>
                     )}
 
-                    {/* 全修按钮悬浮提示 */}
+                    {/* 全修按钮悬浮提示 - 显示在按钮左侧 */}
                     {hoveredPurchaseAll && (
                         <Panel
                             style={{
                                 ...styles.tooltip,
-                                position: '400px 30px 0px',
+                                position: '585px 180px 0px',
                             }}
                             className="JadeTooltip"
                         >
                             <Label text="一键全修" style={styles.tooltipTitle} />
                             <Panel style={styles.tooltipDivider} />
-                            <Label
-                                text={unpurchasedCount > 0
-                                    ? `立即购买剩余 ${unpurchasedCount} 式`
-                                    : '已全部购买'
-                                }
-                                style={styles.tooltipDesc}
-                            />
+                            {unpurchasedCount > 0 ? (
+                                <Panel style={{ flowChildren: 'right' as const, horizontalAlign: 'center' as const }}>
+                                    <Label text="立即购买剩余 " style={styles.tooltipDesc} />
+                                    <Label text={`${unpurchasedCount}`} style={{ color: '#66ffff', fontSize: '13px', fontWeight: 'bold' as const }} />
+                                    <Label text=" 式" style={styles.tooltipDesc} />
+                                </Panel>
+                            ) : (
+                                <Label text="已全部购买" style={styles.tooltipDesc} />
+                            )}
                             {unpurchasedCount > 0 && (
-                                <Panel style={styles.tooltipValueRow}>
+                                <Panel style={{ ...styles.tooltipValueRow, verticalAlign: 'center' as const }}>
                                     <Label text="总计 " style={styles.tooltipDesc} />
-                                    <Label text={`${dynamicTotalCost}`} style={{ color: '#f5d76e', fontSize: '16px', fontWeight: 'bold' as const }} />
+                                    <Label text={`${dynamicTotalCost}`} style={{ color: '#ff8844', fontSize: '16px', fontWeight: 'bold' as const, textShadow: '0px 0px 6px #ff6622' }} />
                                     <Label text=" 灵石" style={styles.tooltipDesc} />
                                 </Panel>
                             )}
@@ -729,7 +731,7 @@ const styles = {
 
     // 玉面板容器
     panelContainer: {
-        width: '680px',
+        width: '820px',
         height: '420px',
     },
 

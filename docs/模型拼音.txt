@@ -16,6 +16,7 @@
 
 endcap 装饰雕塑
 
+搜索: torch, lantern, brazier
 
 gate（门）
 
@@ -25,3 +26,5 @@ prop_dynamic动态模型
 信使：courier
 小兵：creep
 英雄：hero
+
+屏风 ：models/heroes/antimage_female/debut/models/am_debut_bamboo_mat.vmdl
