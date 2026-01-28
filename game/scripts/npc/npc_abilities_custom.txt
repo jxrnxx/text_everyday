@@ -135,4 +135,51 @@
             "particle"                  "particles/units/heroes/hero_tiny/tiny_toss_blur.vpcf"
         }
     }
+
+    //=============================================================
+    // PUBLIC SKILL: 武道·横扫 (Martial Cleave)
+    // Category: PUBLIC | Star: 1 | Element: MARTIAL
+    //=============================================================
+    "ability_public_martial_cleave"
+    {
+        "BaseClass"                     "ability_lua"
+        "ScriptFile"                    "abilities/ability_public_martial_cleave"
+        "AbilityTextureName"            "sven_great_cleave"
+        "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE"
+        "MaxLevel"                      "4"
+        
+        // === Standard Skill Library Fields ===
+        "AbilityCategory"               "PUBLIC"
+        "AbilityStar"                   "1"
+        "AbilityElement"                "MARTIAL"
+        
+        "AbilitySpecial"
+        {
+            "01"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "cleave_percent"        "30 40 50 60"
+            }
+            "02"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "cleave_start_width"    "150"
+            }
+            "03"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "cleave_end_width"      "350"
+            }
+            "04"
+            {
+                "var_type"              "FIELD_INTEGER"
+                "cleave_distance"       "650"
+            }
+        }
+        
+        "Precache"
+        {
+            "particle"                  "particles/ethereal_blade_glow_direction_text.vpcf"
+        }
+    }
 }

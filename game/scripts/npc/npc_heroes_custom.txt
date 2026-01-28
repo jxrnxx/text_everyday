@@ -42,7 +42,7 @@
 	"npc_dota_hero_juggernaut" {
 		"ModelScale" "1.1000"
 		"Ability1" "soldier_war_strike"
-		"Ability2" "generic_hidden"
+		"Ability2" "ability_public_martial_cleave"
 		"Ability3" "generic_hidden"
 		"Ability4" "generic_hidden"
 		"Ability5" "generic_hidden"
@@ -81,7 +81,7 @@
 	"npc_dota_hero_marci" {
 		"ModelScale" "1.1000"
 		"Ability1" "soldier_war_strike"
-		"Ability2" "generic_hidden"
+		"Ability2" "ability_public_martial_cleave"
 		"Ability3" "generic_hidden"
 		"Ability4" "generic_hidden"
 		"Ability5" "generic_hidden"

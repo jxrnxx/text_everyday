@@ -14,6 +14,8 @@ import MerchantShopPanel from './MerchantShopPanel';
 import AbilityShopPanel from './AbilityShopPanel';
 import HeroHUD from './HeroHUD';
 import EnemyPanel from './EnemyPanel';
+import { KnapsackPanel } from './KnapsackPanel';
+import { DefaultBackpackPanel } from './DefaultBackpackPanel';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
 const Root: FC = () => {
@@ -27,6 +29,8 @@ const Root: FC = () => {
             <AbilityShopPanel />
             <HeroHUD />
             <EnemyPanel />
+            <KnapsackPanel />
+            <DefaultBackpackPanel />
         </>
     );
 };
@@ -90,3 +94,14 @@ Game.AddCommand(cmdDashName, () => {
 
 // 绑定 D 键到冲刺命令
 Game.CreateCustomKeyBind('D', cmdDashName);
+
+// ===== Knapsack Toggle Keybind (B Key) =====
+const cmdKnapsackName = 'cmd_knapsack_' + Math.floor(Math.random() * 10000);
+
+Game.AddCommand(cmdKnapsackName, () => {
+    if ((GameUI as any).ToggleKnapsack) {
+        (GameUI as any).ToggleKnapsack();
+    }
+}, '', 0);
+
+Game.CreateCustomKeyBind('B', cmdKnapsackName);

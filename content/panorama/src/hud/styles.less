@@ -600,6 +600,8 @@
     width: 54px;
     height: 54px;
     margin-right: 4px;
+    transition-property: border, box-shadow, brightness;
+    transition-duration: 0.1s;
 }
 
 // 技能槽边框 - 金属质感边框
@@ -623,6 +625,12 @@
     box-shadow: inset 0px 2px 4px 0px rgba(0, 0, 0, 0.7), inset 0px -1px 1px 0px rgba(70, 55, 35, 0.25);
 }
 
+// 技能图标样式
+.SkillIcon {
+    box-shadow: inset 0px 0px 5px #00000088;
+    border-radius: 2px;
+}
+
 // 技能槽数字提示
 .SkillSlotNumber {
     align: center center;
@@ -632,10 +640,15 @@
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
 }
 
-// 技能槽悬停效果
+// 技能槽悬停效果 - 青玉光芒
 .SkillSlotFrame:hover {
     border: 3px solid #8b7040;
-    box-shadow: inset 0px 0px 2px 1px rgba(130, 105, 60, 0.5), 0px 0px 6px 2px rgba(180, 140, 80, 0.25);
+    box-shadow: 0px 0px 15px #00ffaa44, inset 0px 0px 2px 1px rgba(130, 105, 60, 0.5);
+}
+
+.SkillSlot:hover {
+    brightness: 1.2;
+    box-shadow: 0px 0px 15px #00ffaa44;
 }
 
 .SkillSlotFrame:hover .SkillSlotInner {

@@ -9,5 +9,6 @@
         "wave_state",
         "upgrade_system",
         "CustomValue",
+        "knapsack",
     ]
 }

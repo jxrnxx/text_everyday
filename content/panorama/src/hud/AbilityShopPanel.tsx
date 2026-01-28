@@ -13,18 +13,18 @@ const AbilityShopPanel: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [hoveredItem, setHoveredItem] = useState<number | null>(null);
 
-    // 商品位置配置 (4+4 布局, 60x60边框)
+    // 商品位置配置 (4+4 布局)
     const ITEM_POSITIONS = [
         // 第一行 4个 (功能道具)
-        { x: 140, y: 100 },
-        { x: 230, y: 100 },
-        { x: 320, y: 100 },
-        { x: 410, y: 100 },
+        { x: 155, y: 152 },
+        { x: 255, y: 152 },
+        { x: 355, y: 152 },
+        { x: 455, y: 152 },
         // 第二行 4个 (强化石)
-        { x: 140, y: 190 },
-        { x: 230, y: 190 },
-        { x: 320, y: 190 },
-        { x: 410, y: 190 },
+        { x: 155, y: 252 },
+        { x: 255, y: 252 },
+        { x: 355, y: 252 },
+        { x: 455, y: 252 },
     ];
 
     // 商品配置 (8个商品)
@@ -178,7 +178,17 @@ const AbilityShopPanel: React.FC = () => {
     };
 
     const handlePurchase = (item: typeof shopItems[0]) => {
-        // TODO: 实现购买逻辑
+        // 获取本地玩家ID
+        const localPlayer = Players.GetLocalPlayer();
+
+        // 发送购买事件到服务端
+        GameEvents.SendCustomGameEventToServer('cmd_ability_shop_purchase', {
+            item_id: item.id,
+            item_name: item.name,
+            price: item.price,
+            currency: item.currency,
+        } as never);
+
         Game.EmitSound('General.Buy');
     };
 
@@ -236,6 +246,18 @@ const AbilityShopPanel: React.FC = () => {
                             {/* 商品图标 */}
                             <Image src={item.icon} style={styles.itemIcon} />
                         </Panel>
+                    ))}
+
+                    {/* 价格标签 - 单独绝对定位在槽位下方 */}
+                    {shopItems.map((item, index) => (
+                        <Label
+                            key={`price-${item.id}`}
+                            text={`${item.price} 信仰`}
+                            style={{
+                                ...styles.priceLabel,
+                                position: `${ITEM_POSITIONS[index].x - 310}px ${ITEM_POSITIONS[index].y + 65}px 0px`,
+                            }}
+                        />
                     ))}
 
                     {/* 悬浮提示 */}
@@ -317,13 +339,13 @@ const styles = {
         textAlign: 'center' as const,
     },
 
-    // 商品槽位容器
+    // 商品槽位容器 - 匹配边框大小
     itemSlot: {
         width: '60px',
         height: '60px',
     },
 
-    // 边框背景图
+    // 边框背景图 - 填满容器
     slotFrame: {
         width: '60px',
         height: '60px',
@@ -332,10 +354,22 @@ const styles = {
 
     // 商品图标 - 居中在边框内
     itemIcon: {
-        width: '56px',
-        height: '56px',
-        position: '2px 2px 0px' as const,
+        width: '52px',
+        height: '52px',
+        position: '4px 4px 0px' as const,
         imgShadow: 'none' as const,
+    },
+
+    // 价格标签 - 绝对定位在槽位下方
+    priceLabel: {
+        color: '#f0d090',
+        fontSize: '13px',
+        fontWeight: 'bold' as const,
+        textShadow: '0px 0px 4px #c9a861, 1px 1px 2px #000000',
+        horizontalAlign: 'center' as const,
+        textAlign: 'center' as const,
+        width: '120px',
+        whiteSpace: 'nowrap' as const,
     },
 
     // 悬浮提示

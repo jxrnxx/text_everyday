@@ -1,0 +1,102 @@
+
+Dota 2 里关于 溅射 (Cleave) 和 扇形攻击 的特效非常多。为了符合你的 修仙/武道 背景，我按颜色和风格给你分类整理了一些最好用的 .vpcf 文件名。
+你可以在 Asset Browser (F2) 里搜索这些名字，右键 Preview 查看效果。
+1. 白色/青蓝色系 (最符合“剑气”或“灵气”)
+这是最通用的修仙风格，看起来像锐利的剑气。
+狂战斧特效 (最经典)
+particles/items_fx/battlefury_cleave.vpcf
+描述：经典的淡蓝色/白色圆弧，干净利落，不遮挡视线。适合 1-2 星技能。
+虚空假面狂战斧 (特效更足)
+particles/econ/items/faceless_void/faceless_void_weapon_bfury/faceless_void_weapon_bfury_cleave.vpcf
+描述：比普通狂战斧多了闪电和虚空粒子，带有淡淡的紫/白光，很高级。
+猛犸 (Magnus) 授予力量
+particles/units/heroes/hero_magnataur/magnataur_empower_cleave_effect.vpcf
+描述：一道蓝色的能量波纹，看起来内力深厚。
+2. 金色/红色系 (符合“武道”、“霸气”)
+适合高星级或者力量型（兵神道）的技能。
+斯温 (Sven) 巨力挥舞
+particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf
+描述：红色的物理打击感，看起来力道很重。
+斯温 TI7 不朽 (守夜丰功)
+particles/econ/items/sven/sven_ti7_sword/sven_ti7_sword_spell_great_cleave.vpcf
+描述：强推！ 金红色的光效，非常华丽，像一道巨大的金色剑气。适合 3-4 星技能。
+齐天大圣 (Monkey King) 棒击大地
+particles/units/heroes/hero_monkey_king/monkey_king_strike_cast.vpcf
+描述：虽然是长条形，但金色的打击感非常强。
+3. 水墨/特殊风格 (符合“戏神”或“奇门”)
+昆卡 (Kunkka) 潮汐使者
+particles/units/heroes/hero_kunkka/kunkka_spell_tidebringer.vpcf
+描述：巨大的水花溅射。如果你把它染成 黑色 (SetRenderColor)，它就是完美的水墨一击！
+昆卡 鲸刀
+particles/econ/items/kunkka/kunkka_weapon_whaleblade/kunkka_spell_tidebringer_whaleblade.vpcf
+描述：会有鲸鱼尾巴出现，比较奇幻。
+小小 (Tiny) 抓树攻击
+particles/units/heroes/hero_tiny/tiny_tree_linear_strike.vpcf
+描述：地面会有碎石飞溅，适合土系或纯力量技能。
+
+光柱：models/heroes/dawnbreaker/debut/particles/battlemaiden_debut_intro_fall_trails.vpcf
+
+Dota 2 的资源库命名确实非常“程序化”，很多缩写如果不告诉你，找起来就像大海捞针。
+要想在 Asset Browser 里淘到宝贝，你需要掌握几组 “万能关键词”。我把它们按照 功能 和 视觉风格 分类整理给你。
+你直接在搜索框输入这些词，能搜出一大堆好用的东西：
+一、 按“动作类型”找 (最常用)
+这些词决定了“这个特效是干嘛用的”。
+projectile (投射物/飞弹)
+用途：想找飞出去的剑气、火球、符咒。
+搜：base_attack (普攻子弹), spell_projectile (技能飞弹)。
+impact 或 hit (命中/受击)
+用途：技能打在怪物身上炸开的那一下。
+技巧：通常跟在 projectile 后面配对使用。
+aoe (范围伤害)
+用途：地上的法阵、爆炸圈、冲击波。
+关联词：ring (圆环), nova (爆发), pulse (脉冲)。
+trail 或 swipe (拖尾/挥砍)
+用途：武器挥动时的刀光剑影、身后的残影。
+推荐：weapon_trail。
+buff 或 debuff (状态)
+用途：套在英雄身上的盾、脚下的光环、头顶的晕眩标记。
+关联词：shield (护盾), aura (光环), status (状态)。
+cast (施法)
+用途：技能出手瞬间，手上的聚气效果。
+二、 按“目录/来源”找 (含金量最高)
+这些词是 Dota 2 资源库的**“富矿区”**，质量比普通的要高很多。
+items_fx (通用物品特效)
+这里面都是 Dota 装备的特效（比如大电锤、冰眼、辉耀）。
+优点：通用性强，不带特定英雄的风格，最适合做 RPG 的基础技能。
+econ (饰品/氪金特效)
+这是宝库！ 这里面全是 Dota 的 不朽(Immortal) 和 至宝(Arcana) 特效。
+搜法：econ + 英雄名 (例如 econ juggernaut)。
+特点：粒子更细腻，更华丽，适合做 3星、4星技能。
+neutral (野怪特效)
+这里是野怪的技能。
+优点：比较朴素，适合做 1星技能 或者 怪物技能。
+tower (防御塔)
+防御塔的攻击和防御特效，适合做塔防或阵法。
+三、 按“视觉元素”找 (修仙专用)
+做仙侠 RPG，这几个词你会经常用到：
+beam (光束/激光)
+用途：指指点点、链接锁链、天降正义。
+glow (发光)
+用途：让武器、身体发光。
+spiral 或 vortex (螺旋/漩涡)
+用途：传送门、聚怪技能、内丹旋转。
+mist 或 smoke (烟雾)
+用途：妖气、仙气。
+runes (符文)
+用途：地上的法阵花纹。
+四、 针对你的“修仙”英雄推荐关键词
+如果你想找特定风格的，直接搜这些英雄的英文名，他们的特效最符合你的需求：
+水墨/符咒风：搜 grimstroke (天涯墨客)。
+全是毛笔、墨汁、符纸特效，完美契合修仙。
+道家/太极风：搜 void_spirit (紫猫)。
+紫色电光、残影、护盾，很有道韵。
+武道/剑气风：搜 juggernaut (剑圣) 或 ember_spirit (火猫)。
+刀光、火焰、无敌斩。
+天雷/渡劫风：搜 zeus (宙斯) 或 zuus (有些文件缩写是zuus)。
+各种雷劈。
+金光/佛光风：搜 omniknight (全能) 或 dawnbreaker (破晓辰星)。
+金色的治愈光、锤子光。
+举个例子：你想找一个“万剑归宗”的特效
+先搜 projectile (看看有没有飞剑)。
+再搜 econ skywrath (天怒法师的不朽，全是光剑)。
+最后搜 bristleback quill (钢背兽的刺，虽是刺，但改个颜色就像飞针)。

@@ -10,6 +10,8 @@ import { InitGameStateManager, GetGameStateManager } from './systems/state_manag
 import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
+import './abilities/soldier_war_strike';
+import './abilities/ability_public_martial_cleave';
 import { ExecuteDash, ExecuteDashFromCommand } from './abilities/blink_dash';
 import * as json_heroes from './json/npc_heroes_custom.json';
 import { PlayerRegister } from './player/PlayerRegister';
@@ -303,11 +305,12 @@ export class GameMode {
                     return;
                 }
 
-                // -gold <number>: 添加灵石
+                // -gold <number>: 添加灵石和信仰值
                 if (text.startsWith('-gold ')) {
                     const amount = parseInt(text.substring(6));
                     if (!isNaN(amount) && amount > 0) {
                         EconomySystem.GetInstance().AddSpiritCoin(playerId, amount);
+                        EconomySystem.GetInstance().AddFaith(playerId, amount);
                     }
                     return;
                 }
@@ -391,6 +394,7 @@ export class GameMode {
                 const amount = parseInt(text.substring(6));
                 if (!isNaN(amount) && amount > 0) {
                     EconomySystem.GetInstance().AddSpiritCoin(playerId, amount);
+                    EconomySystem.GetInstance().AddFaith(playerId, amount);
                 }
                 return;
             }

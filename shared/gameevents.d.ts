@@ -138,4 +138,52 @@ declare interface CustomGameEventDeclarations {
     wave_completed: {
         waveNumber: number;
     };
+
+    // ===== Knapsack System Events =====
+    /** Show knapsack panel (Server -> Client) */
+    show_knapsack: {};
+
+    /** Hide knapsack panel (Server -> Client) */
+    hide_knapsack: {};
+
+    /** Toggle knapsack panel (Server -> Client) */
+    toggle_knapsack: {};
+
+    /** Use item in knapsack (Client -> Server) */
+    knapsack_use_item: {
+        index: number;
+        targetIndex: EntityIndex;
+    };
+
+    /** Swap items in knapsack (Client -> Server) */
+    knapsack_swap_item: {
+        index_in: number;
+        index_out: number;
+    };
+
+    /** Drop item from knapsack (Client -> Server) */
+    knapsack_drop_item: {
+        index: number;
+        position: Vector;
+    };
+
+    /** Tidy up knapsack (Client -> Server) */
+    knapsack_tidy_up: {};
+
+    /** Decompose items in knapsack (Client -> Server) */
+    knapsack_decompose: {};
+
+    /** Custom toast message (Server -> Client) */
+    custom_toast: {
+        message: string;
+        duration: number;
+    };
+
+    /** Ability shop purchase (Client -> Server) */
+    cmd_ability_shop_purchase: {
+        item_id: number;
+        item_name: string;
+        price: number;
+        currency: string;
+    };
 }
