@@ -58,4 +58,26 @@ declare interface CustomNetTableDeclarations {
             } | null;
         };
     };
+    public_storage: {
+        [key: string]: {
+            [slotIndex: string]: {
+                itemName: string;
+                itemId: number;
+                charges: number;
+                stackable: boolean;
+                icon?: string;
+            } | null;
+        };
+    };
+    private_backpack: {
+        [key: string]: {
+            [slotIndex: string]: {
+                itemName: string;
+                itemId: number;
+                charges: number;
+                stackable: boolean;
+                icon?: string;
+            } | null;
+        };
+    };
 }

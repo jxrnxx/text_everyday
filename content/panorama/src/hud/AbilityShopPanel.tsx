@@ -42,7 +42,7 @@ const AbilityShopPanel: React.FC = () => {
             id: 2,
             name: '问道签',
             desc: '大道三千，弱水三千。\n选择[武道]/[神念]/[被动]，必得指定类型技能书。',
-            icon: 'file://{resources}/images/custom_items/lot_of_the_dao.png',
+            icon: 'file://{images}/custom_game/hud/skill_fortune_sticks.png',
             price: 1000,
             currency: '信仰',
         },
@@ -96,6 +96,49 @@ const AbilityShopPanel: React.FC = () => {
             currency: '信仰',
         },
     ];
+
+    // Toast 消息状态
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const toastTimerRef = React.useRef<number>(0);
+
+    // 玩家信仰值
+    const [playerFaith, setPlayerFaith] = useState(0);
+
+    // 显示浮动提示
+    const showToast = (message: string) => {
+        toastTimerRef.current += 1;
+        const currentTimer = toastTimerRef.current;
+
+        setToastMessage(message);
+        $.Schedule(1.7, () => {
+            if (toastTimerRef.current === currentTimer) {
+                setToastMessage(null);
+            }
+        });
+    };
+
+    // 订阅信仰值更新
+    useEffect(() => {
+        const localPlayer = Players.GetLocalPlayer();
+        $.Msg(`[AbilityShop] 初始化信仰订阅, 玩家: ${localPlayer}`);
+
+        const updateFaith = () => {
+            const economyData = CustomNetTables.GetTableValue('economy', `player_${localPlayer}` as any) as any;
+            $.Msg(`[AbilityShop] 读取经济数据: faith=${economyData?.faith}`);
+            if (economyData && economyData.faith !== undefined) {
+                setPlayerFaith(economyData.faith);
+            }
+        };
+
+        // 初始读取
+        updateFaith();
+
+        // 订阅更新
+        const listener = CustomNetTables.SubscribeNetTableListener('economy' as any, updateFaith);
+        return () => {
+            CustomNetTables.UnsubscribeNetTableListener(listener);
+        };
+    }, []);
 
     // handleClose 引用
     const handleCloseRef = React.useRef<() => void>(() => { });
@@ -178,8 +221,16 @@ const AbilityShopPanel: React.FC = () => {
     };
 
     const handlePurchase = (item: typeof shopItems[0]) => {
-        // 获取本地玩家ID
-        const localPlayer = Players.GetLocalPlayer();
+        // 调试: 显示当前信仰值
+        $.Msg(`[AbilityShop] 购买尝试: ${item.name}, 价格: ${item.price}, 当前信仰: ${playerFaith}`);
+
+        // 检查信仰值余额
+        if (playerFaith < item.price) {
+            Game.EmitSound('General.CastFail_NoMana');
+            showToast(`信仰不足，需要 ${item.price}信仰`);
+            $.Msg(`[AbilityShop] 信仰不足，阻止购买`);
+            return;
+        }
 
         // 发送购买事件到服务端
         GameEvents.SendCustomGameEventToServer('cmd_ability_shop_purchase', {
@@ -189,6 +240,7 @@ const AbilityShopPanel: React.FC = () => {
             currency: item.currency,
         } as never);
 
+        // 购买成功音效
         Game.EmitSound('General.Buy');
     };
 
@@ -204,6 +256,17 @@ const AbilityShopPanel: React.FC = () => {
 
                 {/* NPC肖像区域 */}
                 <Panel style={styles.npcContainer}>
+                    {/* 商人对话气泡 - 显示在NPC头顶 */}
+                    {toastMessage && (
+                        <Panel style={styles.speechBubbleWrapper} className="SpeechFadeIn">
+                            <Panel style={styles.speechBubble}>
+                                <Label text={`"${toastMessage}"`} style={styles.speechText} />
+                            </Panel>
+                            {/* 气泡小尾巴 */}
+                            <Panel style={styles.speechTail} />
+                        </Panel>
+                    )}
+
                     {/* NPC肖像 - 呼吸动画 */}
                     <Image
                         src="file://{resources}/images/shop_02.png"
@@ -427,6 +490,39 @@ const styles = {
     tooltipCurrency: {
         color: '#d4c4a8',
         fontSize: '12px',
+    },
+
+    // 对话气泡样式
+    speechBubbleWrapper: {
+        position: '80px -60px 0px' as const,
+        flowChildren: 'down' as const,
+        horizontalAlign: 'center' as const,
+    },
+
+    speechBubble: {
+        backgroundColor: 'rgba(20, 35, 35, 0.95)',
+        border: '2px solid #c9a861',
+        borderRadius: '8px',
+        padding: '10px 16px',
+        boxShadow: '0px 0px 12px rgba(201, 168, 97, 0.3)',
+    },
+
+    speechText: {
+        color: '#ffd780',
+        fontSize: '14px',
+        fontWeight: 'bold' as const,
+        textShadow: '0px 0px 6px #c9a861',
+        whiteSpace: 'nowrap' as const,
+    },
+
+    speechTail: {
+        width: '0px',
+        height: '0px',
+        borderLeft: '8px solid transparent',
+        borderRight: '8px solid transparent',
+        borderTop: '10px solid #c9a861',
+        horizontalAlign: 'center' as const,
+        marginTop: '-1px',
     },
 };
 

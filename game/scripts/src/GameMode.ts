@@ -6,6 +6,7 @@ import { UpgradeSystem } from './systems/UpgradeSystem';
 import { WaveManager } from './systems/WaveManager';
 import { DamageSystem } from './systems/DamageSystem';
 import { AbilityShopManager } from './systems/AbilityShopManager';
+import { knapsackSystem } from './systems/KnapsackSystem';
 import { InitGameStateManager, GetGameStateManager } from './systems/state_manager';
 import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
@@ -92,6 +93,12 @@ export class GameMode {
         // [AbilityShop] Initialize Ability Shop Merchants at game start
         try {
             AbilityShopManager.GetInstance().Initialize();
+        } catch (e) { }
+
+        // [Knapsack] Initialize Knapsack System for ability shop purchases
+        try {
+            knapsackSystem;
+            print('[GameMode] KnapsackSystem 已初始化');
         } catch (e) { }
 
         // [Level] 监听英雄升级事件，更新显示等级

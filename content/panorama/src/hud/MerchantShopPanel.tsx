@@ -492,7 +492,7 @@ const MerchantShopPanel: React.FC = () => {
         // 检查余额 (使用动态 slotCost)
         if (playerGold < slotCost) {
             Game.EmitSound('General.CastFail_NoMana');
-            showToast(`灵石不足，需要 ${slotCost}`);
+            showToast(`灵石不足，需要 ${slotCost}灵石`);
             return;
         }
 

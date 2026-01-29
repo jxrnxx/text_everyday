@@ -61,6 +61,7 @@ export class KnapsackSystem {
 
         // 技能商人购买
         CustomGameEventManager.RegisterListener('cmd_ability_shop_purchase', (_, event) => {
+            print(`[KnapsackSystem] 收到购买事件: ${event.item_id} ${event.item_name} ${event.price}`);
             this.HandleAbilityShopPurchase(event.PlayerID, event.item_id, event.item_name, event.price, event.currency);
         });
 
@@ -336,38 +337,68 @@ export class KnapsackSystem {
         }
 
         // 根据商品ID创建物品名称映射
+        // ID 1: 演武残卷 -> 获得武道·横扫技能书
+        // ID 2-8: 直接获得对应物品
         const itemNameMap: Record<number, string> = {
-            1: 'item_skill_book', // 演武残卷
-            2: 'item_dao_lot', // 问道签
-            3: 'item_derivation_paper', // 衍法灵笺
+            1: 'item_book_martial_cleave_1', // 演武残卷 -> 武道·横扫技能书
+            2: 'item_ask_dao_lot', // 问道签
+            3: 'item_derive_paper', // 衍法灵笺
             4: 'item_blank_rubbing', // 空白拓本
-            5: 'item_enhance_stone_white', // 悟道石·凡
-            6: 'item_enhance_stone_green', // 悟道石·灵
-            7: 'item_enhance_stone_blue', // 悟道石·玄
-            8: 'item_enhance_stone_purple', // 悟道石·仙
+            5: 'item_upgrade_stone_1', // 悟道石·凡
+            6: 'item_upgrade_stone_2', // 悟道石·灵
+            7: 'item_upgrade_stone_3', // 悟道石·仙
+            8: 'item_upgrade_stone_4', // 悟道石·神
         };
 
-        const internalItemName = itemNameMap[itemId] || `item_${itemId}`;
+        // 是否可堆叠 (技能书不可堆叠)
+        const stackableMap: Record<number, boolean> = {
+            1: false, // 技能书不可堆叠
+            2: true,
+            3: true,
+            4: true,
+            5: true,
+            6: true,
+            7: true,
+            8: true,
+        };
+
+        const internalItemName = itemNameMap[itemId];
+        if (!internalItemName) {
+            print(`[KnapsackSystem] 未知商品ID: ${itemId}`);
+            return;
+        }
+
+        const isStackable = stackableMap[itemId] ?? true;
 
         // 创建物品并添加到背包
         const newItem: KnapsackItem = {
             itemName: internalItemName,
             itemId: itemId,
             charges: 1,
-            stackable: true,
+            stackable: isStackable,
         };
 
         const success = this.AddItem(playerId, newItem);
         if (success) {
             // 扣除货币 - 通过 EconomySystem
-            // 需要导入 EconomySystem 或直接调用
             const newFaith = currentFaith - price;
             CustomNetTables.SetTableValue('economy', `player_${playerId}`, {
                 spirit_coin: economyData?.spirit_coin || 0,
                 faith: newFaith,
             } as any);
 
-            print(`[KnapsackSystem] 玩家 ${playerId} 购买了 ${itemName}，花费 ${price} ${currency}`);
+            // 显示成功消息
+            const player = PlayerResource.GetPlayer(playerId);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: `购买成功: ${itemName}`,
+                    duration: 2,
+                } as never);
+            }
+
+            print(
+                `[KnapsackSystem] 玩家 ${playerId} 购买了 ${itemName} -> ${internalItemName}，花费 ${price} ${currency}`
+            );
         }
     }
 
@@ -390,7 +421,18 @@ export class KnapsackSystem {
             data[i.toString()] = knapsack.items[i];
         }
 
-        CustomNetTables.SetTableValue('knapsack', `player_${playerId}`, data as any);
+        // 写入 public_storage NetTable
+        CustomNetTables.SetTableValue('public_storage' as any, `player_${playerId}`, data as any);
+        print(`[KnapsackSystem] 同步背包到 public_storage: player_${playerId}`);
+
+        // 发送事件通知客户端更新背包
+        const player = PlayerResource.GetPlayer(playerId);
+        if (player) {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'backpack_updated' as never, {
+                items: data
+            } as never);
+            print(`[KnapsackSystem] 发送 backpack_updated 事件给玩家 ${playerId}`);
+        }
     }
 
     /**

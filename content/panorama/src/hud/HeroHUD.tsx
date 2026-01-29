@@ -863,22 +863,29 @@ const HeroHUD: FC = () => {
 
                 {/* 技能栏 - 3个职业技能 + 空隙 + 3个公共技能 */}
                 <Panel style={{ flowChildren: 'right' as const }}>
-                    {/* 第1个技能 - 职业技能1 (兵伐·裂空) */}
+                    {/* 第1个技能 - 职业技能1 (兵伐·裂空) - 金色边框测试 */}
                     <Panel className="SkillSlot">
-                        <Panel className="SkillSlotFrame">
-                            <DOTAAbilityImage
-                                className="SkillSlotInner"
-                                // @ts-ignore
-                                abilityname="soldier_war_strike"
-                                showtooltip={true}
-                                style={{
-                                    width: '44px',
-                                    height: '44px',
-                                    margin: '2px',
-                                    borderRadius: '2px',
-                                }}
-                            />
-                        </Panel>
+                        {/* 金色边框背景层 */}
+                        <Image
+                            src="file://{images}/custom_game/hud/slot_frame_gold.png"
+                            style={{
+                                width: '54px',
+                                height: '54px',
+                                position: '0px 0px 0px' as const,
+                            }}
+                        />
+                        {/* 技能图标层 - 叠加在边框上 */}
+                        <DOTAAbilityImage
+                            // @ts-ignore
+                            abilityname="soldier_war_strike"
+                            showtooltip={true}
+                            style={{
+                                width: '44px',
+                                height: '44px',
+                                position: '5px 5px 0px' as const,
+                                borderRadius: '2px',
+                            }}
+                        />
                     </Panel>
 
                     {/* 第2-3个技能槽 - 职业技能2、3 (空槽) */}
@@ -893,10 +900,9 @@ const HeroHUD: FC = () => {
                     {/* 空隙 - 分隔职业技能和公共技能 */}
                     <Panel style={{ width: '58px', height: '54px' }} />
 
-                    {/* 第4个技能 - 公共技能1: 武道·横扫 (1星) */}
+                    {/* 第4个技能 - 公共技能1: 武道·横扫 */}
                     <Panel className="SkillSlot">
                         <Panel className="SkillSlotFrame">
-                            {/* 技能图标 - 替换空槽内容 */}
                             <Image
                                 src="file://{images}/custom_game/hud/skill_cleave.png"
                                 style={{

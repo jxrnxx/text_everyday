@@ -60,4 +60,169 @@
         "ItemPermanent"         "0"
         "ItemInitialCharges"    "1"
     }
+
+    // -------------------------------------------------------------------------
+    // 技能商人物品 - 消耗品
+    // -------------------------------------------------------------------------
+
+    // 演武残卷 - 凡品(1)
+    "item_scroll_gacha"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_gacha_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1301"
+        "ItemCost"              "500"
+        "AbilityTextureName"    "item_scroll_gacha"
+        "ItemQuality"           "1"
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // 问道签 - 灵品(2)
+    "item_ask_dao_lot"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_gacha_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1302"
+        "ItemCost"              "1000"
+        "AbilityTextureName"    "item_ask_dao_lot"
+        "ItemQuality"           "2"
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // 衍法灵笺 - 灵品(2)
+    "item_derive_paper"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_skill_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1303"
+        "ItemCost"              "1000"
+        "AbilityTextureName"    "item_derive_paper"
+        "ItemQuality"           "2"
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // 空白拓本 - 仙品(3)
+    "item_blank_rubbing"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_skill_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1304"
+        "ItemCost"              "2000"
+        "AbilityTextureName"    "item_blank_rubbing"
+        "ItemQuality"           "3"
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // -------------------------------------------------------------------------
+    // 技能商人物品 - 强化石
+    // -------------------------------------------------------------------------
+
+    // 悟道石·凡 - 凡品(1)
+    "item_upgrade_stone_1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_upgrade_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1305"
+        "ItemCost"              "1000"
+        "AbilityTextureName"    "item_upgrade_stone_1"
+        "ItemQuality"           "1"
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // 悟道石·灵 - 灵品(2)
+    "item_upgrade_stone_2"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_upgrade_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1306"
+        "ItemCost"              "3000"
+        "AbilityTextureName"    "item_upgrade_stone_2"
+        "ItemQuality"           "2"
+        "ItemPurchasable"       "1"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // 悟道石·仙 - 仙品(3)
+    "item_upgrade_stone_3"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_upgrade_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1307"
+        "ItemCost"              "8000"
+        "AbilityTextureName"    "item_upgrade_stone_3"
+        "ItemQuality"           "3"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // 悟道石·神 - 神品(4)
+    "item_upgrade_stone_4"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_upgrade_logic"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1308"
+        "ItemCost"              "20000"
+        "AbilityTextureName"    "item_upgrade_stone_4"
+        "ItemQuality"           "4"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ItemStackable"         "1"
+        "ItemPermanent"         "0"
+        "ItemInitialCharges"    "1"
+    }
+
+    // -------------------------------------------------------------------------
+    // 技能书
+    // -------------------------------------------------------------------------
+
+    // 武道·横扫 技能书 (1星)
+    "item_book_martial_cleave_1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_learn_skill"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "1401"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_book_martial_cleave_1"
+        "ItemQuality"           "1"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "0"
+        "LearnAbilityName"      "ability_public_martial_cleave"
+    }
 }
