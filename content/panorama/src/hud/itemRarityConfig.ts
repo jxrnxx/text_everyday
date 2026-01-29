@@ -54,12 +54,12 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
     },
 };
 
-// 品质等级对应的边框图片
+// 品质等级对应的边框图片 (使用 slot_frame 系列)
 export const RARITY_FRAME_MAP: Record<number, string> = {
-    1: 'file://{images}/custom_game/hud/tier1_grey.png',
-    2: 'file://{images}/custom_game/hud/tier2_green.png',
-    3: 'file://{images}/custom_game/hud/tier3_purple.png',
-    4: 'file://{images}/custom_game/hud/slot_frame_gold.png',
+    1: 'file://{images}/custom_game/hud/slot_frame_grey.png',    // 凡品 - 灰色
+    2: 'file://{images}/custom_game/hud/slot_frame_green.png',   // 灵品 - 绿色
+    3: 'file://{images}/custom_game/hud/slot_frame_purple.png',  // 仙品 - 紫色
+    4: 'file://{images}/custom_game/hud/slot_frame_orange.png',  // 神品 - 橙色
 };
 
 /**

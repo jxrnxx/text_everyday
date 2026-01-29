@@ -85,7 +85,7 @@ const styles = {
     // ===== 外层总框 =====
     outerFrame: {
         width: `${PANEL_WIDTH}px`,
-        height: '500px',
+        height: '510px',
         padding: '6px',
         backgroundColor: 'gradient(linear, 0% 0%, 0% 100%, from(#002a32ee), to(#00080add))',
         border: '2px solid #b8860b',
@@ -238,7 +238,7 @@ const styles = {
     // ===== 底部按钮区域 =====
     buttonBar: {
         width: `${GRID_INNER_WIDTH + 12}px`,
-        height: '55px',
+        height: '40px',
         marginTop: '4px',
         flowChildren: 'right' as const,
         horizontalAlign: 'center' as const,
@@ -306,11 +306,23 @@ interface ItemCellProps {
 
 function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop, onDragEnd }: ItemCellProps) {
     const [isHovered, setIsHovered] = useState(false);
-    const cellStyle = isHovered ? styles.itemCellHover : styles.itemCell;
 
     // 获取物品品质配置
     const itemConfig = item ? getItemConfig(item.itemName) : null;
     const rarityFrame = itemConfig ? getRarityFrame(itemConfig.rarity) : null;
+
+    // 基础格子样式
+    const baseCellStyle = isHovered ? styles.itemCellHover : styles.itemCell;
+
+    // 如果有品质边框，添加背景图并移除背景色
+    const cellStyle = (item && rarityFrame) ? {
+        ...baseCellStyle,
+        backgroundColor: 'transparent',
+        backgroundImage: `url("${rarityFrame}")`,
+        backgroundSize: '100% 100%' as const,
+        backgroundRepeat: 'no-repeat' as const,
+        border: '0px',
+    } : baseCellStyle;
 
     return (
         <Panel
@@ -331,36 +343,24 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
             >
                 {item && (
                     <>
-                        {/* 有品质的物品: 品质边框 + 透明图标 */}
-                        {rarityFrame && itemConfig ? (
-                            <>
-                                {/* Layer 1: 品质边框背景 */}
-                                <Image
-                                    src={rarityFrame}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        position: '0px 0px 0px' as const,
-                                    }}
-                                />
-                                {/* Layer 2: 物品透明图标 */}
-                                <Image
-                                    src={itemConfig.icon}
-                                    style={{
-                                        width: '85%',
-                                        height: '85%',
-                                        position: '4px 4px 0px' as const,
-                                    }}
-                                />
-                            </>
+                        {/* 物品图标 - 使用透明图标或默认图标 */}
+                        {itemConfig ? (
+                            <Image
+                                src={itemConfig.icon}
+                                style={{
+                                    width: '80%',
+                                    height: '80%',
+                                    horizontalAlign: 'center' as const,
+                                    verticalAlign: 'center' as const,
+                                }}
+                            />
                         ) : (
-                            // 无品质的物品: 默认 DOTAItemImage
                             <DOTAItemImage
                                 itemname={item.itemName}
                                 style={{ width: '100%', height: '100%' }}
                             />
                         )}
-                        {/* Layer 3: 堆叠数量 */}
+                        {/* 堆叠数量 */}
                         {item.stackable && item.charges > 1 && (
                             <Panel style={{ width: '100%', height: '30%', position: '0px 35px 0px' }} hittest={false}>
                                 <Label style={styles.stackCount} text={String(item.charges)} />
@@ -533,9 +533,20 @@ export function DefaultBackpackPanel() {
         // 监听服务端发送的 backpack_updated 事件
         const backpackEventListener = GameEvents.Subscribe('backpack_updated' as any, (event: any) => {
             $.Msg(`[DefaultBackpack] 收到 backpack_updated 事件!`);
-            if (event && event.items) {
-                $.Msg(`[DefaultBackpack] 事件携带数据, 第一格=${JSON.stringify(event.items['0'])}`);
-                updateItemsFromNetTable(event.items, 'public');
+            if (event) {
+                // 新格式: event.publicItems 和 event.privateItems
+                if (event.publicItems) {
+                    $.Msg(`[DefaultBackpack] 更新公用仓库数据`);
+                    updateItemsFromNetTable(event.publicItems, 'public');
+                }
+                if (event.privateItems) {
+                    $.Msg(`[DefaultBackpack] 更新私人背包数据`);
+                    updateItemsFromNetTable(event.privateItems, 'private');
+                }
+                // 兼容旧格式
+                if (event.items && !event.publicItems && !event.privateItems) {
+                    updateItemsFromNetTable(event.items, 'public');
+                }
             }
         });
 
@@ -708,25 +719,25 @@ export function DefaultBackpackPanel() {
                         <ActionButton
                             id="combine_equip"
                             text="合成装备"
-                            width={130}
-                            height={44}
+                            width={110}
+                            height={38}
                             marginLeft={0}
                             onClick={handleCombineEquip}
                         />
                         <ActionButton
                             id="combine_skill"
                             text="合成技能"
-                            width={130}
-                            height={44}
-                            marginLeft={34}
+                            width={110}
+                            height={38}
+                            marginLeft={60}
                             onClick={handleCombineSkill}
                         />
                         <ActionButton
                             id="tidy_up"
                             text="整理"
-                            width={90}
-                            height={44}
-                            marginLeft={34}
+                            width={80}
+                            height={38}
+                            marginLeft={55}
                             onClick={handleTidyUp}
                         />
                     </Panel>

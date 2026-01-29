@@ -28,3 +28,8 @@ prop_dynamic动态模型
 英雄：hero
 
 屏风 ：models/heroes/antimage_female/debut/models/am_debut_bamboo_mat.vmdl
+
+wings 翅膀
+crownfall 好多宝贝 建筑 雕塑
+
+sword：武器
