@@ -1,6 +1,6 @@
 /**
  * 背包系统 - 管理玩家物品存储
- * 
+ *
  * 公用仓库: 2行 x 8列 = 16格
  * 私人背包: 5行 x 8列 = 40格
  */
@@ -14,7 +14,7 @@ interface KnapsackItem {
 }
 
 interface PlayerStorage {
-    publicItems: (KnapsackItem | null)[];  // 公用仓库 16格
+    publicItems: (KnapsackItem | null)[]; // 公用仓库 16格
     privateItems: (KnapsackItem | null)[]; // 私人背包 40格
 }
 
@@ -23,8 +23,8 @@ export class KnapsackSystem {
     private playerStorage: Map<PlayerID, PlayerStorage> = new Map();
 
     // 仓库大小配置
-    private readonly PUBLIC_SIZE = 16;   // 2行 x 8列
-    private readonly PRIVATE_SIZE = 40;  // 5行 x 8列
+    private readonly PUBLIC_SIZE = 16; // 2行 x 8列
+    private readonly PRIVATE_SIZE = 40; // 5行 x 8列
 
     private constructor() {
         this.RegisterEventListeners();
@@ -42,28 +42,22 @@ export class KnapsackSystem {
      */
     private RegisterEventListeners(): void {
         // 使用物品 (双击)
-        CustomGameEventManager.RegisterListener('backpack_use_item', (_, event) => {
+        CustomGameEventManager.RegisterListener('backpack_use_item', (_, event: any) => {
             this.UseItem(event.PlayerID, event.storageType, event.index, event.targetIndex);
         });
 
         // 交换物品 (拖拽)
-        CustomGameEventManager.RegisterListener('backpack_swap_item', (_, event) => {
-            this.SwapItems(
-                event.PlayerID,
-                event.sourceType,
-                event.sourceIndex,
-                event.targetType,
-                event.targetIndex
-            );
+        CustomGameEventManager.RegisterListener('backpack_swap_item', (_, event: any) => {
+            this.SwapItems(event.PlayerID, event.sourceType, event.sourceIndex, event.targetType, event.targetIndex);
         });
 
         // 丢弃物品 (右键拖出)
-        CustomGameEventManager.RegisterListener('backpack_drop_item', (_, event) => {
+        CustomGameEventManager.RegisterListener('backpack_drop_item', (_, event: any) => {
             this.DropItem(event.PlayerID, event.storageType, event.index, event.position);
         });
 
         // 整理背包
-        CustomGameEventManager.RegisterListener('backpack_tidy_up', (_, event) => {
+        CustomGameEventManager.RegisterListener('backpack_tidy_up', (_, event: any) => {
             this.TidyUp(event.PlayerID);
         });
 
@@ -112,7 +106,9 @@ export class KnapsackSystem {
             });
 
             this.SyncToClient(playerId);
-            print(`[KnapsackSystem] 玩家 ${playerId} 存储已初始化 (公用${this.PUBLIC_SIZE}格 + 私人${this.PRIVATE_SIZE}格)`);
+            print(
+                `[KnapsackSystem] 玩家 ${playerId} 存储已初始化 (公用${this.PUBLIC_SIZE}格 + 私人${this.PRIVATE_SIZE}格)`
+            );
         }
     }
 
@@ -192,7 +188,12 @@ export class KnapsackSystem {
     /**
      * 使用物品 (双击)
      */
-    private UseItem(playerId: PlayerID, storageType: 'public' | 'private', index: number, _targetIndex: EntityIndex): void {
+    private UseItem(
+        playerId: PlayerID,
+        storageType: 'public' | 'private',
+        index: number,
+        _targetIndex: EntityIndex
+    ): void {
         const storage = this.playerStorage.get(playerId);
         if (!storage) return;
 
@@ -207,7 +208,12 @@ export class KnapsackSystem {
     /**
      * 执行物品效果
      */
-    private ExecuteItemEffect(playerId: PlayerID, storageType: 'public' | 'private', item: KnapsackItem, index: number): void {
+    private ExecuteItemEffect(
+        playerId: PlayerID,
+        storageType: 'public' | 'private',
+        item: KnapsackItem,
+        index: number
+    ): void {
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (!hero) return;
 
@@ -300,7 +306,9 @@ export class KnapsackSystem {
         targetItems[targetIndex] = temp;
 
         this.SyncToClient(playerId);
-        print(`[KnapsackSystem] 玩家 ${playerId} 交换物品 ${sourceType}[${sourceIndex}] <-> ${targetType}[${targetIndex}]`);
+        print(
+            `[KnapsackSystem] 玩家 ${playerId} 交换物品 ${sourceType}[${sourceIndex}] <-> ${targetType}[${targetIndex}]`
+        );
     }
 
     /**
@@ -394,19 +402,19 @@ export class KnapsackSystem {
 
         // 物品ID映射
         const itemNameMap: Record<number, string> = {
-            1: 'item_scroll_gacha',      // 演武残卷
-            2: 'item_ask_dao_lot',       // 问道签
-            3: 'item_derive_paper',      // 衍法灵笺
-            4: 'item_blank_rubbing',     // 空白拓本
-            5: 'item_upgrade_stone_1',   // 悟道石·凡
-            6: 'item_upgrade_stone_2',   // 悟道石·灵
-            7: 'item_upgrade_stone_3',   // 悟道石·仙
-            8: 'item_upgrade_stone_4',   // 悟道石·神
+            1: 'item_scroll_gacha', // 演武残卷
+            2: 'item_ask_dao_lot', // 问道签
+            3: 'item_derive_paper', // 衍法灵笺
+            4: 'item_blank_rubbing', // 空白拓本
+            5: 'item_upgrade_stone_1', // 悟道石·凡
+            6: 'item_upgrade_stone_2', // 悟道石·灵
+            7: 'item_upgrade_stone_3', // 悟道石·仙
+            8: 'item_upgrade_stone_4', // 悟道石·神
         };
 
         // 是否可堆叠
         const stackableMap: Record<number, boolean> = {
-            1: true,  // 演武残卷可堆叠
+            1: true, // 演武残卷可堆叠
             2: true,
             3: true,
             4: true,
@@ -484,15 +492,21 @@ export class KnapsackSystem {
         CustomNetTables.SetTableValue('public_storage' as any, `player_${playerId}`, publicData as any);
         CustomNetTables.SetTableValue('private_backpack' as any, `player_${playerId}`, privateData as any);
 
-        print(`[KnapsackSystem] 同步到客户端: public_storage(${this.PUBLIC_SIZE}格) + private_backpack(${this.PRIVATE_SIZE}格)`);
+        print(
+            `[KnapsackSystem] 同步到客户端: public_storage(${this.PUBLIC_SIZE}格) + private_backpack(${this.PRIVATE_SIZE}格)`
+        );
 
         // 发送事件通知客户端
         const player = PlayerResource.GetPlayer(playerId);
         if (player) {
-            CustomGameEventManager.Send_ServerToPlayer(player, 'backpack_updated' as never, {
-                publicItems: publicData,
-                privateItems: privateData,
-            } as never);
+            CustomGameEventManager.Send_ServerToPlayer(
+                player,
+                'backpack_updated' as never,
+                {
+                    publicItems: publicData,
+                    privateItems: privateData,
+                } as never
+            );
         }
     }
 

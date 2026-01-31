@@ -5,50 +5,50 @@
 
 // 物品配置接口
 export interface ItemConfig {
-    rarity: number;      // 品质等级: 1=凡, 2=灵, 3=仙, 4=神
-    icon: string;        // 透明图标路径
+    rarity: number; // 品质等级: 1=凡, 2=灵, 3=仙, 4=神
+    icon: string; // 透明图标路径
 }
 
 // 物品配置映射
 export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
     // === 消耗品 ===
-    'item_scroll_gacha': {
+    item_scroll_gacha: {
         rarity: 1,
         icon: 'file://{resources}/images/custom_items/skill_book_blue.png',
     },
-    'item_ask_dao_lot': {
+    item_ask_dao_lot: {
         rarity: 2,
         icon: 'file://{images}/custom_game/hud/skill_fortune_sticks.png',
     },
-    'item_derive_paper': {
+    item_derive_paper: {
         rarity: 2,
         icon: 'file://{resources}/images/custom_items/derivation_paper.png',
     },
-    'item_blank_rubbing': {
+    item_blank_rubbing: {
         rarity: 3,
         icon: 'file://{resources}/images/custom_items/blank_rubbing.png',
     },
 
     // === 强化石 ===
-    'item_upgrade_stone_1': {
+    item_upgrade_stone_1: {
         rarity: 1,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_white.png',
     },
-    'item_upgrade_stone_2': {
+    item_upgrade_stone_2: {
         rarity: 2,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_green.png',
     },
-    'item_upgrade_stone_3': {
+    item_upgrade_stone_3: {
         rarity: 3,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_purple.png',
     },
-    'item_upgrade_stone_4': {
+    item_upgrade_stone_4: {
         rarity: 4,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_gold.png',
     },
 
     // === 技能书 ===
-    'item_book_martial_cleave_1': {
+    item_book_martial_cleave_1: {
         rarity: 1,
         icon: 'file://{images}/custom_game/hud/skill_cleave.png',
     },
@@ -56,10 +56,18 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
 
 // 品质等级对应的边框图片 (使用 slot_frame 系列)
 export const RARITY_FRAME_MAP: Record<number, string> = {
-    1: 'file://{images}/custom_game/hud/slot_frame_grey.png',    // 凡品 - 灰色
-    2: 'file://{images}/custom_game/hud/slot_frame_green.png',   // 灵品 - 绿色
-    3: 'file://{images}/custom_game/hud/slot_frame_purple.png',  // 仙品 - 紫色
-    4: 'file://{images}/custom_game/hud/slot_frame_orange.png',  // 神品 - 橙色
+    1: 'file://{images}/custom_game/hud/slot_frame_grey.png', // 凡品 - 灰色
+    2: 'file://{images}/custom_game/hud/slot_frame_green.png', // 灵品 - 绿色
+    3: 'file://{images}/custom_game/hud/slot_frame_purple.png', // 仙品 - 紫色
+    4: 'file://{images}/custom_game/hud/slot_frame_orange.png', // 神品 - 橙色
+};
+
+// 品质等级对应的背景图片 (使用 rarity_bg 系列)
+export const RARITY_BG_MAP: Record<number, string> = {
+    1: 'file://{images}/custom_game/hud/rarity_bg_1.png', // 凡品 - 灰色背景
+    2: 'file://{images}/custom_game/hud/rarity_bg_2.png', // 灵品 - 绿色背景
+    3: 'file://{images}/custom_game/hud/rarity_bg_3.png', // 仙品 - 紫色背景
+    4: 'file://{images}/custom_game/hud/rarity_bg_4.png', // 神品 - 橙色背景
 };
 
 /**
@@ -88,4 +96,11 @@ export function getItemIcon(itemName: string): string | null {
  */
 export function getRarityFrame(rarity: number): string | null {
     return RARITY_FRAME_MAP[rarity] || null;
+}
+
+/**
+ * 获取品质对应的背景图片
+ */
+export function getRarityBg(rarity: number): string | null {
+    return RARITY_BG_MAP[rarity] || null;
 }

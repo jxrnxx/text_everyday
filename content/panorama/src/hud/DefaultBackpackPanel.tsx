@@ -1,5 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { getItemConfig, getRarityFrame } from './itemRarityConfig';
+import React, { useState, useEffect, useRef } from 'react';
+import { getItemConfig, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP } from './itemRarityConfig';
+
+// 预加载标记
+let imagesPreloaded = false;
+
+// 预加载所有品质背景图片
+const preloadImages = (contextPanel: Panel) => {
+    $.Msg('[Backpack] preloadImages 被调用');
+    if (imagesPreloaded) {
+        $.Msg('[Backpack] 图片已预加载过，跳过');
+        return;
+    }
+    imagesPreloaded = true;
+
+    try {
+        $.Msg('[Backpack] 开始预加载图片...');
+        // 预加载背景图
+        Object.values(RARITY_BG_MAP).forEach((bgPath) => {
+            const preloadPanel = $.CreatePanel('Image', contextPanel, '');
+            preloadPanel.SetImage(bgPath);
+            preloadPanel.style.width = '1px';
+            preloadPanel.style.height = '1px';
+            preloadPanel.style.visibility = 'collapse';
+            preloadPanel.DeleteAsync(0.5);
+        });
+        // 预加载边框图
+        Object.values(RARITY_FRAME_MAP).forEach((framePath) => {
+            const preloadPanel = $.CreatePanel('Image', contextPanel, '');
+            preloadPanel.SetImage(framePath);
+            preloadPanel.style.width = '1px';
+            preloadPanel.style.height = '1px';
+            preloadPanel.style.visibility = 'collapse';
+            preloadPanel.DeleteAsync(0.5);
+        });
+        // 预加载物品图标
+        Object.values(ITEM_CONFIG_MAP).forEach((config) => {
+            const preloadPanel = $.CreatePanel('Image', contextPanel, '');
+            preloadPanel.SetImage(config.icon);
+            preloadPanel.style.width = '1px';
+            preloadPanel.style.height = '1px';
+            preloadPanel.style.visibility = 'collapse';
+            preloadPanel.DeleteAsync(0.5);
+        });
+        $.Msg('[Backpack] 图片预加载完成');
+    } catch (e) {
+        $.Msg('[Backpack] 图片预加载失败: ' + e);
+    }
+};
 
 // 背包配置
 const PUBLIC_STORAGE_COLS = 8;
@@ -31,7 +78,9 @@ const styles = {
     // ===== 包装容器 - 打开状态 =====
     wrapperOpen: {
         flowChildren: 'right' as const,
-        position: '1230px 330px 0px' as const,
+        horizontalAlign: 'right' as const,
+        verticalAlign: 'center' as const,
+        marginRight: '0px',
         transform: 'translateX(0px)',
         transitionProperty: 'transform',
         transitionDuration: '0.3s',
@@ -41,7 +90,9 @@ const styles = {
     // ===== 包装容器 - 关闭状态 =====
     wrapperClosed: {
         flowChildren: 'right' as const,
-        position: '1230px 330px 0px' as const,
+        horizontalAlign: 'right' as const,
+        verticalAlign: 'center' as const,
+        marginRight: '0px',
         transform: `translateX(${PANEL_WIDTH}px)`,
         transitionProperty: 'transform',
         transitionDuration: '0.3s',
@@ -310,18 +361,31 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
     // 获取物品品质配置
     const itemConfig = item ? getItemConfig(item.itemName) : null;
     const rarityFrame = itemConfig ? getRarityFrame(itemConfig.rarity) : null;
+    const rarityBg = itemConfig ? getRarityBg(itemConfig.rarity) : null;
+
+    // 品质对应的发光颜色
+    const glowColors: Record<number, string> = {
+        1: '#aaaaaa',  // 凡品 - 灰色
+        2: '#22ff88',  // 灵品 - 绿色
+        3: '#aa44ff',  // 仙品 - 紫色
+        4: '#ffaa00',  // 神品 - 橙色
+    };
+    const glowColor = itemConfig ? glowColors[itemConfig.rarity] || '#ffffff' : '#ffffff';
 
     // 基础格子样式
-    const baseCellStyle = isHovered ? styles.itemCellHover : styles.itemCell;
+    const baseCellStyle = styles.itemCell;
 
-    // 如果有品质边框，添加背景图并移除背景色
-    const cellStyle = (item && rarityFrame) ? {
+    // 如果有物品，使用品质背景和发光效果
+    const cellStyle = (item && rarityBg) ? {
         ...baseCellStyle,
         backgroundColor: 'transparent',
-        backgroundImage: `url("${rarityFrame}")`,
+        backgroundImage: `url("${rarityBg}")`,
         backgroundSize: '100% 100%' as const,
         backgroundRepeat: 'no-repeat' as const,
         border: '0px',
+        boxShadow: isHovered
+            ? `0px 0px 8px ${glowColor}aa, inset 0px 0px 4px ${glowColor}33`
+            : `0px 0px 2px ${glowColor}55`,
     } : baseCellStyle;
 
     return (
@@ -329,41 +393,70 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
             style={cellStyle}
             onmouseover={() => setIsHovered(true)}
             onmouseout={() => setIsHovered(false)}
+            draggable={true}
+            on-ui-DragStart={(p: Panel, d: any) => onDragStart(index, storageType, p, d)}
+            on-ui-DragDrop={(p: Panel, d: any) => onDragDrop(index, storageType, p, d)}
+            on-ui-DragEnd={(p: Panel, d: any) => onDragEnd(p, d)}
         >
             <Button
                 style={styles.itemButton}
-                draggable={true}
                 onactivate={() => onUseItem(index, storageType)}
-                // @ts-ignore
-                onDragStart={(p: Panel, d: any) => onDragStart(index, storageType, p, d)}
-                // @ts-ignore
-                onDragDrop={(p: Panel, d: any) => onDragDrop(index, storageType, p, d)}
-                // @ts-ignore
-                onDragEnd={(p: Panel, d: any) => onDragEnd(p, d)}
             >
                 {item && (
                     <>
+                        {/* 边框层 - 始终显示品质边框 */}
+                        {rarityFrame && (
+                            <Image
+                                src={rarityFrame}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    position: '0px 0px 0px',
+                                    opacity: '1.0',
+                                }}
+                                hittest={false}
+                            />
+                        )}
                         {/* 物品图标 - 使用透明图标或默认图标 */}
                         {itemConfig ? (
                             <Image
                                 src={itemConfig.icon}
                                 style={{
-                                    width: '80%',
-                                    height: '80%',
+                                    width: '99%',
+                                    height: '99%',
                                     horizontalAlign: 'center' as const,
                                     verticalAlign: 'center' as const,
                                 }}
+                                hittest={false}
                             />
                         ) : (
                             <DOTAItemImage
                                 itemname={item.itemName}
                                 style={{ width: '100%', height: '100%' }}
+                                hittest={false}
                             />
                         )}
                         {/* 堆叠数量 */}
                         {item.stackable && item.charges > 1 && (
-                            <Panel style={{ width: '100%', height: '30%', position: '0px 35px 0px' }} hittest={false}>
-                                <Label style={styles.stackCount} text={String(item.charges)} />
+                            <Panel
+                                style={{
+                                    flowChildren: 'right' as const,
+                                    horizontalAlign: 'right' as const,
+                                    verticalAlign: 'bottom' as const,
+                                    marginBottom: '2px',
+                                    marginRight: '4px',
+                                }}
+                                hittest={false}
+                            >
+                                <Label
+                                    text={item.charges.toString()}
+                                    style={{
+                                        color: '#ffffff',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold' as const,
+                                        textShadow: '0px 0px 2px #000000',
+                                    }}
+                                />
                             </Panel>
                         )}
                     </>
@@ -372,6 +465,9 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
         </Panel>
     );
 }
+
+
+
 
 
 // 单个仓库区域组件
@@ -480,8 +576,18 @@ export function DefaultBackpackPanel() {
     const [isOpen, setIsOpen] = useState(true);
     const [publicItems, setPublicItems] = useState<(BackpackItem | null)[]>([]);
     const [privateItems, setPrivateItems] = useState<(BackpackItem | null)[]>([]);
+    const panelRef = useRef<Panel | null>(null);
 
-    // 初始化物品数组
+    // 拖拽状态（使用 ref 在事件之间保持状态）
+    const dragStateRef = useRef<{
+        itemIndex: number;
+        storageType: 'public' | 'private';
+        sourcePanel: Panel | null;
+        displayPanel: any;
+        dragComplete: boolean;
+    } | null>(null);
+
+    // 初始化物品数组 + 预加载图片
     useEffect(() => {
         const initPublic: (BackpackItem | null)[] = [];
         const initPrivate: (BackpackItem | null)[] = [];
@@ -489,6 +595,16 @@ export function DefaultBackpackPanel() {
         for (let i = 0; i < PRIVATE_BAG_SIZE; i++) initPrivate.push(null);
         setPublicItems(initPublic);
         setPrivateItems(initPrivate);
+
+        // 延迟预加载图片，确保面板已挂载
+        $.Schedule(0.5, () => {
+            const contextPanel = $.GetContextPanel();
+            if (contextPanel) {
+                preloadImages(contextPanel);
+            } else {
+                $.Msg('[Backpack] 无法获取 contextPanel，跳过预加载');
+            }
+        });
     }, []);
 
     // 订阅NetTable更新
@@ -591,48 +707,135 @@ export function DefaultBackpackPanel() {
 
     // 拖拽开始
     const handleDragStart = (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any): boolean => {
+        $.Msg(`[Backpack] 拖拽开始: ${storageType}[${index}]`);
+
         if (!isHeroCanCast()) return false;
         const items = storageType === 'public' ? publicItems : privateItems;
-        if (!items[index]) return false;
+        if (!items[index]) {
+            $.Msg(`[Backpack] 格子为空，取消拖拽`);
+            return false;
+        }
 
         const item = items[index]!;
-        let displayPanel: any = $.CreatePanel('DOTAItemImage', $.GetContextPanel(), 'dragImage');
-        displayPanel.itemname = item.itemName;
-        displayPanel.style.height = `${panel.contentheight * 1.05}px`;
-        displayPanel.style.width = `${panel.contentwidth * 1.05}px`;
-        displayPanel.b_dragComplete = false;
-        displayPanel.itemIndex = index;
-        displayPanel.storageType = storageType;
+        $.Msg(`[Backpack] 拖拽物品: ${item.itemName}`);
 
+        // 使源格子半透明
+        panel.style.opacity = '0.5';
+
+        // 获取物品配置
+        const itemConfig = getItemConfig(item.itemName);
+        const rarityBg = itemConfig ? getRarityBg(itemConfig.rarity) : null;
+
+        // 创建可见的拖拽预览
+        const displayPanel: any = $.CreatePanel('Panel', $.GetContextPanel(), 'dragImage');
+        displayPanel.style.width = '48px';
+        displayPanel.style.height = '48px';
+        displayPanel.style.borderRadius = '4px';
+
+        // 设置背景
+        if (rarityBg) {
+            displayPanel.style.backgroundImage = `url("${rarityBg}")`;
+            displayPanel.style.backgroundSize = '100% 100%';
+        } else {
+            displayPanel.style.backgroundColor = '#333333aa';
+        }
+
+        // 添加物品图标
+        if (itemConfig && itemConfig.icon) {
+            const iconImage: any = $.CreatePanel('Image', displayPanel, 'dragIcon');
+            iconImage.SetImage(itemConfig.icon);
+            iconImage.style.width = '44px';
+            iconImage.style.height = '44px';
+            iconImage.style.horizontalAlign = 'center';
+            iconImage.style.verticalAlign = 'center';
+        }
+
+        // 存储拖拽信息到 ref（确保跨事件共享）
+        dragStateRef.current = {
+            itemIndex: index,
+            storageType: storageType,
+            sourcePanel: panel,
+            displayPanel: displayPanel,
+            dragComplete: false,
+        };
+
+        // 同时存储到 dragPanel（Panorama 需要）
+        dragPanel.displayPanel = displayPanel;
+        dragPanel.sourcePanel = panel;
+        dragPanel.itemIndex = index;
+        dragPanel.storageType = storageType;
+        dragPanel.b_dragComplete = false;
         dragPanel.offsetX = 0;
         dragPanel.offsetY = 0;
-        dragPanel.displayPanel = displayPanel;
-        panel.style.opacity = '0.3';
 
+        $.Msg(`[Backpack] 拖拽已开始`);
         return true;
     };
 
     // 拖拽放下
     const handleDragDrop = (index: number, storageType: 'public' | 'private', _panel: Panel, dragPanel: any) => {
-        if (dragPanel.itemIndex !== index || dragPanel.storageType !== storageType) {
+        $.Msg(`[Backpack] 拖拽放下触发: ${storageType}[${index}]`);
+
+        // 从 ref 读取拖拽状态（更可靠）
+        const dragState = dragStateRef.current;
+        const sourceIndex = dragState?.itemIndex ?? dragPanel.itemIndex;
+        const sourceType = dragState?.storageType ?? dragPanel.storageType;
+
+        $.Msg(`[Backpack] 源位置: ${sourceType}[${sourceIndex}]`);
+
+        if (sourceIndex === undefined || sourceType === undefined) {
+            $.Msg(`[Backpack] 源位置无效，取消交换`);
+            return;
+        }
+
+        if (sourceIndex !== index || sourceType !== storageType) {
             dragPanel.b_dragComplete = true;
+            if (dragState) dragState.dragComplete = true;
+            $.Msg(`[Backpack] 交换物品: ${sourceType}[${sourceIndex}] -> ${storageType}[${index}]`);
             GameEvents.SendCustomGameEventToServer('backpack_swap_item', {
-                sourceType: dragPanel.storageType,
-                sourceIndex: dragPanel.itemIndex,
+                sourceType: sourceType,
+                sourceIndex: sourceIndex,
                 targetType: storageType,
                 targetIndex: index,
             } as never);
+        } else {
+            $.Msg(`[Backpack] 放回原位，不交换`);
         }
     };
 
     // 拖拽结束
     const handleDragEnd = (panel: Panel, dragPanel: any) => {
-        dragPanel.displayPanel?.DeleteAsync(0);
+        $.Msg(`[Backpack] 拖拽结束`);
+
+        // 从 ref 读取拖拽状态
+        const dragState = dragStateRef.current;
+
+        // 清理 displayPanel
+        if (dragState?.displayPanel) {
+            dragState.displayPanel.DeleteAsync(0);
+        } else if (dragPanel.displayPanel) {
+            dragPanel.displayPanel.DeleteAsync(0);
+        }
+
+        // 恢复透明度
+        if (dragState?.sourcePanel) {
+            dragState.sourcePanel.style.opacity = '1';
+        } else if (dragPanel.sourcePanel) {
+            dragPanel.sourcePanel.style.opacity = '1';
+        }
         panel.style.opacity = '1';
 
-        if (dragPanel.b_dragComplete) return;
+        const dragComplete = dragState?.dragComplete ?? dragPanel.b_dragComplete;
+        if (dragComplete) {
+            $.Msg(`[Backpack] 拖拽完成`);
+            dragStateRef.current = null;
+            return;
+        }
 
         // 丢弃到地面
+        const sourceType = dragState?.storageType ?? dragPanel.storageType;
+        const sourceIndex = dragState?.itemIndex ?? dragPanel.itemIndex;
+
         $.Schedule(0.01, () => {
             const pos = GameUI.GetCursorPosition();
             const worldPosition = GameUI.GetScreenWorldPosition(pos);
@@ -643,14 +846,16 @@ export function DefaultBackpackPanel() {
                     Entities.IsHero(queryUnit) &&
                     !Entities.IsIllusion(queryUnit);
 
-                if (isValidHero) {
+                if (isValidHero && sourceType && sourceIndex !== undefined) {
+                    $.Msg(`[Backpack] 丢弃物品: ${sourceType}[${sourceIndex}]`);
                     GameEvents.SendCustomGameEventToServer('backpack_drop_item', {
-                        storageType: dragPanel.storageType,
-                        index: dragPanel.itemIndex,
+                        storageType: sourceType,
+                        index: sourceIndex,
                         position: worldPosition,
                     } as never);
                 }
             }
+            dragStateRef.current = null;
         });
     };
 
