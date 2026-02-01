@@ -33,7 +33,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 1,
             name: '演武残卷',
-            desc: '天地为台，众生为戏。\n随机获得1星(90%)/2星(9%)/4星(1%)技能书。',
+            desc: '天地为台，众生为戏。\n随机获得1星2星技能书。极小概率获得4星技能书。',
             icon: 'file://{resources}/images/custom_items/skill_book_blue.png',
             price: 500,
             currency: '信仰',
@@ -41,7 +41,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 2,
             name: '问道签',
-            desc: '大道三千，弱水三千。\n选择[武道]/[神念]/[被动]，必得指定类型技能书。',
+            desc: '大道三千，弱水三千。\n选择武道/神念/被动，必得指定类型技能书。',
             icon: 'file://{images}/custom_game/hud/skill_fortune_sticks.png',
             price: 1000,
             currency: '信仰',
@@ -82,7 +82,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 7,
             name: '悟道石·仙',
-            desc: '羽化登仙，超脱凡俗。\n将3级技能强化至4级(满级)。',
+            desc: '羽化登仙，超脱凡俗。\n将3级技能强化至4级。',
             icon: 'file://{resources}/images/custom_items/upgrade_stone_purple.png',
             price: 8000,
             currency: '信仰',
@@ -90,7 +90,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 8,
             name: '武道石·神',
-            desc: '神恩如海，神威如狱。\n强化4星技能或突破等级上限。',
+            desc: '神恩如海，神威如狱。\n强化4星技能至等级上限。',
             icon: 'file://{resources}/images/custom_items/upgrade_stone_gold.png',
             price: 20000,
             currency: '信仰',

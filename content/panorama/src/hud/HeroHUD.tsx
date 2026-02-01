@@ -900,18 +900,10 @@ const HeroHUD: FC = () => {
                     {/* 空隙 - 分隔职业技能和公共技能 */}
                     <Panel style={{ width: '58px', height: '54px' }} />
 
-                    {/* 第4个技能 - 公共技能1: 武道·横扫 */}
+                    {/* 第4个技能 - 公共技能1 (空槽) */}
                     <Panel className="SkillSlot">
                         <Panel className="SkillSlotFrame">
-                            <Image
-                                src="file://{images}/custom_game/hud/skill_cleave.png"
-                                style={{
-                                    width: '44px',
-                                    height: '44px',
-                                    margin: '2px',
-                                    borderRadius: '2px',
-                                }}
-                            />
+                            <Panel className="SkillSlotInner" />
                         </Panel>
                     </Panel>
 

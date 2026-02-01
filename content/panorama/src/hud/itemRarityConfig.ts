@@ -7,6 +7,8 @@
 export interface ItemConfig {
     rarity: number; // 品质等级: 1=凡, 2=灵, 3=仙, 4=神
     icon: string; // 透明图标路径
+    displayName: string; // 显示名称
+    description: string; // 物品描述
 }
 
 // 物品配置映射
@@ -15,42 +17,68 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
     item_scroll_gacha: {
         rarity: 1,
         icon: 'file://{resources}/images/custom_items/skill_book_blue.png',
+        displayName: '演武残卷',
+        description:
+            '天地为台，众生为戏。\n随机获得<font color="#c0c0c0">1星</font><font color="#66cc66">2星</font>技能书。极小概率获得<font color="#ffaa00">4星</font>技能书。',
     },
     item_ask_dao_lot: {
         rarity: 2,
         icon: 'file://{images}/custom_game/hud/skill_fortune_sticks.png',
+        displayName: '问道签',
+        description:
+            '大道三千，弱水三千。\n选择<font color="#ff6666">武道</font>/<font color="#66ccff">神念</font>/<font color="#ffcc66">被动</font>，必得指定类型技能书。',
     },
     item_derive_paper: {
         rarity: 2,
         icon: 'file://{resources}/images/custom_items/derivation_paper.png',
+        displayName: '衍法灵笺',
+        description: '法无定法，式无定式。\n将技能随机变为<font color="#66ccff">同星级</font>的另一个技能。',
     },
     item_blank_rubbing: {
         rarity: 3,
         icon: 'file://{resources}/images/custom_items/blank_rubbing.png',
+        displayName: '空白拓本',
+        description:
+            '前尘影事，皆可拓印。\n将已学技能<font color="#ff6666">剥离</font>，变回<font color="#66ccff">技能书</font>放入背包。',
     },
 
     // === 强化石 ===
     item_upgrade_stone_1: {
         rarity: 1,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_white.png',
+        displayName: '悟道石·凡',
+        description:
+            '初窥门径，略有所得。\n将<font color="#c0c0c0">1级</font>技能强化至<font color="#66cc66">2级</font>。',
     },
     item_upgrade_stone_2: {
         rarity: 2,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_green.png',
+        displayName: '悟道石·灵',
+        description:
+            '灵光一闪，融会贯通。\n将<font color="#66cc66">2级</font>技能强化至<font color="#cc66ff">3级</font>。',
     },
     item_upgrade_stone_3: {
         rarity: 3,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_purple.png',
+        displayName: '悟道石·仙',
+        description:
+            '羽化登仙，超脱凡俗。\n将<font color="#cc66ff">3级</font>技能强化至<font color="#ffaa00">4级</font>。',
     },
     item_upgrade_stone_4: {
         rarity: 4,
         icon: 'file://{resources}/images/custom_items/upgrade_stone_gold.png',
+        displayName: '悟道石·神',
+        description:
+            '神恩如海，神威如狱。\n强化<font color="#ffaa00">4星</font>技能至<font color="#ff6666">等级上限</font>。',
     },
 
     // === 技能书 ===
     item_book_martial_cleave_1: {
         rarity: 1,
         icon: 'file://{images}/custom_game/hud/skill_cleave.png',
+        displayName: '武道·横扫秘籍',
+        description:
+            '学习后获得<font color="#ffcc66">被动技能</font>：攻击时对周围敌人造成<font color="#ff6666">溅射伤害</font>',
     },
 };
 

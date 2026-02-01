@@ -14,7 +14,7 @@ import MerchantShopPanel from './MerchantShopPanel';
 import AbilityShopPanel from './AbilityShopPanel';
 import HeroHUD from './HeroHUD';
 import EnemyPanel from './EnemyPanel';
-import { KnapsackPanel } from './KnapsackPanel';
+// import { KnapsackPanel } from './KnapsackPanel'; // 已废弃
 import { DefaultBackpackPanel } from './DefaultBackpackPanel';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
@@ -29,7 +29,7 @@ const Root: FC = () => {
             <AbilityShopPanel />
             <HeroHUD />
             <EnemyPanel />
-            <KnapsackPanel />
+            {/* KnapsackPanel 已废弃，使用 DefaultBackpackPanel 替代 */}
             <DefaultBackpackPanel />
         </>
     );

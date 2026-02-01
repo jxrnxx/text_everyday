@@ -4,7 +4,7 @@ import { getItemConfig, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME
 // 预加载标记
 let imagesPreloaded = false;
 
-// 预加载所有品质背景图片
+// 预加载所有品质背景图片 - 使用实际渲染预热 GPU 缓存
 const preloadImages = (contextPanel: Panel) => {
     $.Msg('[Backpack] preloadImages 被调用');
     if (imagesPreloaded) {
@@ -15,33 +15,42 @@ const preloadImages = (contextPanel: Panel) => {
 
     try {
         $.Msg('[Backpack] 开始预加载图片...');
-        // 预加载背景图
-        Object.values(RARITY_BG_MAP).forEach((bgPath) => {
-            const preloadPanel = $.CreatePanel('Image', contextPanel, '');
-            preloadPanel.SetImage(bgPath);
-            preloadPanel.style.width = '1px';
-            preloadPanel.style.height = '1px';
-            preloadPanel.style.visibility = 'collapse';
-            preloadPanel.DeleteAsync(0.5);
+
+        // 创建一个屏幕外的容器来预加载所有图片
+        const preloadContainer = $.CreatePanel('Panel', contextPanel, 'preloadContainer');
+        preloadContainer.style.position = '-1000px -1000px 0px';  // 屏幕外
+        preloadContainer.style.width = '200px';
+        preloadContainer.style.height = '200px';
+        preloadContainer.style.flowChildren = 'right-wrap';
+
+        // 预加载背景图 - 使用 backgroundImage 属性
+        (Object.values(RARITY_BG_MAP) as string[]).forEach((bgPath, i) => {
+            const preloadPanel = $.CreatePanel('Panel', preloadContainer, `preloadBg_${i}`);
+            preloadPanel.style.width = '48px';
+            preloadPanel.style.height = '48px';
+            preloadPanel.style.backgroundImage = `url("${bgPath}")`;
+            preloadPanel.style.backgroundSize = '100% 100%';
         });
+
         // 预加载边框图
-        Object.values(RARITY_FRAME_MAP).forEach((framePath) => {
-            const preloadPanel = $.CreatePanel('Image', contextPanel, '');
-            preloadPanel.SetImage(framePath);
-            preloadPanel.style.width = '1px';
-            preloadPanel.style.height = '1px';
-            preloadPanel.style.visibility = 'collapse';
-            preloadPanel.DeleteAsync(0.5);
+        (Object.values(RARITY_FRAME_MAP) as string[]).forEach((framePath, i) => {
+            const preloadPanel = $.CreatePanel('Image', preloadContainer, `preloadFrame_${i}`);
+            (preloadPanel as ImagePanel).SetImage(framePath);
+            preloadPanel.style.width = '48px';
+            preloadPanel.style.height = '48px';
         });
+
         // 预加载物品图标
-        Object.values(ITEM_CONFIG_MAP).forEach((config) => {
-            const preloadPanel = $.CreatePanel('Image', contextPanel, '');
-            preloadPanel.SetImage(config.icon);
-            preloadPanel.style.width = '1px';
-            preloadPanel.style.height = '1px';
-            preloadPanel.style.visibility = 'collapse';
-            preloadPanel.DeleteAsync(0.5);
+        (Object.values(ITEM_CONFIG_MAP) as { rarity: number; icon: string }[]).forEach((config, i) => {
+            const preloadPanel = $.CreatePanel('Image', preloadContainer, `preloadIcon_${i}`);
+            (preloadPanel as ImagePanel).SetImage(config.icon);
+            preloadPanel.style.width = '48px';
+            preloadPanel.style.height = '48px';
         });
+
+        // 5秒后删除预加载容器
+        preloadContainer.DeleteAsync(5.0);
+
         $.Msg('[Backpack] 图片预加载完成');
     } catch (e) {
         $.Msg('[Backpack] 图片预加载失败: ' + e);
@@ -344,6 +353,14 @@ const isHeroCanCast = (): boolean => {
     return true;
 };
 
+// 悬停物品信息接口
+interface HoveredItemInfo {
+    item: BackpackItem;
+    itemConfig: ReturnType<typeof getItemConfig>;
+    x: number;
+    y: number;
+}
+
 // 物品格子组件
 interface ItemCellProps {
     index: number;
@@ -353,10 +370,12 @@ interface ItemCellProps {
     onDragStart: (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any) => boolean;
     onDragDrop: (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any) => void;
     onDragEnd: (panel: Panel, dragPanel: any) => void;
+    onHover: (info: HoveredItemInfo | null) => void;
 }
 
-function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop, onDragEnd }: ItemCellProps) {
+function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop, onDragEnd, onHover }: ItemCellProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const cellRef = useRef<Panel | null>(null);
 
     // 获取物品品质配置
     const itemConfig = item ? getItemConfig(item.itemName) : null;
@@ -370,29 +389,80 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
         3: '#aa44ff',  // 仙品 - 紫色
         4: '#ffaa00',  // 神品 - 橙色
     };
-    const glowColor = itemConfig ? glowColors[itemConfig.rarity] || '#ffffff' : '#ffffff';
+    const glowColor = itemConfig ? (glowColors[itemConfig.rarity] || '#ffffff') : '#ffffff';
 
-    // 基础格子样式
-    const baseCellStyle = styles.itemCell;
+    // 完全硬编码样式，避免任何 undefined 值
+    // 重要：两个样式对象必须有完全相同的属性集，否则 Panorama 无法处理属性移除
 
-    // 如果有物品，使用品质背景和发光效果
-    const cellStyle = (item && rarityBg) ? {
-        ...baseCellStyle,
+    // 基础格子样式（无物品时）
+    const emptyCellStyle = {
+        width: `${CELL_SIZE}px`,
+        height: `${CELL_SIZE}px`,
+        margin: `${CELL_GAP}px`,
+        backgroundColor: '#00000088',
+        backgroundImage: 'none',  // 必须有此属性
+        backgroundSize: '100% 100%',  // 必须有此属性
+        backgroundRepeat: 'no-repeat',  // 必须有此属性
+        border: '1px solid #454545',
+        borderRadius: '3px',
+        boxShadow: 'inset 0px 0px 8px #000000',
+        transitionProperty: 'border, box-shadow, background-color',
+        transitionDuration: '0.15s',
+    };
+
+    // 有物品时的样式
+    const itemCellStyle = {
+        width: `${CELL_SIZE}px`,
+        height: `${CELL_SIZE}px`,
+        margin: `${CELL_GAP}px`,
         backgroundColor: 'transparent',
-        backgroundImage: `url("${rarityBg}")`,
-        backgroundSize: '100% 100%' as const,
-        backgroundRepeat: 'no-repeat' as const,
-        border: '0px',
+        backgroundImage: rarityBg ? `url("${rarityBg}")` : 'none',
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        border: '0px solid transparent',
+        borderRadius: '3px',
         boxShadow: isHovered
             ? `0px 0px 8px ${glowColor}aa, inset 0px 0px 4px ${glowColor}33`
             : `0px 0px 2px ${glowColor}55`,
-    } : baseCellStyle;
+        transitionProperty: 'border, box-shadow, background-color',
+        transitionDuration: '0.15s',
+    };
+
+    // 选择样式
+    const cellStyle = (item && rarityBg) ? itemCellStyle : emptyCellStyle;
+
+    // 处理鼠标悬停
+    const handleMouseOver = () => {
+        setIsHovered(true);
+        if (item) {
+            // 获取面板位置用于显示提示框
+            const panel = cellRef.current;
+            let x = 0, y = 0;
+            if (panel) {
+                const pos = panel.GetPositionWithinWindow();
+                x = pos.x;
+                y = pos.y;
+            }
+            onHover({
+                item,
+                itemConfig,
+                x,
+                y,
+            });
+        }
+    };
+
+    const handleMouseOut = () => {
+        setIsHovered(false);
+        onHover(null);
+    };
 
     return (
         <Panel
+            ref={cellRef as any}
             style={cellStyle}
-            onmouseover={() => setIsHovered(true)}
-            onmouseout={() => setIsHovered(false)}
+            onmouseover={handleMouseOver}
+            onmouseout={handleMouseOut}
             draggable={true}
             on-ui-DragStart={(p: Panel, d: any) => onDragStart(index, storageType, p, d)}
             on-ui-DragDrop={(p: Panel, d: any) => onDragDrop(index, storageType, p, d)}
@@ -411,7 +481,8 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
                                 style={{
                                     width: '100%',
                                     height: '100%',
-                                    position: '0px 0px 0px',
+                                    horizontalAlign: 'center',
+                                    verticalAlign: 'center',
                                     opacity: '1.0',
                                 }}
                                 hittest={false}
@@ -482,6 +553,7 @@ interface StorageSectionProps {
     onDragStart: (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any) => boolean;
     onDragDrop: (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any) => void;
     onDragEnd: (panel: Panel, dragPanel: any) => void;
+    onHover: (info: HoveredItemInfo | null) => void;
 }
 
 function StorageSection({
@@ -494,7 +566,8 @@ function StorageSection({
     onUseItem,
     onDragStart,
     onDragDrop,
-    onDragEnd
+    onDragEnd,
+    onHover
 }: StorageSectionProps) {
     const cells = [];
     for (let i = 0; i < cellCount; i++) {
@@ -508,6 +581,7 @@ function StorageSection({
                 onDragStart={onDragStart}
                 onDragDrop={onDragDrop}
                 onDragEnd={onDragEnd}
+                onHover={onHover}
             />
         );
     }
@@ -576,7 +650,11 @@ export function DefaultBackpackPanel() {
     const [isOpen, setIsOpen] = useState(true);
     const [publicItems, setPublicItems] = useState<(BackpackItem | null)[]>([]);
     const [privateItems, setPrivateItems] = useState<(BackpackItem | null)[]>([]);
+    const [hoveredItem, setHoveredItem] = useState<HoveredItemInfo | null>(null);
     const panelRef = useRef<Panel | null>(null);
+
+    // 跟踪组件是否已挂载，防止在卸载后更新状态
+    const isMountedRef = useRef(true);
 
     // 拖拽状态（使用 ref 在事件之间保持状态）
     const dragStateRef = useRef<{
@@ -587,8 +665,13 @@ export function DefaultBackpackPanel() {
         dragComplete: boolean;
     } | null>(null);
 
+    // 从NetTable数据更新物品列表 - 使用 useRef 包装确保闭包正确
+    const updateItemsFromNetTableRef = useRef<(data: any, storageType: 'public' | 'private') => void>(() => { });
+
     // 初始化物品数组 + 预加载图片
     useEffect(() => {
+        isMountedRef.current = true;
+
         const initPublic: (BackpackItem | null)[] = [];
         const initPrivate: (BackpackItem | null)[] = [];
         for (let i = 0; i < PUBLIC_STORAGE_SIZE; i++) initPublic.push(null);
@@ -596,15 +679,18 @@ export function DefaultBackpackPanel() {
         setPublicItems(initPublic);
         setPrivateItems(initPrivate);
 
-        // 延迟预加载图片，确保面板已挂载
-        $.Schedule(0.5, () => {
-            const contextPanel = $.GetContextPanel();
-            if (contextPanel) {
-                preloadImages(contextPanel);
-            } else {
-                $.Msg('[Backpack] 无法获取 contextPanel，跳过预加载');
-            }
-        });
+        // 立即预加载图片（不再延迟）
+        const contextPanel = $.GetContextPanel();
+        if (contextPanel) {
+            preloadImages(contextPanel);
+        } else {
+            $.Msg('[Backpack] 无法获取 contextPanel，跳过预加载');
+        }
+
+        // 组件卸载时设置 isMountedRef = false
+        return () => {
+            isMountedRef.current = false;
+        };
     }, []);
 
     // 订阅NetTable更新
@@ -617,14 +703,14 @@ export function DefaultBackpackPanel() {
             const data = CustomNetTables.GetTableValue('public_storage', `player_${playerId}`);
             if (data) {
                 $.Msg(`[DefaultBackpack] 发现 public_storage 数据`);
-                updateItemsFromNetTable(data, 'public');
+                updateItemsFromNetTableRef.current(data, 'public');
             }
         };
 
         // 加载私人背包数据
         const loadPrivateData = () => {
             const data = CustomNetTables.GetTableValue('private_backpack', `player_${playerId}`);
-            if (data) updateItemsFromNetTable(data, 'private');
+            if (data) updateItemsFromNetTableRef.current(data, 'private');
         };
 
         // 初始加载
@@ -635,14 +721,14 @@ export function DefaultBackpackPanel() {
         const publicListener = CustomNetTables.SubscribeNetTableListener('public_storage', (_, key, value) => {
             $.Msg(`[DefaultBackpack] 收到 public_storage 更新: key=${key}`);
             if (key === `player_${playerId}` && value) {
-                updateItemsFromNetTable(value, 'public');
+                updateItemsFromNetTableRef.current(value, 'public');
             }
         });
 
         // 订阅私人背包更新
         const privateListener = CustomNetTables.SubscribeNetTableListener('private_backpack', (_, key, value) => {
             if (key === `player_${playerId}` && value) {
-                updateItemsFromNetTable(value, 'private');
+                updateItemsFromNetTableRef.current(value, 'private');
             }
         });
 
@@ -653,15 +739,15 @@ export function DefaultBackpackPanel() {
                 // 新格式: event.publicItems 和 event.privateItems
                 if (event.publicItems) {
                     $.Msg(`[DefaultBackpack] 更新公用仓库数据`);
-                    updateItemsFromNetTable(event.publicItems, 'public');
+                    updateItemsFromNetTableRef.current(event.publicItems, 'public');
                 }
                 if (event.privateItems) {
                     $.Msg(`[DefaultBackpack] 更新私人背包数据`);
-                    updateItemsFromNetTable(event.privateItems, 'private');
+                    updateItemsFromNetTableRef.current(event.privateItems, 'private');
                 }
                 // 兼容旧格式
                 if (event.items && !event.publicItems && !event.privateItems) {
-                    updateItemsFromNetTable(event.items, 'public');
+                    updateItemsFromNetTableRef.current(event.items, 'public');
                 }
             }
         });
@@ -673,18 +759,59 @@ export function DefaultBackpackPanel() {
         };
     }, []);
 
-    // 从NetTable数据更新物品列表
+    // 更新 ref 的实现（每次渲染更新，确保捕获最新的 state setter）
+    updateItemsFromNetTableRef.current = (data: any, storageType: 'public' | 'private') => {
+        try {
+            // 检查组件是否已卸载
+            if (!isMountedRef.current) {
+                $.Msg(`[DefaultBackpack] 组件已卸载，跳过更新`);
+                return;
+            }
+
+            // 检查 data 是否有效
+            if (data === null || data === undefined) {
+                $.Msg(`[DefaultBackpack] 数据为 null/undefined，跳过更新`);
+                return;
+            }
+
+            if (typeof data !== 'object') {
+                $.Msg(`[DefaultBackpack] 数据类型错误: ${typeof data}，跳过更新`);
+                return;
+            }
+
+            const size = storageType === 'public' ? PUBLIC_STORAGE_SIZE : PRIVATE_BAG_SIZE;
+            const newItems: (BackpackItem | null)[] = [];
+
+            for (let i = 0; i < size; i++) {
+                const key = i.toString();
+                const item = data[key];
+
+                // 确保物品数据有效
+                if (item && typeof item === 'object' && 'itemName' in item && item.itemName) {
+                    newItems.push({
+                        itemName: item.itemName,
+                        itemId: item.itemId || 0,
+                        charges: item.charges || 1,
+                        stackable: item.stackable || false,
+                    });
+                } else {
+                    newItems.push(null);
+                }
+            }
+
+            if (storageType === 'public') {
+                setPublicItems(newItems);
+            } else {
+                setPrivateItems(newItems);
+            }
+        } catch (e) {
+            $.Msg(`[DefaultBackpack] updateItemsFromNetTable 错误: ${e}`);
+        }
+    };
+
+    // 包装函数供外部使用
     const updateItemsFromNetTable = (data: any, storageType: 'public' | 'private') => {
-        const size = storageType === 'public' ? PUBLIC_STORAGE_SIZE : PRIVATE_BAG_SIZE;
-        const newItems: (BackpackItem | null)[] = [];
-        for (let i = 0; i < size; i++) {
-            newItems.push(data[i.toString()] || null);
-        }
-        if (storageType === 'public') {
-            setPublicItems(newItems);
-        } else {
-            setPrivateItems(newItems);
-        }
+        updateItemsFromNetTableRef.current(data, storageType);
     };
 
     // 切换背包可见性
@@ -837,23 +964,32 @@ export function DefaultBackpackPanel() {
         const sourceIndex = dragState?.itemIndex ?? dragPanel.itemIndex;
 
         $.Schedule(0.01, () => {
-            const pos = GameUI.GetCursorPosition();
-            const worldPosition = GameUI.GetScreenWorldPosition(pos);
+            // 检查组件是否已卸载
+            if (!isMountedRef.current) {
+                return;
+            }
 
-            if (worldPosition) {
-                const queryUnit = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
-                const isValidHero = Entities.IsControllableByPlayer(queryUnit, Players.GetLocalPlayer()) &&
-                    Entities.IsHero(queryUnit) &&
-                    !Entities.IsIllusion(queryUnit);
+            try {
+                const pos = GameUI.GetCursorPosition();
+                const worldPosition = GameUI.GetScreenWorldPosition(pos);
 
-                if (isValidHero && sourceType && sourceIndex !== undefined) {
-                    $.Msg(`[Backpack] 丢弃物品: ${sourceType}[${sourceIndex}]`);
-                    GameEvents.SendCustomGameEventToServer('backpack_drop_item', {
-                        storageType: sourceType,
-                        index: sourceIndex,
-                        position: worldPosition,
-                    } as never);
+                if (worldPosition) {
+                    const queryUnit = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+                    const isValidHero = Entities.IsControllableByPlayer(queryUnit, Players.GetLocalPlayer()) &&
+                        Entities.IsHero(queryUnit) &&
+                        !Entities.IsIllusion(queryUnit);
+
+                    if (isValidHero && sourceType && sourceIndex !== undefined) {
+                        $.Msg(`[Backpack] 丢弃物品: ${sourceType}[${sourceIndex}]`);
+                        GameEvents.SendCustomGameEventToServer('backpack_drop_item', {
+                            storageType: sourceType,
+                            index: sourceIndex,
+                            position: worldPosition,
+                        } as never);
+                    }
                 }
+            } catch (e) {
+                $.Msg(`[Backpack] handleDragEnd Schedule 错误: ${e}`);
             }
             dragStateRef.current = null;
         });
@@ -885,69 +1021,167 @@ export function DefaultBackpackPanel() {
     const wrapperStyle = isOpen ? styles.wrapperOpen : styles.wrapperClosed;
     const toggleTabStyle = isOpen ? styles.toggleTabHidden : styles.toggleTabVisible;
 
+    // 品质名称映射
+    const rarityNames: Record<number, string> = {
+        1: '凡品',
+        2: '灵品',
+        3: '仙品',
+        4: '神品',
+    };
+
+    // 品质颜色映射
+    const rarityColors: Record<number, string> = {
+        1: '#c0c0c0',
+        2: '#66cc66',
+        3: '#cc66ff',
+        4: '#ffaa00',
+    };
+
     return (
-        <Panel style={wrapperStyle}>
-            {/* 左侧手柄 - 关闭时可见，打开时隐藏 */}
-            <Button style={toggleTabStyle} onactivate={toggleInventory} />
+        <>
+            <Panel style={wrapperStyle}>
+                {/* 左侧手柄 - 关闭时可见，打开时隐藏 */}
+                <Button style={toggleTabStyle} onactivate={toggleInventory} />
 
-            {/* 背包主体 */}
-            <Panel style={styles.outerFrame}>
-                <Panel style={styles.innerContainer}>
-                    {/* 公用仓库 */}
-                    <StorageSection
-                        title="公用仓库"
-                        cellCount={PUBLIC_STORAGE_SIZE}
-                        storageType="public"
-                        items={publicItems}
-                        showCloseBtn={isOpen}
-                        onClose={toggleInventory}
-                        onUseItem={handleUseItem}
-                        onDragStart={handleDragStart}
-                        onDragDrop={handleDragDrop}
-                        onDragEnd={handleDragEnd}
-                    />
+                {/* 背包主体 */}
+                <Panel style={styles.outerFrame}>
+                    <Panel style={styles.innerContainer}>
+                        {/* 公用仓库 */}
+                        <StorageSection
+                            title="公用仓库"
+                            cellCount={PUBLIC_STORAGE_SIZE}
+                            storageType="public"
+                            items={publicItems}
+                            showCloseBtn={isOpen}
+                            onClose={toggleInventory}
+                            onUseItem={handleUseItem}
+                            onDragStart={handleDragStart}
+                            onDragDrop={handleDragDrop}
+                            onDragEnd={handleDragEnd}
+                            onHover={setHoveredItem}
+                        />
 
-                    {/* 私人背包 */}
-                    <StorageSection
-                        title="私人背包"
-                        cellCount={PRIVATE_BAG_SIZE}
-                        storageType="private"
-                        items={privateItems}
-                        onUseItem={handleUseItem}
-                        onDragStart={handleDragStart}
-                        onDragDrop={handleDragDrop}
-                        onDragEnd={handleDragEnd}
-                    />
+                        {/* 私人背包 */}
+                        <StorageSection
+                            title="私人背包"
+                            cellCount={PRIVATE_BAG_SIZE}
+                            storageType="private"
+                            items={privateItems}
+                            onUseItem={handleUseItem}
+                            onDragStart={handleDragStart}
+                            onDragDrop={handleDragDrop}
+                            onDragEnd={handleDragEnd}
+                            onHover={setHoveredItem}
+                        />
 
-                    {/* 底部按钮 */}
-                    <Panel style={styles.buttonBar}>
-                        <ActionButton
-                            id="combine_equip"
-                            text="合成装备"
-                            width={110}
-                            height={38}
-                            marginLeft={0}
-                            onClick={handleCombineEquip}
-                        />
-                        <ActionButton
-                            id="combine_skill"
-                            text="合成技能"
-                            width={110}
-                            height={38}
-                            marginLeft={60}
-                            onClick={handleCombineSkill}
-                        />
-                        <ActionButton
-                            id="tidy_up"
-                            text="整理"
-                            width={80}
-                            height={38}
-                            marginLeft={55}
-                            onClick={handleTidyUp}
-                        />
+                        {/* 底部按钮 */}
+                        <Panel style={styles.buttonBar}>
+                            <ActionButton
+                                id="combine_equip"
+                                text="合成装备"
+                                width={110}
+                                height={38}
+                                marginLeft={0}
+                                onClick={handleCombineEquip}
+                            />
+                            <ActionButton
+                                id="combine_skill"
+                                text="合成技能"
+                                width={110}
+                                height={38}
+                                marginLeft={55}
+                                onClick={handleCombineSkill}
+                            />
+                            <ActionButton
+                                id="tidy_up"
+                                text="整理"
+                                width={80}
+                                height={38}
+                                marginLeft={55}
+                                onClick={handleTidyUp}
+                            />
+                        </Panel>
                     </Panel>
                 </Panel>
             </Panel>
-        </Panel>
+
+            {/* 全局物品提示框 - 在最外层渲染 */}
+            {hoveredItem && (() => {
+                // 智能定位：背包在屏幕右侧，提示框始终显示在物品左侧
+                const tooltipWidth = 220;
+                const itemX = hoveredItem.x;
+                const itemY = hoveredItem.y;
+                const screenHeight = Game.GetScreenHeight();
+
+                // 始终在物品左侧显示，确保不超出左边界
+                const tooltipX = Math.max(10, itemX - tooltipWidth - 10);
+
+                // 确保不超出底部边界
+                const tooltipY = Math.min(itemY, screenHeight - 150);
+
+
+                return (
+                    <Panel
+                        style={{
+                            position: `${tooltipX}px ${tooltipY}px 0px` as const,
+                            width: `${tooltipWidth}px`,
+                            minHeight: '80px',
+                            flowChildren: 'down' as const,
+                            backgroundColor: 'rgba(15, 20, 25, 0.95)',
+                            border: `2px solid ${hoveredItem.itemConfig ? (rarityColors[hoveredItem.itemConfig.rarity] || '#666666') : '#666666'}`,
+                            borderRadius: '6px',
+                            padding: '10px',
+                            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.8)',
+                        }}
+                        hittest={false}
+                    >
+                        {/* 物品名称 */}
+                        <Label
+                            text={hoveredItem.itemConfig?.displayName || hoveredItem.item.itemName.replace('item_', '').replace(/_/g, ' ')}
+                            style={{
+                                color: hoveredItem.itemConfig ? (rarityColors[hoveredItem.itemConfig.rarity] || '#ffffff') : '#ffffff',
+                                fontSize: '16px',
+                                fontWeight: 'bold' as const,
+                                marginBottom: '4px',
+                                textShadow: '0px 0px 4px rgba(0, 0, 0, 0.8)',
+                            }}
+                        />
+                        {/* 品质 */}
+                        {hoveredItem.itemConfig && (
+                            <Label
+                                text={`[${rarityNames[hoveredItem.itemConfig.rarity] || '未知'}]`}
+                                style={{
+                                    color: rarityColors[hoveredItem.itemConfig.rarity] || '#888888',
+                                    fontSize: '12px',
+                                    marginBottom: '8px',
+                                }}
+                            />
+                        )}
+                        {/* 描述 */}
+                        <Label
+                            html={true}
+                            text={hoveredItem.itemConfig?.description || '暂无描述'}
+                            style={{
+                                color: '#cccccc',
+                                fontSize: '13px',
+                                textOverflow: 'clip' as const,
+                                whiteSpace: 'normal' as const,
+                            }}
+                        />
+                        {/* 堆叠数量提示 */}
+                        {hoveredItem.item.stackable && hoveredItem.item.charges > 1 && (
+                            <Label
+                                text={`数量: ${hoveredItem.item.charges}`}
+                                style={{
+                                    color: '#aaaaaa',
+                                    fontSize: '12px',
+                                    marginTop: '6px',
+                                }}
+                            />
+                        )}
+                    </Panel>
+                );
+            })()}
+        </>
     );
 }

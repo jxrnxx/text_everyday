@@ -102,7 +102,7 @@ Light Scale	光照强度	1.5-3.0	就是亮度！
 Ambient Angle	光照角度	(0, 100, 0)	控制阴影方向
 Enable Shadows	启用阴影	✅ 勾选	让物体有阴影
 
- light_dynamic（动态点光源）
+ ZHEDCI （动态点光源）
 作用
 局部照明，可以放多个，照亮特定区域。 适合：基地光源、底部光效、装饰灯光。
 
