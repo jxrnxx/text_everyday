@@ -33,7 +33,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 1,
             name: '演武残卷',
-            desc: '天地为台，众生为戏。\n随机获得1星2星技能书。极小概率获得4星技能书。',
+            desc: '天地为台，众生为戏。\n随机获得<font color="#c0c0c0">1星</font><font color="#66cc66">2星</font>技能书。极小概率获得<font color="#ffaa00">4星</font>技能书。',
             icon: 'file://{resources}/images/custom_items/skill_book_blue.png',
             price: 500,
             currency: '信仰',
@@ -41,7 +41,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 2,
             name: '问道签',
-            desc: '大道三千，弱水三千。\n选择武道/神念/被动，必得指定类型技能书。',
+            desc: '大道三千，弱水三千。\n选择<font color="#ff6666">武道</font>/<font color="#66ccff">神念</font>/<font color="#ffcc66">被动</font>，必得指定类型技能书。',
             icon: 'file://{images}/custom_game/hud/skill_fortune_sticks.png',
             price: 1000,
             currency: '信仰',
@@ -49,7 +49,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 3,
             name: '衍法灵笺',
-            desc: '法无定法，式无定式。\n将技能随机变为同星级的另一个技能。',
+            desc: '法无定法，式无定式。\n将技能随机变为<font color="#66ccff">同星级</font>的另一个技能。',
             icon: 'file://{resources}/images/custom_items/derivation_paper.png',
             price: 1000,
             currency: '信仰',
@@ -57,7 +57,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 4,
             name: '空白拓本',
-            desc: '前尘影事，皆可拓印。\n将已学技能剥离，变回技能书放入背包。',
+            desc: '前尘影事，皆可拓印。\n将已学技能<font color="#ff6666">剥离</font>，变回<font color="#66ccff">技能书</font>放入背包。',
             icon: 'file://{resources}/images/custom_items/blank_rubbing.png',
             price: 2000,
             currency: '信仰',
@@ -66,7 +66,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 5,
             name: '悟道石·凡',
-            desc: '初窥门径，略有所得。\n将1级技能强化至2级。',
+            desc: '初窥门径，略有所得。\n将<font color="#c0c0c0">1级</font>技能强化至<font color="#66cc66">2级</font>。',
             icon: 'file://{resources}/images/custom_items/upgrade_stone_white.png',
             price: 1000,
             currency: '信仰',
@@ -74,7 +74,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 6,
             name: '悟道石·灵',
-            desc: '灵光一闪，融会贯通。\n将2级技能强化至3级。',
+            desc: '灵光一闪，融会贯通。\n将<font color="#66cc66">2级</font>技能强化至<font color="#cc66ff">3级</font>。',
             icon: 'file://{resources}/images/custom_items/upgrade_stone_green.png',
             price: 3000,
             currency: '信仰',
@@ -82,7 +82,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 7,
             name: '悟道石·仙',
-            desc: '羽化登仙，超脱凡俗。\n将3级技能强化至4级。',
+            desc: '羽化登仙，超脱凡俗。\n将<font color="#cc66ff">3级</font>技能强化至<font color="#ffaa00">4级</font>。',
             icon: 'file://{resources}/images/custom_items/upgrade_stone_purple.png',
             price: 8000,
             currency: '信仰',
@@ -90,7 +90,7 @@ const AbilityShopPanel: React.FC = () => {
         {
             id: 8,
             name: '武道石·神',
-            desc: '神恩如海，神威如狱。\n强化4星技能至等级上限。',
+            desc: '神恩如海，神威如狱。\n强化<font color="#ffaa00">4星</font>技能至<font color="#ff6666">等级上限</font>。',
             icon: 'file://{resources}/images/custom_items/upgrade_stone_gold.png',
             price: 20000,
             currency: '信仰',
@@ -334,7 +334,7 @@ const AbilityShopPanel: React.FC = () => {
                         >
                             <Label text={shopItems[hoveredItem].name} style={styles.tooltipTitle} />
                             <Panel style={styles.tooltipDivider} />
-                            <Label text={shopItems[hoveredItem].desc} style={styles.tooltipDesc} />
+                            <Label text={shopItems[hoveredItem].desc} style={styles.tooltipDesc} html={true} />
                             <Panel style={styles.tooltipPriceRow}>
                                 <Label text={`${shopItems[hoveredItem].price}`} style={styles.tooltipPrice} />
                                 <Label text={` ${shopItems[hoveredItem].currency}`} style={styles.tooltipCurrency} />

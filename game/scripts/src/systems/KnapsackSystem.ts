@@ -82,6 +82,18 @@ export class KnapsackSystem {
             this.HandleAbilityShopPurchase(event.PlayerID, event.item_id, event.item_name, event.price, event.currency);
         });
 
+        // 技能替换确认 (玩家选择了要替换的格子)
+        CustomGameEventManager.RegisterListener('cmd_skill_replace_confirm', (_, event: any) => {
+            print(`[KnapsackSystem] 收到技能替换确认: slot=${event.slot_key}`);
+            this.HandleSkillReplaceConfirm(
+                event.PlayerID,
+                event.slot_key,
+                event.skill_to_learn,
+                event.storage_type,
+                event.item_index
+            );
+        });
+
         print('[KnapsackSystem] 事件监听器已注册 (backpack_* 前缀)');
     }
 
@@ -222,7 +234,7 @@ export class KnapsackSystem {
             case 'item_book_martial_cleave_1':
                 // 技能书效果 - 学习技能
                 print(`[KnapsackSystem] 玩家 ${playerId} 使用了技能书: ${item.itemName}`);
-                this.ConsumeItem(playerId, storageType, index, 1);
+                this.LearnSkillFromBook(playerId, hero, item, storageType, index);
                 break;
 
             case 'item_scroll_gacha':
@@ -276,6 +288,203 @@ export class KnapsackSystem {
             items[index] = null;
         }
         this.SyncToClient(playerId);
+    }
+
+    // 技能书名到技能名的映射
+    private readonly SKILL_BOOK_MAP: Record<string, string> = {
+        item_book_martial_cleave_1: 'ability_public_martial_cleave', // 武道·横扫
+        // 未来添加更多技能书映射
+    };
+
+    // 公共技能格索引 (对应 Ability3, Ability4, Ability5 = F, G, R)
+    private readonly PUBLIC_SKILL_SLOTS = [2, 3, 4]; // 0-indexed: Ability3=2, Ability4=3, Ability5=4
+
+    /**
+     * 从技能书学习技能
+     * 规则：
+     * - 按F/G/R顺序填充空格子
+     * - 第三格(R)需要玩家达到3阶(rank>=2, 即宗师)
+     * - 格子满时弹出替换选择提示
+     */
+    private LearnSkillFromBook(
+        playerId: PlayerID,
+        hero: CDOTA_BaseNPC_Hero,
+        item: KnapsackItem,
+        storageType: 'public' | 'private',
+        itemIndex: number
+    ): void {
+        const abilityName = this.SKILL_BOOK_MAP[item.itemName];
+        if (!abilityName) {
+            print(`[KnapsackSystem] 未知技能书: ${item.itemName}`);
+            return;
+        }
+
+        // 获取玩家阶位
+        const rankData = CustomNetTables.GetTableValue('custom_stats', `player_${playerId}`) as any;
+        const playerRank = rankData?.rank || 0;
+
+        // 检查是否已学习该技能
+        const existingAbility = hero.FindAbilityByName(abilityName);
+        if (existingAbility && existingAbility.GetLevel() > 0) {
+            const player = PlayerResource.GetPlayer(playerId);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: '你已经学会这个技能了！',
+                    duration: 2,
+                } as never);
+            }
+            return;
+        }
+
+        // 查找空的技能格子
+        let emptySlotIndex = -1;
+        const occupiedSlots: { slot: number; key: string; abilityName: string }[] = [];
+
+        for (let i = 0; i < this.PUBLIC_SKILL_SLOTS.length; i++) {
+            const slotIndex = this.PUBLIC_SKILL_SLOTS[i];
+            const ability = hero.GetAbilityByIndex(slotIndex);
+            const slotKey = i === 0 ? 'F' : i === 1 ? 'G' : 'R';
+
+            // 第三格(R)需要3阶
+            if (i === 2 && playerRank < 2) {
+                // 宗师(rank=2)才能解锁R格
+                continue;
+            }
+
+            if (!ability || ability.GetAbilityName() === 'generic_hidden' || ability.GetLevel() === 0) {
+                // 找到空格子
+                if (emptySlotIndex === -1) {
+                    emptySlotIndex = slotIndex;
+                }
+            } else {
+                // 记录已占用的格子
+                occupiedSlots.push({
+                    slot: slotIndex,
+                    key: slotKey,
+                    abilityName: ability.GetAbilityName(),
+                });
+            }
+        }
+
+        // 如果有空格子，直接学习
+        if (emptySlotIndex !== -1) {
+            this.DoLearnAbility(playerId, hero, abilityName, emptySlotIndex);
+            this.ConsumeItem(playerId, storageType, itemIndex, 1);
+            return;
+        }
+
+        // 格子满了，需要选择替换
+        const player = PlayerResource.GetPlayer(playerId);
+        if (!player) return;
+
+        // 根据阶位决定可替换的格子
+        const availableSlots: string[] = [];
+        if (playerRank < 2) {
+            // 3阶前只有F/G两个格子
+            availableSlots.push('F', 'G');
+        } else {
+            // 3阶后有F/G/R三个格子
+            availableSlots.push('F', 'G', 'R');
+        }
+
+        // 发送事件到客户端，让玩家选择替换哪个技能
+        CustomGameEventManager.Send_ServerToPlayer(player, 'skill_replace_prompt', {
+            skill_to_learn: abilityName,
+            skill_book_name: item.itemName,
+            available_slots: availableSlots,
+            occupied_slots: occupiedSlots,
+            storage_type: storageType,
+            item_index: itemIndex,
+        } as never);
+
+        print(`[KnapsackSystem] 玩家 ${playerId} 技能格已满，发送替换选择提示`);
+    }
+
+    /**
+     * 执行学习技能
+     */
+    private DoLearnAbility(playerId: PlayerID, hero: CDOTA_BaseNPC_Hero, abilityName: string, slotIndex: number): void {
+        // 先移除目标槽位的技能（包括generic_hidden）
+        const oldAbility = hero.GetAbilityByIndex(slotIndex);
+        if (oldAbility) {
+            const oldName = oldAbility.GetAbilityName();
+            print(`[KnapsackSystem] 移除槽位${slotIndex}的旧技能: ${oldName}`);
+            hero.RemoveAbility(oldName);
+        }
+
+        // 添加新技能
+        hero.AddAbility(abilityName);
+        const newAbility = hero.FindAbilityByName(abilityName);
+        if (newAbility) {
+            newAbility.SetLevel(1);
+            newAbility.SetHidden(false);
+            newAbility.SetActivated(true);
+
+            const currentIndex = newAbility.GetAbilityIndex();
+            print(`[KnapsackSystem] 技能${abilityName}添加成功, 当前槽位: ${currentIndex}, 等级: ${newAbility.GetLevel()}`);
+
+            // 打印学习后所有技能状态
+            for (let i = 0; i < 8; i++) {
+                const ab = hero.GetAbilityByIndex(i);
+                if (ab) {
+                    print(`[KnapsackSystem] 槽位${i}: ${ab.GetAbilityName()}, 等级${ab.GetLevel()}, Hidden=${ab.IsHidden()}`);
+                }
+            }
+        } else {
+            print(`[KnapsackSystem] 错误: 技能${abilityName}未找到!`);
+        }
+
+        const slotKey = slotIndex === 2 ? 'F' : slotIndex === 3 ? 'G' : 'R';
+
+        const player = PlayerResource.GetPlayer(playerId);
+        if (player) {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                message: `学习成功！技能已放入 ${slotKey} 格`,
+                duration: 2,
+            } as never);
+        }
+
+        // 播放学习特效
+        EmitSoundOn('General.LevelUp', hero);
+
+        print(`[KnapsackSystem] 玩家 ${playerId} 学习技能 ${abilityName} 到槽位 ${slotKey}`);
+    }
+
+    /**
+     * 处理技能替换确认
+     */
+    private HandleSkillReplaceConfirm(
+        playerId: PlayerID,
+        slotKey: string,
+        skillToLearn: string,
+        storageType: 'public' | 'private',
+        itemIndex: number
+    ): void {
+        const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+        if (!hero) return;
+
+        // 将格子键转换为槽位索引
+        let slotIndex: number;
+        switch (slotKey) {
+            case 'F':
+                slotIndex = 2;
+                break;
+            case 'G':
+                slotIndex = 3;
+                break;
+            case 'R':
+                slotIndex = 4;
+                break;
+            default:
+                print(`[KnapsackSystem] 无效的槽位键: ${slotKey}`);
+                return;
+        }
+
+        // 执行替换
+        this.DoLearnAbility(playerId, hero, skillToLearn, slotIndex);
+        this.ConsumeItem(playerId, storageType, itemIndex, 1);
+
+        print(`[KnapsackSystem] 玩家 ${playerId} 替换技能到槽位 ${slotKey}`);
     }
 
     /**
@@ -432,7 +641,49 @@ export class KnapsackSystem {
 
         const isStackable = stackableMap[itemId] ?? true;
 
-        // 创建物品并添加到私人背包
+        // === 特殊处理：演武残卷 (itemId=1) ===
+        // 演武残卷购买后直接给玩家一本随机技能书，而不是演武残卷本身
+        if (itemId === 1) {
+            // 技能书池 (目前只有一本，以后可以扩展)
+            const skillBooks = [
+                { name: 'item_book_martial_cleave_1', displayName: '武道·横扫秘籍', rarity: 1 },
+                // 未来可以添加更多技能书：
+                // { name: 'item_book_xxx_2', displayName: 'xxx', rarity: 2 },
+            ];
+
+            // 随机选择一本技能书 (目前只有一本，未来可以加入概率逻辑)
+            const selectedBook = skillBooks[0]; // 目前固定给武道·横扫
+
+            const skillBookItem: KnapsackItem = {
+                itemName: selectedBook.name,
+                itemId: 100 + skillBooks.indexOf(selectedBook), // 技能书ID从100开始
+                charges: 1,
+                stackable: false, // 技能书不可堆叠
+            };
+
+            const success = this.AddItemToPrivate(playerId, skillBookItem);
+            if (success) {
+                // 扣除货币
+                const newFaith = currentFaith - price;
+                CustomNetTables.SetTableValue('economy', `player_${playerId}`, {
+                    spirit_coin: economyData?.spirit_coin || 0,
+                    faith: newFaith,
+                } as any);
+
+                const player = PlayerResource.GetPlayer(playerId);
+                if (player) {
+                    CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                        message: `使用演武残卷，获得: ${selectedBook.displayName}`,
+                        duration: 2,
+                    } as never);
+                }
+
+                print(`[KnapsackSystem] 玩家 ${playerId} 使用演武残卷，获得技能书: ${selectedBook.name}`);
+            }
+            return;
+        }
+
+        // === 其他道具：正常添加到背包 ===
         const newItem: KnapsackItem = {
             itemName: internalItemName,
             itemId: itemId,

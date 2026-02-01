@@ -144,7 +144,7 @@
     {
         "BaseClass"                     "ability_lua"
         "ScriptFile"                    "abilities/ability_public_martial_cleave"
-        "AbilityTextureName"            "sven_great_cleave"
+        "AbilityTextureName"            "item_book_martial_cleave_1"
         "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE"
         "MaxLevel"                      "4"
         

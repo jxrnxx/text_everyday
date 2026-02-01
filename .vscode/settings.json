@@ -25,4 +25,8 @@
         "sass"
     ],
     "prettier.tabWidth": 4,
+    // markdown 默认预览模式
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.preview.editor"
+    }
 }
