@@ -111,6 +111,20 @@ const HeroHUD: FC = () => {
     }
     const [buffs, setBuffs] = useState<BuffInfo[]>([]);
 
+    // 公共技能槽位 (F/G/R)
+    interface PublicSkillInfo {
+        slotIndex: number;
+        slotKey: string;
+        abilityName: string;
+        hasAbility: boolean;
+        rarity: number; // 品质等级: 1=凡, 2=灵, 3=仙, 4=神
+    }
+    const [publicSkills, setPublicSkills] = useState<PublicSkillInfo[]>([
+        { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1 },
+        { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1 },
+        { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1 },
+    ]);
+
     // 隐藏状态 - 当其他面板打开时隐藏HeroHUD
     const [isHidden, setIsHidden] = useState(false);
 
@@ -289,6 +303,68 @@ const HeroHUD: FC = () => {
         $.Schedule(0.5, function buffLoop() {
             updateBuffs();
             $.Schedule(0.2, buffLoop);
+        });
+
+        // 公共技能槽更新函数 - 扫描所有技能找公共技能
+        const updatePublicSkills = () => {
+            const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+            if (localHero === -1) return;
+
+            // 公共技能名映射（技能名 -> 品质等级）
+            const PUBLIC_ABILITIES: Record<string, number> = {
+                'ability_public_martial_cleave': 1, // 武道·横扫 - 凡品
+                // 未来添加更多公共技能
+            };
+
+            // 初始化三个槽位为空
+            const skills: { slotIndex: number; slotKey: string; abilityName: string; hasAbility: boolean; rarity: number }[] = [
+                { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1 },
+                { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1 },
+                { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1 },
+            ];
+
+            // 扫描英雄的所有技能（最多24个）
+            const foundAbilities: { name: string; rarity: number }[] = [];
+            // @ts-ignore
+            const abilityCount = Entities.GetAbilityCount(localHero) || 24;
+
+            for (let i = 0; i < Math.min(abilityCount, 24); i++) {
+                // @ts-ignore
+                const ability = Entities.GetAbility(localHero, i);
+                if (!ability || ability === -1) continue;
+
+                // @ts-ignore
+                const abilityName = Abilities.GetAbilityName(ability);
+                // @ts-ignore
+                const level = Abilities.GetLevel(ability);
+
+                // 调试：打印每个技能
+                // $.Msg(`[HeroHUD] 槽位${i}: ${abilityName} lv${level}`);
+
+                // 检查是否是公共技能
+                const abilityRarity = PUBLIC_ABILITIES[abilityName];
+                if (abilityName && abilityRarity !== undefined && level > 0) {
+                    foundAbilities.push({ name: abilityName, rarity: abilityRarity });
+                    $.Msg(`[HeroHUD] 发现公共技能: ${abilityName}, 品质: ${abilityRarity}`);
+                }
+            }
+
+            // 将找到的公共技能填入槽位
+            foundAbilities.forEach((ability, idx) => {
+                if (idx < 3) {
+                    skills[idx].abilityName = ability.name;
+                    skills[idx].hasAbility = true;
+                    skills[idx].rarity = ability.rarity;
+                }
+            });
+
+            setPublicSkills(skills);
+        };
+
+        // 公共技能更新循环 - 每0.5秒刷新
+        $.Schedule(1.0, function skillLoop() {
+            updatePublicSkills();
+            $.Schedule(0.5, skillLoop);
         });
     }, []);
 
@@ -863,7 +939,7 @@ const HeroHUD: FC = () => {
 
                 {/* 技能栏 - 3个职业技能 + 空隙 + 3个公共技能 */}
                 <Panel style={{ flowChildren: 'right' as const }}>
-                    {/* 第1个技能 - 职业技能1 (兵伐·裂空) - 金色边框测试 */}
+                    {/* 第1个技能 - 职业技能1 (兵伐·裂空) - Q */}
                     <Panel className="SkillSlot">
                         {/* 金色边框背景层 */}
                         <Image
@@ -886,35 +962,155 @@ const HeroHUD: FC = () => {
                                 borderRadius: '2px',
                             }}
                         />
+                        {/* 键位标签 */}
+                        <Panel
+                            style={{
+                                position: '2px 2px 0px' as const,
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                padding: '1px 3px',
+                                borderRadius: '2px',
+                            }}
+                        >
+                            <Label
+                                text="Q"
+                                style={{
+                                    color: '#ffcc00',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                }}
+                            />
+                        </Panel>
                     </Panel>
 
-                    {/* 第2-3个技能槽 - 职业技能2、3 (空槽) */}
-                    {[2, 3].map((skillNum) => (
-                        <Panel key={skillNum} className="SkillSlot">
+                    {/* 第2-3个技能槽 - 职业技能2、3 (空槽) W/E */}
+                    {['W', 'E'].map((key, idx) => (
+                        <Panel key={key} className="SkillSlot">
                             <Panel className="SkillSlotFrame">
                                 <Panel className="SkillSlotInner" />
                             </Panel>
+                            {/* 空槽不显示键位 */}
                         </Panel>
                     ))}
 
                     {/* 空隙 - 分隔职业技能和公共技能 */}
                     <Panel style={{ width: '58px', height: '54px' }} />
 
-                    {/* 第4个技能 - 公共技能1 (空槽) */}
-                    <Panel className="SkillSlot">
-                        <Panel className="SkillSlotFrame">
-                            <Panel className="SkillSlotInner" />
-                        </Panel>
-                    </Panel>
+                    {/* 公共技能槽 F/G/R - 动态渲染 */}
+                    {publicSkills.map((skill, index) => {
+                        // 品质对应的边框图片
+                        const RARITY_FRAMES: Record<number, string> = {
+                            1: 'file://{images}/custom_game/hud/slot_frame_grey.png',  // 凡品
+                            2: 'file://{images}/custom_game/hud/slot_frame_green.png', // 灵品
+                            3: 'file://{images}/custom_game/hud/slot_frame_purple.png', // 仙品
+                            4: 'file://{images}/custom_game/hud/slot_frame_orange.png', // 神品
+                        };
+                        // 品质对应的背景图片
+                        const RARITY_BGS: Record<number, string> = {
+                            1: 'file://{images}/custom_game/hud/rarity_bg_1.png', // 凡品背景
+                            2: 'file://{images}/custom_game/hud/rarity_bg_2.png', // 灵品背景
+                            3: 'file://{images}/custom_game/hud/rarity_bg_3.png', // 仙品背景
+                            4: 'file://{images}/custom_game/hud/rarity_bg_4.png', // 神品背景
+                        };
+                        // 技能图标映射
+                        const SKILL_ICONS: Record<string, string> = {
+                            'ability_public_martial_cleave': 'file://{images}/custom_game/hud/skill_cleave.png',
+                            // 未来添加更多技能图标
+                        };
+                        const frameImg = RARITY_FRAMES[skill.rarity] || RARITY_FRAMES[1];
+                        const bgImg = RARITY_BGS[skill.rarity] || RARITY_BGS[1];
+                        const iconImg = SKILL_ICONS[skill.abilityName] || '';
 
-                    {/* 第5-6个技能 - 公共技能2、3 (空槽) */}
-                    {[5, 6].map((skillNum) => (
-                        <Panel key={skillNum} className="SkillSlot">
-                            <Panel className="SkillSlotFrame">
-                                <Panel className="SkillSlotInner" />
+                        return (
+                            <Panel
+                                key={`public_${skill.slotIndex}`}
+                                className="SkillSlot"
+                                onmouseover={(panel) => {
+                                    if (skill.hasAbility && skill.abilityName) {
+                                        // @ts-ignore
+                                        $.DispatchEvent('DOTAShowAbilityTooltip', panel, skill.abilityName);
+                                    }
+                                }}
+                                onmouseout={() => {
+                                    // @ts-ignore
+                                    $.DispatchEvent('DOTAHideAbilityTooltip');
+                                }}
+                            >
+                                {skill.hasAbility ? (
+                                    <>
+                                        {/* 品质背景层 */}
+                                        <Image
+                                            src={bgImg}
+                                            style={{
+                                                width: '54px',
+                                                height: '54px',
+                                                position: '0px 0px 0px' as const,
+                                            }}
+                                        />
+                                        {/* 技能图标层 */}
+                                        <Image
+                                            src={iconImg}
+                                            style={{
+                                                width: '44px',
+                                                height: '44px',
+                                                position: '5px 5px 0px' as const,
+                                            }}
+                                        />
+                                        {/* 品质边框层 */}
+                                        <Image
+                                            src={frameImg}
+                                            style={{
+                                                width: '54px',
+                                                height: '54px',
+                                                position: '0px 0px 0px' as const,
+                                            }}
+                                        />
+                                        {/* 键位标签 */}
+                                        <Panel
+                                            style={{
+                                                position: '2px 2px 0px' as const,
+                                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                                padding: '1px 3px',
+                                                borderRadius: '2px',
+                                            }}
+                                        >
+                                            <Label
+                                                text={skill.slotKey}
+                                                style={{
+                                                    color: '#ffcc00',
+                                                    fontSize: '11px',
+                                                    fontWeight: 'bold',
+                                                }}
+                                            />
+                                        </Panel>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Panel className="SkillSlotFrame">
+                                            <Panel className="SkillSlotInner" />
+                                        </Panel>
+                                        {/* 键位标签 */}
+                                        <Panel
+                                            style={{
+                                                position: '2px 2px 0px' as const,
+                                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                                padding: '1px 3px',
+                                                borderRadius: '2px',
+                                            }}
+                                        >
+                                            <Label
+                                                text={skill.slotKey}
+                                                style={{
+                                                    color: '#888888',
+                                                    fontSize: '11px',
+                                                    fontWeight: 'bold',
+                                                }}
+                                            />
+                                        </Panel>
+                                    </>
+                                )}
                             </Panel>
-                        </Panel>
-                    ))}
+                        );
+                    })}
                 </Panel>
             </Panel>
             {/* 流光分隔线 - 在属性面板右边 */}

@@ -186,4 +186,22 @@ declare interface CustomGameEventDeclarations {
         price: number;
         currency: string;
     };
+
+    /** Skill replace prompt - slots full (Server -> Client) */
+    skill_replace_prompt: {
+        skill_to_learn: string;
+        skill_book_name: string;
+        available_slots: string[];
+        occupied_slots: { slot: number; key: string; abilityName: string }[];
+        storage_type: 'public' | 'private';
+        item_index: number;
+    };
+
+    /** Skill replace confirm (Client -> Server) */
+    cmd_skill_replace_confirm: {
+        slot_key: string;
+        skill_to_learn: string;
+        storage_type: 'public' | 'private';
+        item_index: number;
+    };
 }

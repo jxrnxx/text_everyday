@@ -82,6 +82,16 @@ interface BackpackItem {
     stackable: boolean;
 }
 
+// 技能替换数据接口
+interface SkillReplaceData {
+    skill_to_learn: string;
+    skill_book_name: string;
+    available_slots: string[];
+    occupied_slots: { slot: number; key: string; abilityName: string }[];
+    storage_type: 'public' | 'private';
+    item_index: number;
+}
+
 // 样式定义 - 墨玉(Dark Jade)主题
 const styles = {
     // ===== 包装容器 - 打开状态 =====
@@ -644,6 +654,162 @@ function ActionButton({ id, text, width, height, marginLeft = 0, onClick }: {
     );
 }
 
+// 技能替换弹窗组件
+function SkillReplaceModal({
+    data,
+    onClose
+}: {
+    data: SkillReplaceData;
+    onClose: () => void;
+}) {
+    // 获取玩家阶位 (从NetTable读取)
+    const playerId = Players.GetLocalPlayer();
+    const statsData = CustomNetTables.GetTableValue('custom_stats', `player_${playerId}`) as any;
+    const playerRank = statsData?.rank || 0;
+
+    // 技能名称映射
+    const skillDisplayNames: Record<string, string> = {
+        'ability_public_martial_cleave': '武道·横扫',
+        // 可扩展更多技能
+    };
+
+    const getSkillDisplayName = (abilityName: string) => {
+        return skillDisplayNames[abilityName] || abilityName.replace('ability_', '').replace(/_/g, ' ');
+    };
+
+    // 处理替换确认
+    const handleConfirm = (slotKey: string) => {
+        $.Msg(`[SkillReplace] 确认替换到槽位: ${slotKey}`);
+        GameEvents.SendCustomGameEventToServer('cmd_skill_replace_confirm', {
+            slot_key: slotKey,
+            skill_to_learn: data.skill_to_learn,
+            storage_type: data.storage_type,
+            item_index: data.item_index,
+        } as never);
+        onClose();
+    };
+
+    // 弹窗样式
+    const modalOverlayStyle = {
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        horizontalAlign: 'center' as const,
+        verticalAlign: 'center' as const,
+    };
+
+    const modalBoxStyle = {
+        width: '350px',
+        flowChildren: 'down' as const,
+        backgroundColor: 'linear-gradient(180deg, #1a2030 0%, #0d1520 100%)',
+        border: '2px solid #b8860b',
+        borderRadius: '8px',
+        padding: '20px',
+        boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.9)',
+        horizontalAlign: 'center' as const,
+        verticalAlign: 'center' as const,
+    };
+
+    const titleStyle = {
+        fontSize: '18px',
+        fontWeight: 'bold' as const,
+        color: '#ffd700',
+        marginBottom: '16px',
+        textShadow: '0px 0px 6px rgba(255, 215, 0, 0.5)',
+    };
+
+    const skillNameStyle = {
+        fontSize: '16px',
+        color: '#66ff88',
+        marginBottom: '20px',
+    };
+
+    const slotButtonStyle = {
+        width: '100%',
+        height: '40px',
+        marginBottom: '8px',
+        backgroundColor: 'linear-gradient(180deg, #2a3a4a 0%, #1a2a3a 100%)',
+        border: '1px solid #4a6a8a',
+        borderRadius: '4px',
+    };
+
+    const slotButtonDisabledStyle = {
+        ...slotButtonStyle,
+        backgroundColor: '#333333',
+        border: '1px solid #555555',
+        opacity: '0.6',
+    };
+
+    const slotButtonTextStyle = {
+        fontSize: '14px',
+        color: '#ffffff',
+        horizontalAlign: 'center' as const,
+        verticalAlign: 'center' as const,
+    };
+
+    const disabledTextStyle = {
+        ...slotButtonTextStyle,
+        color: '#888888',
+    };
+
+    const cancelButtonStyle = {
+        width: '120px',
+        height: '36px',
+        marginTop: '16px',
+        backgroundColor: 'linear-gradient(180deg, #4a3a3a 0%, #3a2a2a 100%)',
+        border: '1px solid #8a5a5a',
+        borderRadius: '4px',
+        horizontalAlign: 'center' as const,
+    };
+
+    return (
+        <Panel style={modalOverlayStyle}>
+            <Panel style={modalBoxStyle}>
+                {/* 标题 */}
+                <Label style={titleStyle} text="技能格已满，请选择替换" />
+
+                {/* 即将学习的技能 */}
+                <Label style={skillNameStyle} text={`即将学习: ${getSkillDisplayName(data.skill_to_learn)}`} />
+
+                {/* 技能槽位按钮 */}
+                {data.occupied_slots.map((slot) => {
+                    const isRSlot = slot.key === 'R';
+                    const isDisabled = isRSlot && playerRank < 2;
+
+                    return (
+                        <Button
+                            key={slot.key}
+                            style={isDisabled ? slotButtonDisabledStyle : slotButtonStyle}
+                            onactivate={isDisabled ? undefined : () => handleConfirm(slot.key)}
+                        >
+                            <Label
+                                style={isDisabled ? disabledTextStyle : slotButtonTextStyle}
+                                text={isDisabled
+                                    ? `[${slot.key}] 需达到三阶(宗师)解锁`
+                                    : `[${slot.key}] 替换 ${getSkillDisplayName(slot.abilityName)}`
+                                }
+                            />
+                        </Button>
+                    );
+                })}
+
+                {/* 如果R格不在occupied_slots但需要显示禁用状态 */}
+                {playerRank < 2 && !data.occupied_slots.find(s => s.key === 'R') && (
+                    <Button style={slotButtonDisabledStyle}>
+                        <Label style={disabledTextStyle} text="[R] 需达到三阶(宗师)解锁" />
+                    </Button>
+                )}
+
+                {/* 取消按钮 */}
+                <Button style={cancelButtonStyle} onactivate={onClose}>
+                    <Label style={slotButtonTextStyle} text="取消" />
+                </Button>
+            </Panel>
+        </Panel>
+    );
+}
+
+
 // 主背包组件
 export function DefaultBackpackPanel() {
     $.Msg('[DefaultBackpack] ======= 组件已渲染 =======');
@@ -651,6 +817,7 @@ export function DefaultBackpackPanel() {
     const [publicItems, setPublicItems] = useState<(BackpackItem | null)[]>([]);
     const [privateItems, setPrivateItems] = useState<(BackpackItem | null)[]>([]);
     const [hoveredItem, setHoveredItem] = useState<HoveredItemInfo | null>(null);
+    const [skillReplaceData, setSkillReplaceData] = useState<SkillReplaceData | null>(null);
     const panelRef = useRef<Panel | null>(null);
 
     // 跟踪组件是否已挂载，防止在卸载后更新状态
@@ -752,10 +919,26 @@ export function DefaultBackpackPanel() {
             }
         });
 
+        // 监听技能替换提示事件
+        const skillReplaceListener = GameEvents.Subscribe('skill_replace_prompt', (event: any) => {
+            $.Msg(`[DefaultBackpack] 收到 skill_replace_prompt 事件!`);
+            if (event && isMountedRef.current) {
+                setSkillReplaceData({
+                    skill_to_learn: event.skill_to_learn,
+                    skill_book_name: event.skill_book_name,
+                    available_slots: event.available_slots,
+                    occupied_slots: event.occupied_slots,
+                    storage_type: event.storage_type,
+                    item_index: event.item_index,
+                });
+            }
+        });
+
         return () => {
             CustomNetTables.UnsubscribeNetTableListener(publicListener);
             CustomNetTables.UnsubscribeNetTableListener(privateListener);
             GameEvents.Unsubscribe(backpackEventListener);
+            GameEvents.Unsubscribe(skillReplaceListener);
         };
     }, []);
 
@@ -1182,6 +1365,14 @@ export function DefaultBackpackPanel() {
                     </Panel>
                 );
             })()}
+
+            {/* 技能替换弹窗 */}
+            {skillReplaceData && (
+                <SkillReplaceModal
+                    data={skillReplaceData}
+                    onClose={() => setSkillReplaceData(null)}
+                />
+            )}
         </>
     );
 }

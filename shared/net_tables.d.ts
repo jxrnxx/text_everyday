@@ -80,4 +80,7 @@ declare interface CustomNetTableDeclarations {
             } | null;
         };
     };
+    custom_stats: {
+        [key: string]: any;
+    };
 }

@@ -144,7 +144,7 @@
     {
         "BaseClass"                     "ability_lua"
         "ScriptFile"                    "abilities/ability_public_martial_cleave"
-        "AbilityTextureName"            "item_book_martial_cleave_1"
+        "AbilityTextureName"            "ability_public_martial_cleave"
         "AbilityBehavior"               "DOTA_ABILITY_BEHAVIOR_PASSIVE"
         "MaxLevel"                      "4"
         

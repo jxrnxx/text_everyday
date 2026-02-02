@@ -402,38 +402,50 @@ export class KnapsackSystem {
 
     /**
      * 执行学习技能
+     * 注意: hero.AddAbility() 会把技能添加到第一个空位
+     * SwapAbilities 不能真正交换槽位，只改变可见性
+     * 所以我们只需添加技能并确保可见，UI会按技能名查找
      */
     private DoLearnAbility(playerId: PlayerID, hero: CDOTA_BaseNPC_Hero, abilityName: string, slotIndex: number): void {
-        // 先移除目标槽位的技能（包括generic_hidden）
-        const oldAbility = hero.GetAbilityByIndex(slotIndex);
-        if (oldAbility) {
-            const oldName = oldAbility.GetAbilityName();
-            print(`[KnapsackSystem] 移除槽位${slotIndex}的旧技能: ${oldName}`);
-            hero.RemoveAbility(oldName);
-        }
-
         // 添加新技能
         hero.AddAbility(abilityName);
         const newAbility = hero.FindAbilityByName(abilityName);
-        if (newAbility) {
-            newAbility.SetLevel(1);
-            newAbility.SetHidden(false);
-            newAbility.SetActivated(true);
 
-            const currentIndex = newAbility.GetAbilityIndex();
-            print(`[KnapsackSystem] 技能${abilityName}添加成功, 当前槽位: ${currentIndex}, 等级: ${newAbility.GetLevel()}`);
-
-            // 打印学习后所有技能状态
-            for (let i = 0; i < 8; i++) {
-                const ab = hero.GetAbilityByIndex(i);
-                if (ab) {
-                    print(`[KnapsackSystem] 槽位${i}: ${ab.GetAbilityName()}, 等级${ab.GetLevel()}, Hidden=${ab.IsHidden()}`);
-                }
-            }
-        } else {
-            print(`[KnapsackSystem] 错误: 技能${abilityName}未找到!`);
+        if (!newAbility) {
+            print(`[KnapsackSystem] 错误: 技能${abilityName}添加失败!`);
+            return;
         }
 
+        // 设置技能属性 - 确保技能可见且激活
+        newAbility.SetLevel(1);
+        newAbility.SetHidden(false);
+        newAbility.SetActivated(true);
+
+        const currentIndex = newAbility.GetAbilityIndex();
+        print(`[KnapsackSystem] 技能${abilityName}已添加到槽位: ${currentIndex}`);
+
+        // 再次确保技能不隐藏（有时候需要延迟设置）
+        Timers.CreateTimer(0.1, () => {
+            const ab = hero.FindAbilityByName(abilityName);
+            if (ab) {
+                ab.SetHidden(false);
+                ab.SetActivated(true);
+                print(`[KnapsackSystem] 技能${abilityName}可见性已确认: Hidden=${ab.IsHidden()}`);
+            }
+        });
+
+        // 打印学习后所有技能状态
+        print(`[KnapsackSystem] === 学习后技能状态 ===`);
+        for (let i = 0; i < 24; i++) {
+            const ab = hero.GetAbilityByIndex(i);
+            if (ab && ab.GetAbilityName() !== 'generic_hidden') {
+                print(
+                    `[KnapsackSystem] 槽位${i}: ${ab.GetAbilityName()}, 等级${ab.GetLevel()}, Hidden=${ab.IsHidden()}`
+                );
+            }
+        }
+
+        // 槽位 2/3/4 对应 F/G/R
         const slotKey = slotIndex === 2 ? 'F' : slotIndex === 3 ? 'G' : 'R';
 
         const player = PlayerResource.GetPlayer(playerId);
@@ -447,7 +459,7 @@ export class KnapsackSystem {
         // 播放学习特效
         EmitSoundOn('General.LevelUp', hero);
 
-        print(`[KnapsackSystem] 玩家 ${playerId} 学习技能 ${abilityName} 到槽位 ${slotKey}`);
+        print(`[KnapsackSystem] 玩家 ${playerId} 学习技能 ${abilityName} 成功`);
     }
 
     /**
