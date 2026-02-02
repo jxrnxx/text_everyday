@@ -6,15 +6,15 @@ let imagesPreloaded = false;
 
 // 预加载所有品质背景图片 - 使用实际渲染预热 GPU 缓存
 const preloadImages = (contextPanel: Panel) => {
-    $.Msg('[Backpack] preloadImages 被调用');
+
     if (imagesPreloaded) {
-        $.Msg('[Backpack] 图片已预加载过，跳过');
+
         return;
     }
     imagesPreloaded = true;
 
     try {
-        $.Msg('[Backpack] 开始预加载图片...');
+
 
         // 创建一个屏幕外的容器来预加载所有图片
         const preloadContainer = $.CreatePanel('Panel', contextPanel, 'preloadContainer');
@@ -51,9 +51,9 @@ const preloadImages = (contextPanel: Panel) => {
         // 5秒后删除预加载容器
         preloadContainer.DeleteAsync(5.0);
 
-        $.Msg('[Backpack] 图片预加载完成');
+
     } catch (e) {
-        $.Msg('[Backpack] 图片预加载失败: ' + e);
+
     }
 };
 
@@ -628,7 +628,6 @@ function ActionButton({ id, text, width, height, marginLeft = 0, onClick }: {
     onClick?: () => void;
 }) {
     const handleClick = () => {
-        $.Msg(`[Backpack] Button clicked: ${id}`);
         onClick?.();
     };
 
@@ -679,7 +678,6 @@ function SkillReplaceModal({
 
     // 处理替换确认
     const handleConfirm = (slotKey: string) => {
-        $.Msg(`[SkillReplace] 确认替换到槽位: ${slotKey}`);
         GameEvents.SendCustomGameEventToServer('cmd_skill_replace_confirm', {
             slot_key: slotKey,
             skill_to_learn: data.skill_to_learn,
@@ -812,7 +810,6 @@ function SkillReplaceModal({
 
 // 主背包组件
 export function DefaultBackpackPanel() {
-    $.Msg('[DefaultBackpack] ======= 组件已渲染 =======');
     const [isOpen, setIsOpen] = useState(true);
     const [publicItems, setPublicItems] = useState<(BackpackItem | null)[]>([]);
     const [privateItems, setPrivateItems] = useState<(BackpackItem | null)[]>([]);
@@ -850,8 +847,6 @@ export function DefaultBackpackPanel() {
         const contextPanel = $.GetContextPanel();
         if (contextPanel) {
             preloadImages(contextPanel);
-        } else {
-            $.Msg('[Backpack] 无法获取 contextPanel，跳过预加载');
         }
 
         // 组件卸载时设置 isMountedRef = false
@@ -863,13 +858,11 @@ export function DefaultBackpackPanel() {
     // 订阅NetTable更新
     useEffect(() => {
         const playerId = Players.GetLocalPlayer();
-        $.Msg(`[DefaultBackpack] 开始订阅 NetTable, playerId=${playerId}`);
 
         // 加载公用仓库数据
         const loadPublicData = () => {
             const data = CustomNetTables.GetTableValue('public_storage', `player_${playerId}`);
             if (data) {
-                $.Msg(`[DefaultBackpack] 发现 public_storage 数据`);
                 updateItemsFromNetTableRef.current(data, 'public');
             }
         };
@@ -886,7 +879,6 @@ export function DefaultBackpackPanel() {
 
         // 订阅公用仓库更新
         const publicListener = CustomNetTables.SubscribeNetTableListener('public_storage', (_, key, value) => {
-            $.Msg(`[DefaultBackpack] 收到 public_storage 更新: key=${key}`);
             if (key === `player_${playerId}` && value) {
                 updateItemsFromNetTableRef.current(value, 'public');
             }
@@ -901,15 +893,12 @@ export function DefaultBackpackPanel() {
 
         // 监听服务端发送的 backpack_updated 事件
         const backpackEventListener = GameEvents.Subscribe('backpack_updated' as any, (event: any) => {
-            $.Msg(`[DefaultBackpack] 收到 backpack_updated 事件!`);
             if (event) {
                 // 新格式: event.publicItems 和 event.privateItems
                 if (event.publicItems) {
-                    $.Msg(`[DefaultBackpack] 更新公用仓库数据`);
                     updateItemsFromNetTableRef.current(event.publicItems, 'public');
                 }
                 if (event.privateItems) {
-                    $.Msg(`[DefaultBackpack] 更新私人背包数据`);
                     updateItemsFromNetTableRef.current(event.privateItems, 'private');
                 }
                 // 兼容旧格式
@@ -921,7 +910,6 @@ export function DefaultBackpackPanel() {
 
         // 监听技能替换提示事件
         const skillReplaceListener = GameEvents.Subscribe('skill_replace_prompt', (event: any) => {
-            $.Msg(`[DefaultBackpack] 收到 skill_replace_prompt 事件!`);
             if (event && isMountedRef.current) {
                 setSkillReplaceData({
                     skill_to_learn: event.skill_to_learn,
@@ -947,18 +935,15 @@ export function DefaultBackpackPanel() {
         try {
             // 检查组件是否已卸载
             if (!isMountedRef.current) {
-                $.Msg(`[DefaultBackpack] 组件已卸载，跳过更新`);
                 return;
             }
 
             // 检查 data 是否有效
             if (data === null || data === undefined) {
-                $.Msg(`[DefaultBackpack] 数据为 null/undefined，跳过更新`);
                 return;
             }
 
             if (typeof data !== 'object') {
-                $.Msg(`[DefaultBackpack] 数据类型错误: ${typeof data}，跳过更新`);
                 return;
             }
 
@@ -988,7 +973,6 @@ export function DefaultBackpackPanel() {
                 setPrivateItems(newItems);
             }
         } catch (e) {
-            $.Msg(`[DefaultBackpack] updateItemsFromNetTable 错误: ${e}`);
         }
     };
 
@@ -1017,17 +1001,13 @@ export function DefaultBackpackPanel() {
 
     // 拖拽开始
     const handleDragStart = (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any): boolean => {
-        $.Msg(`[Backpack] 拖拽开始: ${storageType}[${index}]`);
-
         if (!isHeroCanCast()) return false;
         const items = storageType === 'public' ? publicItems : privateItems;
         if (!items[index]) {
-            $.Msg(`[Backpack] 格子为空，取消拖拽`);
             return false;
         }
 
         const item = items[index]!;
-        $.Msg(`[Backpack] 拖拽物品: ${item.itemName}`);
 
         // 使源格子半透明
         panel.style.opacity = '0.5';
@@ -1078,30 +1058,24 @@ export function DefaultBackpackPanel() {
         dragPanel.offsetX = 0;
         dragPanel.offsetY = 0;
 
-        $.Msg(`[Backpack] 拖拽已开始`);
         return true;
     };
 
     // 拖拽放下
     const handleDragDrop = (index: number, storageType: 'public' | 'private', _panel: Panel, dragPanel: any) => {
-        $.Msg(`[Backpack] 拖拽放下触发: ${storageType}[${index}]`);
 
         // 从 ref 读取拖拽状态（更可靠）
         const dragState = dragStateRef.current;
         const sourceIndex = dragState?.itemIndex ?? dragPanel.itemIndex;
         const sourceType = dragState?.storageType ?? dragPanel.storageType;
 
-        $.Msg(`[Backpack] 源位置: ${sourceType}[${sourceIndex}]`);
-
         if (sourceIndex === undefined || sourceType === undefined) {
-            $.Msg(`[Backpack] 源位置无效，取消交换`);
             return;
         }
 
         if (sourceIndex !== index || sourceType !== storageType) {
             dragPanel.b_dragComplete = true;
             if (dragState) dragState.dragComplete = true;
-            $.Msg(`[Backpack] 交换物品: ${sourceType}[${sourceIndex}] -> ${storageType}[${index}]`);
             GameEvents.SendCustomGameEventToServer('backpack_swap_item', {
                 sourceType: sourceType,
                 sourceIndex: sourceIndex,
@@ -1109,13 +1083,11 @@ export function DefaultBackpackPanel() {
                 targetIndex: index,
             } as never);
         } else {
-            $.Msg(`[Backpack] 放回原位，不交换`);
         }
     };
 
     // 拖拽结束
     const handleDragEnd = (panel: Panel, dragPanel: any) => {
-        $.Msg(`[Backpack] 拖拽结束`);
 
         // 从 ref 读取拖拽状态
         const dragState = dragStateRef.current;
@@ -1137,7 +1109,6 @@ export function DefaultBackpackPanel() {
 
         const dragComplete = dragState?.dragComplete ?? dragPanel.b_dragComplete;
         if (dragComplete) {
-            $.Msg(`[Backpack] 拖拽完成`);
             dragStateRef.current = null;
             return;
         }
@@ -1163,7 +1134,6 @@ export function DefaultBackpackPanel() {
                         !Entities.IsIllusion(queryUnit);
 
                     if (isValidHero && sourceType && sourceIndex !== undefined) {
-                        $.Msg(`[Backpack] 丢弃物品: ${sourceType}[${sourceIndex}]`);
                         GameEvents.SendCustomGameEventToServer('backpack_drop_item', {
                             storageType: sourceType,
                             index: sourceIndex,
@@ -1172,7 +1142,6 @@ export function DefaultBackpackPanel() {
                     }
                 }
             } catch (e) {
-                $.Msg(`[Backpack] handleDragEnd Schedule 错误: ${e}`);
             }
             dragStateRef.current = null;
         });
@@ -1191,7 +1160,6 @@ export function DefaultBackpackPanel() {
         // 调试：手动读取 NetTable 数据
         const playerId = Players.GetLocalPlayer();
         const data = CustomNetTables.GetTableValue('public_storage', `player_${playerId}`);
-        $.Msg(`[DefaultBackpack] 手动读取 public_storage: hasData=${!!data}, 第一格=${JSON.stringify((data as any)?.['0'])}`);
 
         if (data) {
             updateItemsFromNetTable(data, 'public');

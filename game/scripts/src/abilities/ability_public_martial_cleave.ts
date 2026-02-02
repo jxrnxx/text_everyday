@@ -14,15 +14,12 @@ export class ability_public_martial_cleave extends BaseAbility {
     }
 
     Precache(context: CScriptPrecacheContext) {
-        PrecacheResource('particle', 'particles/ethereal_blade_glow_direction_text.vpcf', context);
+        PrecacheResource('particle', 'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf', context);
     }
 }
 
 @registerModifier('modifier_public_martial_cleave')
 export class modifier_public_martial_cleave extends BaseModifier {
-    // 粒子特效 (用户指定的白色剑气)
-    private cleaveParticle = 'particles/ethereal_blade_glow_direction_text.vpcf';
-
     // 技能数值
     cleave_percent: number = 30;
     cleave_start_width: number = 150;
@@ -68,14 +65,6 @@ export class modifier_public_martial_cleave extends BaseModifier {
         const attacker = event.attacker;
         const target = event.target;
 
-        // 检查是否是父单位攻击
-        if (attacker !== this.GetParent()) return;
-
-        // 检查目标是否有效
-        if (!target || !IsValidEntity(target)) return;
-        if (target.IsBuilding() || target.IsOther()) return;
-        if (attacker.GetTeamNumber() === target.GetTeamNumber()) return;
-
         // 计算溅射伤害
         const originalDamage = event.original_damage;
         const cleaveDamage = originalDamage * (this.cleave_percent / 100);
@@ -93,21 +82,13 @@ export class modifier_public_martial_cleave extends BaseModifier {
         const forward = attacker.GetForwardVector();
         const forward2D = Vector(forward.x, forward.y, 0).Normalized();
 
-        // 播放溅射特效 (在玩家正前方显示)
-        const effectPos = (origin + forward2D * 100) as Vector as Vector;
-        const particleIndex = ParticleManager.CreateParticle(
-            this.cleaveParticle,
-            ParticleAttachment.WORLDORIGIN,
+        // 主溅射特效 - 使用Juggernaut暴击特效（已验证可用）
+        const cleaveVisual = ParticleManager.CreateParticle(
+            'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf',
+            ParticleAttachment.ABSORIGIN_FOLLOW,
             attacker
         );
-        ParticleManager.SetParticleControl(particleIndex, 0, effectPos);
-        ParticleManager.SetParticleControlForward(particleIndex, 0, forward);
-
-        // 1秒后释放特效
-        Timers.CreateTimer(1.0, () => {
-            ParticleManager.DestroyParticle(particleIndex, false);
-            ParticleManager.ReleaseParticleIndex(particleIndex);
-        });
+        ParticleManager.ReleaseParticleIndex(cleaveVisual);
 
         // 查找溅射范围内的敌人 (锥形区域)
         const enemies = FindUnitsInRadius(
@@ -144,6 +125,14 @@ export class modifier_public_martial_cleave extends BaseModifier {
                         damage_type: DamageTypes.PHYSICAL,
                         ability: ability,
                     });
+
+                    // 击中特效
+                    const hitEffect = ParticleManager.CreateParticle(
+                        'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf',
+                        ParticleAttachment.ABSORIGIN_FOLLOW,
+                        enemy
+                    );
+                    ParticleManager.ReleaseParticleIndex(hitEffect);
                 }
             }
         }

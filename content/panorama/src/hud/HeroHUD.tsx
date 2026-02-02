@@ -118,12 +118,16 @@ const HeroHUD: FC = () => {
         abilityName: string;
         hasAbility: boolean;
         rarity: number; // 品质等级: 1=凡, 2=灵, 3=仙, 4=神
+        abilityEntityIndex: number; // 技能实体索引，用于tooltip显示
     }
     const [publicSkills, setPublicSkills] = useState<PublicSkillInfo[]>([
-        { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1 },
-        { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1 },
-        { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1 },
+        { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
+        { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
+        { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
     ]);
+
+    // Q技能（soldier_war_strike）的实体索引
+    const [qSkillEntityIndex, setQSkillEntityIndex] = useState(-1);
 
     // 隐藏状态 - 当其他面板打开时隐藏HeroHUD
     const [isHidden, setIsHidden] = useState(false);
@@ -317,14 +321,15 @@ const HeroHUD: FC = () => {
             };
 
             // 初始化三个槽位为空
-            const skills: { slotIndex: number; slotKey: string; abilityName: string; hasAbility: boolean; rarity: number }[] = [
-                { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1 },
-                { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1 },
-                { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1 },
+            const skills: { slotIndex: number; slotKey: string; abilityName: string; hasAbility: boolean; rarity: number; abilityEntityIndex: number }[] = [
+                { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
+                { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
+                { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
             ];
 
             // 扫描英雄的所有技能（最多24个）
-            const foundAbilities: { name: string; rarity: number }[] = [];
+            const foundAbilities: { name: string; rarity: number; entityIndex: number }[] = [];
+            let foundQSkillIndex = -1; // Q技能的实体索引
             // @ts-ignore
             const abilityCount = Entities.GetAbilityCount(localHero) || 24;
 
@@ -338,16 +343,20 @@ const HeroHUD: FC = () => {
                 // @ts-ignore
                 const level = Abilities.GetLevel(ability);
 
-                // 调试：打印每个技能
-                // $.Msg(`[HeroHUD] 槽位${i}: ${abilityName} lv${level}`);
+                // 检查是否是Q技能（soldier_war_strike）
+                if (abilityName === 'soldier_war_strike') {
+                    foundQSkillIndex = ability;
+                }
 
                 // 检查是否是公共技能
                 const abilityRarity = PUBLIC_ABILITIES[abilityName];
                 if (abilityName && abilityRarity !== undefined && level > 0) {
-                    foundAbilities.push({ name: abilityName, rarity: abilityRarity });
-                    $.Msg(`[HeroHUD] 发现公共技能: ${abilityName}, 品质: ${abilityRarity}`);
+                    foundAbilities.push({ name: abilityName, rarity: abilityRarity, entityIndex: ability });
                 }
             }
+
+            // 设置Q技能实体索引
+            setQSkillEntityIndex(foundQSkillIndex);
 
             // 将找到的公共技能填入槽位
             foundAbilities.forEach((ability, idx) => {
@@ -355,6 +364,7 @@ const HeroHUD: FC = () => {
                     skills[idx].abilityName = ability.name;
                     skills[idx].hasAbility = true;
                     skills[idx].rarity = ability.rarity;
+                    skills[idx].abilityEntityIndex = ability.entityIndex;
                 }
             });
 
@@ -940,8 +950,41 @@ const HeroHUD: FC = () => {
                 {/* 技能栏 - 3个职业技能 + 空隙 + 3个公共技能 */}
                 <Panel style={{ flowChildren: 'right' as const }}>
                     {/* 第1个技能 - 职业技能1 (兵伐·裂空) - Q */}
-                    <Panel className="SkillSlot">
-                        {/* 金色边框背景层 */}
+                    <Panel
+                        className="SkillSlot"
+                        onmouseover={(panel) => {
+                            if (qSkillEntityIndex !== -1) {
+                                // 使用技能实体索引显示原生tooltip - 需要abilityName和entityIndex
+                                // @ts-ignore
+                                $.DispatchEvent('DOTAShowAbilityTooltipForEntityIndex', panel, 'soldier_war_strike', qSkillEntityIndex);
+                            }
+                        }}
+                        onmouseout={() => {
+                            // @ts-ignore
+                            $.DispatchEvent('DOTAHideAbilityTooltip');
+                        }}
+                    >
+                        {/* 金色品质背景层 - 与公共技能一致 */}
+                        <Image
+                            src="file://{images}/custom_game/hud/rarity_bg_4.png"
+                            style={{
+                                width: '54px',
+                                height: '54px',
+                                position: '0px 0px 0px' as const,
+                            }}
+                        />
+                        {/* 技能图标层 - 调整尺寸与公共技能一致 */}
+                        <DOTAAbilityImage
+                            // @ts-ignore
+                            abilityname="soldier_war_strike"
+                            showtooltip={true}
+                            style={{
+                                width: '48px',
+                                height: '48px',
+                                position: '3px 3px 0px' as const,
+                            }}
+                        />
+                        {/* 金色边框层 - 放在图标上层 */}
                         <Image
                             src="file://{images}/custom_game/hud/slot_frame_gold.png"
                             style={{
@@ -950,24 +993,13 @@ const HeroHUD: FC = () => {
                                 position: '0px 0px 0px' as const,
                             }}
                         />
-                        {/* 技能图标层 - 叠加在边框上 */}
-                        <DOTAAbilityImage
-                            // @ts-ignore
-                            abilityname="soldier_war_strike"
-                            showtooltip={true}
-                            style={{
-                                width: '44px',
-                                height: '44px',
-                                position: '5px 5px 0px' as const,
-                                borderRadius: '2px',
-                            }}
-                        />
-                        {/* 键位标签 */}
+                        {/* 键位标签 - 与公共技能样式一致 */}
                         <Panel
                             style={{
                                 position: '2px 2px 0px' as const,
+                                width: '14px',
+                                height: '16px',
                                 backgroundColor: 'rgba(0,0,0,0.7)',
-                                padding: '1px 3px',
                                 borderRadius: '2px',
                             }}
                         >
@@ -977,18 +1009,40 @@ const HeroHUD: FC = () => {
                                     color: '#ffcc00',
                                     fontSize: '11px',
                                     fontWeight: 'bold',
+                                    horizontalAlign: 'center' as const,
+                                    verticalAlign: 'center' as const,
                                 }}
                             />
                         </Panel>
                     </Panel>
 
                     {/* 第2-3个技能槽 - 职业技能2、3 (空槽) W/E */}
-                    {['W', 'E'].map((key, idx) => (
+                    {['W', 'E'].map((key) => (
                         <Panel key={key} className="SkillSlot">
                             <Panel className="SkillSlotFrame">
                                 <Panel className="SkillSlotInner" />
                             </Panel>
-                            {/* 空槽不显示键位 */}
+                            {/* 键位标签 - 空槽使用灰色 */}
+                            <Panel
+                                style={{
+                                    position: '2px 2px 0px' as const,
+                                    width: '14px',
+                                    height: '16px',
+                                    backgroundColor: 'rgba(0,0,0,0.5)',
+                                    borderRadius: '2px',
+                                }}
+                            >
+                                <Label
+                                    text={key}
+                                    style={{
+                                        color: '#888888',
+                                        fontSize: '11px',
+                                        fontWeight: 'bold',
+                                        horizontalAlign: 'center' as const,
+                                        verticalAlign: 'center' as const,
+                                    }}
+                                />
+                            </Panel>
                         </Panel>
                     ))}
 
@@ -1025,9 +1079,10 @@ const HeroHUD: FC = () => {
                                 key={`public_${skill.slotIndex}`}
                                 className="SkillSlot"
                                 onmouseover={(panel) => {
-                                    if (skill.hasAbility && skill.abilityName) {
+                                    if (skill.hasAbility && skill.abilityEntityIndex !== -1) {
+                                        // 使用技能实体索引显示原生tooltip - 需要abilityName和entityIndex
                                         // @ts-ignore
-                                        $.DispatchEvent('DOTAShowAbilityTooltip', panel, skill.abilityName);
+                                        $.DispatchEvent('DOTAShowAbilityTooltipForEntityIndex', panel, skill.abilityName, skill.abilityEntityIndex);
                                     }
                                 }}
                                 onmouseout={() => {
@@ -1068,8 +1123,9 @@ const HeroHUD: FC = () => {
                                         <Panel
                                             style={{
                                                 position: '2px 2px 0px' as const,
+                                                width: '14px',
+                                                height: '16px',
                                                 backgroundColor: 'rgba(0,0,0,0.7)',
-                                                padding: '1px 3px',
                                                 borderRadius: '2px',
                                             }}
                                         >
@@ -1079,6 +1135,8 @@ const HeroHUD: FC = () => {
                                                     color: '#ffcc00',
                                                     fontSize: '11px',
                                                     fontWeight: 'bold',
+                                                    horizontalAlign: 'center' as const,
+                                                    verticalAlign: 'center' as const,
                                                 }}
                                             />
                                         </Panel>

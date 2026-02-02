@@ -120,11 +120,9 @@ const AbilityShopPanel: React.FC = () => {
     // 订阅信仰值更新
     useEffect(() => {
         const localPlayer = Players.GetLocalPlayer();
-        $.Msg(`[AbilityShop] 初始化信仰订阅, 玩家: ${localPlayer}`);
 
         const updateFaith = () => {
             const economyData = CustomNetTables.GetTableValue('economy', `player_${localPlayer}` as any) as any;
-            $.Msg(`[AbilityShop] 读取经济数据: faith=${economyData?.faith}`);
             if (economyData && economyData.faith !== undefined) {
                 setPlayerFaith(economyData.faith);
             }
@@ -222,13 +220,11 @@ const AbilityShopPanel: React.FC = () => {
 
     const handlePurchase = (item: typeof shopItems[0]) => {
         // 调试: 显示当前信仰值
-        $.Msg(`[AbilityShop] 购买尝试: ${item.name}, 价格: ${item.price}, 当前信仰: ${playerFaith}`);
 
         // 检查信仰值余额
         if (playerFaith < item.price) {
             Game.EmitSound('General.CastFail_NoMana');
             showToast(`信仰不足，需要 ${item.price}信仰`);
-            $.Msg(`[AbilityShop] 信仰不足，阻止购买`);
             return;
         }
 
