@@ -43,3 +43,4 @@ content/panorama/src/shared
 #ignore local test scripts
 scripts/.test
 game/resource/parnorma-css.txt
+game/maps/untitled_2.vpk
