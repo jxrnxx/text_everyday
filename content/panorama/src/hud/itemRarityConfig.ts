@@ -9,7 +9,17 @@ export interface ItemConfig {
     icon: string; // 透明图标路径
     displayName: string; // 显示名称
     description: string; // 物品描述
+    usable: boolean; // 是否可使用（双击/右键使用）
+    isSkillBook: boolean; // 是否是技能书（右键显示"参悟"而非"使用"）
 }
+
+// 出售价格映射（按品质等级）
+export const SELL_PRICE_MAP: Record<number, number> = {
+    1: 20,   // 凡品
+    2: 50,   // 灵品
+    3: 100,  // 仙品
+    4: 200,  // 神品
+};
 
 // 物品配置映射
 export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
@@ -20,6 +30,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '演武残卷',
         description:
             '天地为台，众生为戏。\n随机获得<font color="#c0c0c0">1星</font><font color="#66cc66">2星</font>技能书。极小概率获得<font color="#ffaa00">4星</font>技能书。',
+        usable: true,
+        isSkillBook: false,
     },
     item_ask_dao_lot: {
         rarity: 2,
@@ -27,12 +39,16 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '问道签',
         description:
             '大道三千，弱水三千。\n选择<font color="#ff6666">武道</font>/<font color="#66ccff">神念</font>/<font color="#ffcc66">被动</font>，必得指定类型技能书。',
+        usable: true,
+        isSkillBook: false,
     },
     item_derive_paper: {
         rarity: 2,
         icon: 'file://{resources}/images/custom_items/derivation_paper.png',
         displayName: '衍法灵笺',
         description: '法无定法，式无定式。\n将技能随机变为<font color="#66ccff">同星级</font>的另一个技能。',
+        usable: true,
+        isSkillBook: false,
     },
     item_blank_rubbing: {
         rarity: 3,
@@ -40,6 +56,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '空白拓本',
         description:
             '前尘影事，皆可拓印。\n将已学技能<font color="#ff6666">剥离</font>，变回<font color="#66ccff">技能书</font>放入背包。',
+        usable: true,
+        isSkillBook: false,
     },
 
     // === 强化石 ===
@@ -49,6 +67,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '悟道石·凡',
         description:
             '初窥门径，略有所得。\n将<font color="#c0c0c0">1级</font>技能强化至<font color="#66cc66">2级</font>。',
+        usable: true,
+        isSkillBook: false,
     },
     item_upgrade_stone_2: {
         rarity: 2,
@@ -56,6 +76,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '悟道石·灵',
         description:
             '灵光一闪，融会贯通。\n将<font color="#66cc66">2级</font>技能强化至<font color="#cc66ff">3级</font>。',
+        usable: true,
+        isSkillBook: false,
     },
     item_upgrade_stone_3: {
         rarity: 3,
@@ -63,6 +85,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '悟道石·仙',
         description:
             '羽化登仙，超脱凡俗。\n将<font color="#cc66ff">3级</font>技能强化至<font color="#ffaa00">4级</font>。',
+        usable: true,
+        isSkillBook: false,
     },
     item_upgrade_stone_4: {
         rarity: 4,
@@ -70,6 +94,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '悟道石·神',
         description:
             '神恩如海，神威如狱。\n强化<font color="#ffaa00">4星</font>技能至<font color="#ff6666">等级上限</font>。',
+        usable: true,
+        isSkillBook: false,
     },
 
     // === 技能书 ===
@@ -79,6 +105,8 @@ export const ITEM_CONFIG_MAP: Record<string, ItemConfig> = {
         displayName: '武道·横扫秘籍',
         description:
             '学习后获得<font color="#ffcc66">被动技能</font>：攻击时对周围敌人造成<font color="#ff6666">溅射伤害</font>',
+        usable: true,
+        isSkillBook: true,
     },
 };
 
@@ -132,3 +160,25 @@ export function getRarityFrame(rarity: number): string | null {
 export function getRarityBg(rarity: number): string | null {
     return RARITY_BG_MAP[rarity] || null;
 }
+
+/**
+ * 获取物品出售价格
+ */
+export function getSellPrice(rarity: number): number {
+    return SELL_PRICE_MAP[rarity] || 10;
+}
+
+/**
+ * 检查物品是否可使用
+ */
+export function isItemUsable(itemName: string): boolean {
+    return ITEM_CONFIG_MAP[itemName]?.usable || false;
+}
+
+/**
+ * 检查物品是否是技能书
+ */
+export function isSkillBook(itemName: string): boolean {
+    return ITEM_CONFIG_MAP[itemName]?.isSkillBook || false;
+}
+

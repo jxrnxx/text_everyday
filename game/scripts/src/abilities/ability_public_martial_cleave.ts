@@ -14,7 +14,13 @@ export class ability_public_martial_cleave extends BaseAbility {
     }
 
     Precache(context: CScriptPrecacheContext) {
-        PrecacheResource('particle', 'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf', context);
+        // 横扫专属特效 - 独特于职业技能
+        PrecacheResource('particle', 'particles/units/heroes/hero_tusk/tusk_walruspunch_start.vpcf', context);
+        PrecacheResource(
+            'particle',
+            'particles/units/heroes/hero_ember_spirit/ember_spirit_sleightoffist_tgt.vpcf',
+            context
+        );
     }
 }
 
@@ -65,6 +71,9 @@ export class modifier_public_martial_cleave extends BaseModifier {
         const attacker = event.attacker;
         const target = event.target;
 
+        // 只有技能持有者攻击时才触发横扫
+        if (attacker !== this.GetParent()) return;
+
         // 计算溅射伤害
         const originalDamage = event.original_damage;
         const cleaveDamage = originalDamage * (this.cleave_percent / 100);
@@ -79,16 +88,31 @@ export class modifier_public_martial_cleave extends BaseModifier {
     private DoCleaveAttack(attacker: CDOTA_BaseNPC, target: CDOTA_BaseNPC, damage: number): void {
         const ability = this.GetAbility();
         const origin = attacker.GetAbsOrigin();
-        const forward = attacker.GetForwardVector();
-        const forward2D = Vector(forward.x, forward.y, 0).Normalized();
+        const targetPos = target.GetAbsOrigin();
 
-        // 主溅射特效 - 使用Juggernaut暴击特效（已验证可用）
-        const cleaveVisual = ParticleManager.CreateParticle(
-            'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf',
+        // 使用攻击者到目标的方向作为溅射方向（而不是角色前向）
+        const toTarget = (targetPos - origin) as Vector;
+        toTarget.z = 0;
+        const cleaveDirection = toTarget.Normalized();
+
+        // 主溅射特效 - 使用 Tusk 海象冲击环形波纹（独特于职业技能）
+        const ringEffect = ParticleManager.CreateParticle(
+            'particles/units/heroes/hero_tusk/tusk_walruspunch_start.vpcf',
             ParticleAttachment.ABSORIGIN_FOLLOW,
             attacker
         );
-        ParticleManager.ReleaseParticleIndex(cleaveVisual);
+        ParticleManager.SetParticleControl(ringEffect, 0, origin);
+        ParticleManager.SetParticleControl(ringEffect, 1, targetPos);
+        ParticleManager.ReleaseParticleIndex(ringEffect);
+
+        // 额外斩击特效 - Ember Spirit 火焰拳刃
+        const slashEffect = ParticleManager.CreateParticle(
+            'particles/units/heroes/hero_ember_spirit/ember_spirit_sleightoffist_tgt.vpcf',
+            ParticleAttachment.ABSORIGIN_FOLLOW,
+            target
+        );
+        ParticleManager.SetParticleControl(slashEffect, 0, targetPos);
+        ParticleManager.ReleaseParticleIndex(slashEffect);
 
         // 查找溅射范围内的敌人 (锥形区域)
         const enemies = FindUnitsInRadius(
@@ -103,9 +127,8 @@ export class modifier_public_martial_cleave extends BaseModifier {
             false
         );
 
-        // 计算扇形角度阈值
-        const halfAngle = Math.atan2(this.cleave_end_width / 2, this.cleave_distance);
-        const angleThreshold = Math.cos(halfAngle);
+        // 使用更大的溅射角度 (60度半角 = 120度扇形)
+        const angleThreshold = Math.cos(Math.PI / 3); // cos(60°) ≈ 0.5
 
         // 对锥形范围内的每个敌人造成物理伤害（排除原目标）
         for (const enemy of enemies) {
@@ -114,7 +137,7 @@ export class modifier_public_martial_cleave extends BaseModifier {
                 const toEnemy = (enemyPos - origin) as Vector;
                 toEnemy.z = 0;
                 const toEnemyNormalized = toEnemy.Normalized();
-                const dot = forward2D.Dot(toEnemyNormalized);
+                const dot = cleaveDirection.Dot(toEnemyNormalized);
 
                 // 检查是否在锥形范围内
                 if (dot >= angleThreshold) {
@@ -126,9 +149,9 @@ export class modifier_public_martial_cleave extends BaseModifier {
                         ability: ability,
                     });
 
-                    // 击中特效
+                    // 击中特效 - Ember Spirit 火焰斩击
                     const hitEffect = ParticleManager.CreateParticle(
-                        'particles/units/heroes/hero_juggernaut/juggernaut_crit_tgt.vpcf',
+                        'particles/units/heroes/hero_ember_spirit/ember_spirit_sleightoffist_tgt.vpcf',
                         ParticleAttachment.ABSORIGIN_FOLLOW,
                         enemy
                     );

@@ -1,59 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getItemConfig, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP } from './itemRarityConfig';
+import { getItemConfig, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP, isItemUsable, isSkillBook, getSellPrice } from './itemRarityConfig';
 
 // 预加载标记
 let imagesPreloaded = false;
+let preloadContainer: Panel | null = null;
 
 // 预加载所有品质背景图片 - 使用实际渲染预热 GPU 缓存
+// 改进：使用更大尺寸预加载，保持容器存活更长时间
 const preloadImages = (contextPanel: Panel) => {
-
-    if (imagesPreloaded) {
-
+    if (imagesPreloaded && preloadContainer) {
         return;
     }
     imagesPreloaded = true;
 
     try {
-
+        // 如果已存在旧容器，先删除
+        const existingContainer = contextPanel.FindChildTraverse('preloadContainer');
+        if (existingContainer) {
+            existingContainer.DeleteAsync(0);
+        }
 
         // 创建一个屏幕外的容器来预加载所有图片
-        const preloadContainer = $.CreatePanel('Panel', contextPanel, 'preloadContainer');
-        preloadContainer.style.position = '-1000px -1000px 0px';  // 屏幕外
-        preloadContainer.style.width = '200px';
-        preloadContainer.style.height = '200px';
+        preloadContainer = $.CreatePanel('Panel', contextPanel, 'preloadContainer');
+        preloadContainer.style.position = '-2000px -2000px 0px';  // 屏幕外更远位置
+        preloadContainer.style.width = '400px';
+        preloadContainer.style.height = '400px';
         preloadContainer.style.flowChildren = 'right-wrap';
+        preloadContainer.style.visibility = 'collapse';  // 不可见但仍会触发加载
 
-        // 预加载背景图 - 使用 backgroundImage 属性
+        // 预加载背景图 - 使用更大尺寸确保完全加载
         (Object.values(RARITY_BG_MAP) as string[]).forEach((bgPath, i) => {
-            const preloadPanel = $.CreatePanel('Panel', preloadContainer, `preloadBg_${i}`);
-            preloadPanel.style.width = '48px';
-            preloadPanel.style.height = '48px';
+            const preloadPanel = $.CreatePanel('Panel', preloadContainer!, `preloadBg_${i}`);
+            preloadPanel.style.width = '64px';
+            preloadPanel.style.height = '64px';
             preloadPanel.style.backgroundImage = `url("${bgPath}")`;
             preloadPanel.style.backgroundSize = '100% 100%';
+            preloadPanel.style.backgroundRepeat = 'no-repeat';
         });
 
         // 预加载边框图
         (Object.values(RARITY_FRAME_MAP) as string[]).forEach((framePath, i) => {
-            const preloadPanel = $.CreatePanel('Image', preloadContainer, `preloadFrame_${i}`);
+            const preloadPanel = $.CreatePanel('Image', preloadContainer!, `preloadFrame_${i}`);
             (preloadPanel as ImagePanel).SetImage(framePath);
-            preloadPanel.style.width = '48px';
-            preloadPanel.style.height = '48px';
+            preloadPanel.style.width = '64px';
+            preloadPanel.style.height = '64px';
         });
 
         // 预加载物品图标
         (Object.values(ITEM_CONFIG_MAP) as { rarity: number; icon: string }[]).forEach((config, i) => {
-            const preloadPanel = $.CreatePanel('Image', preloadContainer, `preloadIcon_${i}`);
+            const preloadPanel = $.CreatePanel('Image', preloadContainer!, `preloadIcon_${i}`);
             (preloadPanel as ImagePanel).SetImage(config.icon);
-            preloadPanel.style.width = '48px';
-            preloadPanel.style.height = '48px';
+            preloadPanel.style.width = '64px';
+            preloadPanel.style.height = '64px';
         });
 
-        // 5秒后删除预加载容器
-        preloadContainer.DeleteAsync(5.0);
-
+        // 延长预加载容器存活时间到30秒，确保图片完全加载到 GPU 缓存
+        preloadContainer.DeleteAsync(30.0);
 
     } catch (e) {
-
+        // 出错时重置标记，允许重试
+        imagesPreloaded = false;
+        preloadContainer = null;
     }
 };
 
@@ -371,6 +378,16 @@ interface HoveredItemInfo {
     y: number;
 }
 
+// 右键菜单信息接口
+interface ContextMenuInfo {
+    item: BackpackItem;
+    itemConfig: ReturnType<typeof getItemConfig>;
+    index: number;
+    storageType: 'public' | 'private';
+    x: number;
+    y: number;
+}
+
 // 物品格子组件
 interface ItemCellProps {
     index: number;
@@ -381,9 +398,10 @@ interface ItemCellProps {
     onDragDrop: (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any) => void;
     onDragEnd: (panel: Panel, dragPanel: any) => void;
     onHover: (info: HoveredItemInfo | null) => void;
+    onContextMenu: (info: ContextMenuInfo | null) => void;
 }
 
-function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop, onDragEnd, onHover }: ItemCellProps) {
+function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop, onDragEnd, onHover, onContextMenu }: ItemCellProps) {
     const [isHovered, setIsHovered] = useState(false);
     const cellRef = useRef<Panel | null>(null);
 
@@ -467,12 +485,50 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
         onHover(null);
     };
 
+    // 处理右键菜单
+    const handleRightClick = () => {
+        if (!item) return;
+
+        try {
+            // 获取格子位置，在右侧显示菜单
+            let x = 100, y = 100;
+            const panel = cellRef.current;
+            if (panel && panel.GetPositionWithinWindow) {
+                const pos = panel.GetPositionWithinWindow();
+                if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
+                    x = pos.x + CELL_SIZE;  // 格子右侧
+                    y = pos.y;              // 格子顶部
+                }
+            }
+
+            onContextMenu({
+                item,
+                itemConfig,
+                index,
+                storageType,
+                x,
+                y,
+            });
+        } catch (e) {
+            // 出错时使用默认位置
+            onContextMenu({
+                item,
+                itemConfig,
+                index,
+                storageType,
+                x: 100,
+                y: 100,
+            });
+        }
+    };
+
     return (
         <Panel
             ref={cellRef as any}
             style={cellStyle}
             onmouseover={handleMouseOver}
             onmouseout={handleMouseOut}
+            oncontextmenu={handleRightClick}
             draggable={true}
             on-ui-DragStart={(p: Panel, d: any) => onDragStart(index, storageType, p, d)}
             on-ui-DragDrop={(p: Panel, d: any) => onDragDrop(index, storageType, p, d)}
@@ -480,7 +536,7 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
         >
             <Button
                 style={styles.itemButton}
-                onactivate={() => onUseItem(index, storageType)}
+                ondblclick={() => onUseItem(index, storageType)}
             >
                 {item && (
                     <>
@@ -564,6 +620,7 @@ interface StorageSectionProps {
     onDragDrop: (index: number, storageType: 'public' | 'private', panel: Panel, dragPanel: any) => void;
     onDragEnd: (panel: Panel, dragPanel: any) => void;
     onHover: (info: HoveredItemInfo | null) => void;
+    onContextMenu: (info: ContextMenuInfo | null) => void;
 }
 
 function StorageSection({
@@ -577,7 +634,8 @@ function StorageSection({
     onDragStart,
     onDragDrop,
     onDragEnd,
-    onHover
+    onHover,
+    onContextMenu
 }: StorageSectionProps) {
     const cells = [];
     for (let i = 0; i < cellCount; i++) {
@@ -592,6 +650,7 @@ function StorageSection({
                 onDragDrop={onDragDrop}
                 onDragEnd={onDragEnd}
                 onHover={onHover}
+                onContextMenu={onContextMenu}
             />
         );
     }
@@ -650,6 +709,55 @@ function ActionButton({ id, text, width, height, marginLeft = 0, onClick }: {
                 <Label style={styles.buttonText} text={text} />
             </Button>
         </Panel>
+    );
+}
+
+// 右键菜单按钮组件 - 带hover效果
+interface ContextMenuButtonProps {
+    text: string;
+    textColor?: string;
+    isLast?: boolean;
+    onClick: () => void;
+}
+
+function ContextMenuButton({ text, textColor = '#e6cfa0', isLast = false, onClick }: ContextMenuButtonProps) {
+    const [isHovered, setIsHovered] = useState(false);
+
+    // 计算hover时的高亮颜色
+    const getHoverColor = (color: string) => {
+        // 简单实现：hover时使用更亮的金色
+        if (color === '#ffcc44') return '#ffe066';
+        if (color === '#ff6666') return '#ff8888';
+        return '#fff0c8'; // 默认hover色
+    };
+
+    const btnStyle = {
+        width: '100%',
+        height: '32px',
+        backgroundColor: isHovered
+            ? 'gradient(linear, 0% 0%, 100% 0%, from(#b8860b00), color-stop(0.5, #b8860b44), to(#b8860b00))'
+            : 'transparent',
+        borderBottom: isLast ? '0px' : '1px solid #ffffff08',
+    };
+
+    const labelStyle = {
+        color: isHovered ? getHoverColor(textColor) : textColor,
+        fontSize: '14px',
+        horizontalAlign: 'center' as const,
+        verticalAlign: 'center' as const,
+        textShadow: isHovered ? '0px 0px 6px rgba(255, 200, 100, 0.5)' : '0px 1px 2px black',
+        letterSpacing: '1px',
+    };
+
+    return (
+        <Button
+            style={btnStyle}
+            onactivate={onClick}
+            onmouseover={() => setIsHovered(true)}
+            onmouseout={() => setIsHovered(false)}
+        >
+            <Label style={labelStyle} text={text} />
+        </Button>
     );
 }
 
@@ -815,6 +923,7 @@ export function DefaultBackpackPanel() {
     const [privateItems, setPrivateItems] = useState<(BackpackItem | null)[]>([]);
     const [hoveredItem, setHoveredItem] = useState<HoveredItemInfo | null>(null);
     const [skillReplaceData, setSkillReplaceData] = useState<SkillReplaceData | null>(null);
+    const [contextMenu, setContextMenu] = useState<ContextMenuInfo | null>(null);
     const panelRef = useRef<Panel | null>(null);
 
     // 跟踪组件是否已挂载，防止在卸载后更新状态
@@ -922,11 +1031,21 @@ export function DefaultBackpackPanel() {
             }
         });
 
+        // 监听玩家发出移动命令时关闭右键菜单
+        const orderListener = GameEvents.Subscribe('dota_player_update_query_unit', () => {
+            setContextMenu(null);
+        });
+        const orderListener2 = GameEvents.Subscribe('dota_player_update_selected_unit', () => {
+            setContextMenu(null);
+        });
+
         return () => {
             CustomNetTables.UnsubscribeNetTableListener(publicListener);
             CustomNetTables.UnsubscribeNetTableListener(privateListener);
             GameEvents.Unsubscribe(backpackEventListener);
             GameEvents.Unsubscribe(skillReplaceListener);
+            GameEvents.Unsubscribe(orderListener);
+            GameEvents.Unsubscribe(orderListener2);
         };
     }, []);
 
@@ -1088,7 +1207,6 @@ export function DefaultBackpackPanel() {
 
     // 拖拽结束
     const handleDragEnd = (panel: Panel, dragPanel: any) => {
-
         // 从 ref 读取拖拽状态
         const dragState = dragStateRef.current;
 
@@ -1107,44 +1225,17 @@ export function DefaultBackpackPanel() {
         }
         panel.style.opacity = '1';
 
+        // 如果拖拽完成（成功放到其他格子），直接返回
         const dragComplete = dragState?.dragComplete ?? dragPanel.b_dragComplete;
         if (dragComplete) {
             dragStateRef.current = null;
             return;
         }
 
-        // 丢弃到地面
-        const sourceType = dragState?.storageType ?? dragPanel.storageType;
-        const sourceIndex = dragState?.itemIndex ?? dragPanel.itemIndex;
-
-        $.Schedule(0.01, () => {
-            // 检查组件是否已卸载
-            if (!isMountedRef.current) {
-                return;
-            }
-
-            try {
-                const pos = GameUI.GetCursorPosition();
-                const worldPosition = GameUI.GetScreenWorldPosition(pos);
-
-                if (worldPosition) {
-                    const queryUnit = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
-                    const isValidHero = Entities.IsControllableByPlayer(queryUnit, Players.GetLocalPlayer()) &&
-                        Entities.IsHero(queryUnit) &&
-                        !Entities.IsIllusion(queryUnit);
-
-                    if (isValidHero && sourceType && sourceIndex !== undefined) {
-                        GameEvents.SendCustomGameEventToServer('backpack_drop_item', {
-                            storageType: sourceType,
-                            index: sourceIndex,
-                            position: worldPosition,
-                        } as never);
-                    }
-                }
-            } catch (e) {
-            }
-            dragStateRef.current = null;
-        });
+        // 如果拖拽没有完成（没放到有效格子上），物品保持原位不丢弃
+        // 注释掉丢弃逻辑，防止物品意外消失
+        // 如果将来需要支持丢弃功能，可以添加一个确认弹窗
+        dragStateRef.current = null;
     };
 
     // 功能按钮事件
@@ -1166,6 +1257,59 @@ export function DefaultBackpackPanel() {
         }
 
         GameEvents.SendCustomGameEventToServer('backpack_tidy_up', {} as never);
+    };
+
+    // ========== 右键菜单处理函数 ==========
+
+    // 处理右键菜单显示
+    const handleContextMenu = (info: ContextMenuInfo | null) => {
+        // 关闭悬停提示
+        setHoveredItem(null);
+        // 设置右键菜单
+        setContextMenu(info);
+    };
+
+    // 关闭右键菜单
+    const closeContextMenu = () => {
+        setContextMenu(null);
+    };
+
+    // 使用物品（双击或右键使用）
+    const handleMenuUseItem = () => {
+        if (!contextMenu) return;
+        handleUseItem(contextMenu.index, contextMenu.storageType);
+        closeContextMenu();
+    };
+
+    // 存入仓库（私人背包 → 公用仓库）
+    const handleStoreItem = () => {
+        if (!contextMenu) return;
+        GameEvents.SendCustomGameEventToServer('backpack_store_item', {
+            sourceIndex: contextMenu.index,
+        } as never);
+        closeContextMenu();
+    };
+
+    // 取出物品（公用仓库 → 私人背包）
+    const handleRetrieveItem = () => {
+        if (!contextMenu) return;
+        GameEvents.SendCustomGameEventToServer('backpack_retrieve_item', {
+            sourceIndex: contextMenu.index,
+        } as never);
+        closeContextMenu();
+    };
+
+    // 出售物品
+    const handleSellItem = () => {
+        if (!contextMenu) return;
+        const rarity = contextMenu.itemConfig?.rarity || 1;
+        const sellPrice = getSellPrice(rarity);
+        GameEvents.SendCustomGameEventToServer('backpack_sell_item', {
+            storageType: contextMenu.storageType,
+            index: contextMenu.index,
+            price: sellPrice,
+        } as never);
+        closeContextMenu();
     };
 
     // 根据状态选择样式
@@ -1210,6 +1354,7 @@ export function DefaultBackpackPanel() {
                             onDragDrop={handleDragDrop}
                             onDragEnd={handleDragEnd}
                             onHover={setHoveredItem}
+                            onContextMenu={handleContextMenu}
                         />
 
                         {/* 私人背包 */}
@@ -1223,6 +1368,7 @@ export function DefaultBackpackPanel() {
                             onDragDrop={handleDragDrop}
                             onDragEnd={handleDragEnd}
                             onHover={setHoveredItem}
+                            onContextMenu={handleContextMenu}
                         />
 
                         {/* 底部按钮 */}
@@ -1341,6 +1487,96 @@ export function DefaultBackpackPanel() {
                     onClose={() => setSkillReplaceData(null)}
                 />
             )}
+
+            {/* 右键菜单 */}
+            {contextMenu && contextMenu.item && (() => {
+                const menuX = contextMenu.x || 100;
+                const menuY = contextMenu.y || 100;
+                const isPublicStorage = contextMenu.storageType === 'public';
+                const itemName = contextMenu.item.itemName || '';
+                const canUse = itemName ? isItemUsable(itemName) : false;
+                const isBook = itemName ? isSkillBook(itemName) : false;
+                const rarity = contextMenu.itemConfig?.rarity || 1;
+                const sellPrice = getSellPrice(rarity);
+
+                // 浮玉石板风格菜单样式
+                const menuContainerStyle = {
+                    position: `${menuX}px ${menuY}px 0px`,
+                    width: '140px',
+                    flowChildren: 'down',
+                    padding: '1px',
+                    // 深翠绿渐变背景
+                    backgroundColor: 'gradient(linear, 0% 0%, 0% 100%, from(#052224fa), to(#000b0dfa))',
+                    // 古金色边框
+                    border: '1px solid #b8860b',
+                    borderRadius: '4px',
+                    // 悬浮投影效果
+                    boxShadow: '0px 5px 20px #000000ee',
+                };
+
+                const menuBtnStyle = {
+                    width: '100%',
+                    height: '32px',
+                    backgroundColor: 'transparent',
+                    // 底部分隔线
+                    borderBottom: '1px solid #ffffff08',
+                };
+
+                const menuLabelStyle = {
+                    color: '#e6cfa0', // 香槟金
+                    fontSize: '14px',
+                    horizontalAlign: 'center' as const,
+                    verticalAlign: 'center' as const,
+                    textShadow: '0px 1px 2px black',
+                    letterSpacing: '1px',
+                };
+
+                return (
+                    <>
+                        {/* 遮罩层 */}
+                        <Panel
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                position: '0px 0px 0px',
+                                backgroundColor: 'transparent',
+                            }}
+                            onactivate={closeContextMenu}
+                            oncontextmenu={closeContextMenu}
+                        />
+                        {/* 菜单 */}
+                        <Panel style={menuContainerStyle}>
+                            {isPublicStorage ? (
+                                <ContextMenuButton
+                                    text="取出"
+                                    onClick={handleRetrieveItem}
+                                    isLast={true}
+                                />
+                            ) : (
+                                <>
+                                    {canUse && (
+                                        <ContextMenuButton
+                                            text={isBook ? "参悟" : "使用"}
+                                            textColor="#ffcc44"
+                                            onClick={handleMenuUseItem}
+                                        />
+                                    )}
+                                    <ContextMenuButton
+                                        text="存入仓库"
+                                        onClick={handleStoreItem}
+                                    />
+                                    <ContextMenuButton
+                                        text={`出售(${sellPrice})`}
+                                        textColor="#ff6666"
+                                        onClick={handleSellItem}
+                                        isLast={true}
+                                    />
+                                </>
+                            )}
+                        </Panel>
+                    </>
+                );
+            })()}
         </>
     );
 }

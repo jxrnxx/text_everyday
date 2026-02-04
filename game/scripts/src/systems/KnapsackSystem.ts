@@ -94,6 +94,21 @@ export class KnapsackSystem {
             );
         });
 
+        // 存入仓库 (私人背包 → 公用仓库)
+        CustomGameEventManager.RegisterListener('backpack_store_item', (_, event: any) => {
+            this.StoreItem(event.PlayerID, event.sourceIndex);
+        });
+
+        // 取出物品 (公用仓库 → 私人背包)
+        CustomGameEventManager.RegisterListener('backpack_retrieve_item', (_, event: any) => {
+            this.RetrieveItem(event.PlayerID, event.sourceIndex);
+        });
+
+        // 出售物品
+        CustomGameEventManager.RegisterListener('backpack_sell_item', (_, event: any) => {
+            this.SellItem(event.PlayerID, event.storageType, event.index, event.price);
+        });
+
         print('[KnapsackSystem] 事件监听器已注册 (backpack_* 前缀)');
     }
 
@@ -730,6 +745,134 @@ export class KnapsackSystem {
      */
     private DecomposeItems(_playerId: PlayerID): void {
         print('[KnapsackSystem] 分解功能待实现');
+    }
+
+    /**
+     * 存入仓库 (私人背包 → 公用仓库)
+     */
+    private StoreItem(playerId: PlayerID, sourceIndex: number): void {
+        const storage = this.playerStorage.get(playerId);
+        if (!storage) return;
+
+        // 获取私人背包中的物品
+        const item = storage.privateItems[sourceIndex];
+        if (!item) {
+            print(`[KnapsackSystem] 存入仓库失败: 槽位${sourceIndex}无物品`);
+            return;
+        }
+
+        // 检查公用仓库是否有空位
+        let emptySlot = -1;
+        for (let i = 0; i < this.PUBLIC_SIZE; i++) {
+            if (!storage.publicItems[i]) {
+                emptySlot = i;
+                break;
+            }
+        }
+
+        if (emptySlot === -1) {
+            // 公用仓库已满
+            const player = PlayerResource.GetPlayer(playerId);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: '公用仓库已满！',
+                    duration: 2,
+                } as never);
+            }
+            return;
+        }
+
+        // 移动物品
+        storage.publicItems[emptySlot] = item;
+        storage.privateItems[sourceIndex] = null;
+
+        this.SyncToClient(playerId);
+        print(`[KnapsackSystem] 玩家 ${playerId} 存入物品 ${item.itemName} 到仓库槽位 ${emptySlot}`);
+    }
+
+    /**
+     * 取出物品 (公用仓库 → 私人背包)
+     */
+    private RetrieveItem(playerId: PlayerID, sourceIndex: number): void {
+        const storage = this.playerStorage.get(playerId);
+        if (!storage) return;
+
+        // 获取公用仓库中的物品
+        const item = storage.publicItems[sourceIndex];
+        if (!item) {
+            print(`[KnapsackSystem] 取出失败: 槽位${sourceIndex}无物品`);
+            return;
+        }
+
+        // 检查私人背包是否有空位
+        let emptySlot = -1;
+        for (let i = 0; i < this.PRIVATE_SIZE; i++) {
+            if (!storage.privateItems[i]) {
+                emptySlot = i;
+                break;
+            }
+        }
+
+        if (emptySlot === -1) {
+            // 私人背包已满
+            const player = PlayerResource.GetPlayer(playerId);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: '私人背包已满！',
+                    duration: 2,
+                } as never);
+            }
+            return;
+        }
+
+        // 移动物品
+        storage.privateItems[emptySlot] = item;
+        storage.publicItems[sourceIndex] = null;
+
+        this.SyncToClient(playerId);
+        print(`[KnapsackSystem] 玩家 ${playerId} 取出物品 ${item.itemName} 到背包槽位 ${emptySlot}`);
+    }
+
+    /**
+     * 出售物品
+     */
+    private SellItem(playerId: PlayerID, storageType: 'public' | 'private', index: number, price: number): void {
+        const storage = this.playerStorage.get(playerId);
+        if (!storage) return;
+
+        const items = storageType === 'public' ? storage.publicItems : storage.privateItems;
+        const item = items[index];
+
+        if (!item) {
+            print(`[KnapsackSystem] 出售失败: 槽位无物品`);
+            return;
+        }
+
+        // 移除物品
+        items[index] = null;
+
+        // 增加信仰值
+        const economyData = CustomNetTables.GetTableValue('economy', `player_${playerId}`) as any;
+        const currentFaith = economyData?.faith || 0;
+        const newFaith = currentFaith + price;
+
+        CustomNetTables.SetTableValue('economy', `player_${playerId}`, {
+            spirit_coin: economyData?.spirit_coin || 0,
+            faith: newFaith,
+        } as any);
+
+        this.SyncToClient(playerId);
+
+        // 发送提示
+        const player = PlayerResource.GetPlayer(playerId);
+        if (player) {
+            CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                message: `出售成功，获得 ${price} 信仰`,
+                duration: 2,
+            } as never);
+        }
+
+        print(`[KnapsackSystem] 玩家 ${playerId} 出售物品 ${item.itemName}，获得 ${price} 信仰`);
     }
 
     /**
