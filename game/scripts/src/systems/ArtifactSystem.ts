@@ -67,6 +67,11 @@ export class ArtifactSystem {
             this.UnequipArtifact(event.PlayerID, event.slot);
         });
 
+        // 升级蒙尘神器 (Tier 0 -> Tier 1)
+        CustomGameEventManager.RegisterListener('cmd_upgrade_artifact', (_, event: any) => {
+            this.UpgradeDormantArtifact(event.PlayerID, event.slot);
+        });
+
         print('[ArtifactSystem] 事件监听器已注册');
     }
 
@@ -75,18 +80,35 @@ export class ArtifactSystem {
      */
     public InitPlayerArtifacts(playerId: PlayerID): void {
         if (!this.playerArtifacts.has(playerId)) {
+            // Tier 0 蒙尘神器默认装备
+            const tier0Items: { itemName: string; displayName: string }[] = [
+                { itemName: 'item_artifact_weapon_t0', displayName: '蒙尘武器' },
+                { itemName: 'item_artifact_armor_t0', displayName: '蒙尘衣甲' },
+                { itemName: 'item_artifact_helm_t0', displayName: '蒙尘头冠' },
+                { itemName: 'item_artifact_accessory_t0', displayName: '蒙尘饰品' },
+                { itemName: 'item_artifact_boots_t0', displayName: '蒙尘靴子' },
+                { itemName: 'item_artifact_amulet_t0', displayName: '蒙尘护符' },
+            ];
+
             const slots: ArtifactSlotData[] = [];
             for (let i = 0; i < this.SLOT_COUNT; i++) {
                 slots.push({
-                    itemName: null,
+                    itemName: tier0Items[i].itemName,
                     tier: 0,
-                    displayName: '',
+                    displayName: tier0Items[i].displayName,
                 });
             }
 
             this.playerArtifacts.set(playerId, { slots });
+
+            // 刷新英雄属性（应用 Tier 0 加成）
+            const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+            if (hero) {
+                this.RefreshHeroModifier(hero);
+            }
+
             this.SyncToClient(playerId);
-            print(`[ArtifactSystem] 玩家 ${playerId} 神器数据已初始化`);
+            print(`[ArtifactSystem] 玩家 ${playerId} 神器数据已初始化 (装备6件蒙尘神器)`);
         }
     }
 
@@ -160,6 +182,93 @@ export class ArtifactSystem {
 
         this.SyncToClient(playerId);
         return oldSlot;
+    }
+
+    /**
+     * 升级蒙尘神器 (Tier 0 -> Tier 1)
+     */
+    public UpgradeDormantArtifact(playerId: PlayerID, slotIndex: number): boolean {
+        const artifacts = this.playerArtifacts.get(playerId);
+        if (!artifacts) {
+            print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
+            return false;
+        }
+
+        if (slotIndex < 0 || slotIndex >= this.SLOT_COUNT) {
+            print(`[ArtifactSystem] 无效槽位: ${slotIndex}`);
+            return false;
+        }
+
+        const currentSlot = artifacts.slots[slotIndex];
+        if (!currentSlot.itemName || currentSlot.tier !== 0) {
+            print(`[ArtifactSystem] 槽位 ${slotIndex} 不是蒙尘神器`);
+            return false;
+        }
+
+        // 根据槽位确定 Tier 1 物品名称
+        const slotToT1Item: Record<number, string> = {
+            0: 'item_artifact_weapon_t1',
+            1: 'item_artifact_armor_t1',
+            2: 'item_artifact_helm_t1',
+            3: 'item_artifact_accessory_t1',
+            4: 'item_artifact_boots_t1',
+            5: 'item_artifact_amulet_t1',
+        };
+
+        const t1ItemName = slotToT1Item[slotIndex];
+        if (!t1ItemName) {
+            print(`[ArtifactSystem] 无法找到槽位 ${slotIndex} 的 Tier 1 物品`);
+            return false;
+        }
+
+        // 获取 Tier 1 物品信息
+        const t1Info = this.GetArtifactInfo(t1ItemName);
+        if (!t1Info) {
+            print(`[ArtifactSystem] 无法获取 ${t1ItemName} 的信息`);
+            return false;
+        }
+
+        // 升级到 Tier 1
+        artifacts.slots[slotIndex] = {
+            itemName: t1ItemName,
+            tier: t1Info.tier,
+            displayName: t1Info.displayName,
+        };
+        print(
+            `[ArtifactSystem] 槽位 ${slotIndex} 升级后 tier=${artifacts.slots[slotIndex].tier}, displayName=${artifacts.slots[slotIndex].displayName}`
+        );
+
+        // 播放音效和特效
+        const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+        if (hero) {
+            // 播放音效 - 月光碎片消耗音效
+            EmitSoundOn('Item.MoonShard.Consume', hero);
+            // 附加升级音效
+            EmitSoundOn('General.LevelUp', hero);
+
+            // 创建主特效 - 金色光柱 (TI10 升级特效)
+            const particleMain = ParticleManager.CreateParticle(
+                'particles/econ/events/ti10/hero_levelup_ti10.vpcf',
+                ParticleAttachment.ABSORIGIN_FOLLOW,
+                hero
+            );
+            ParticleManager.ReleaseParticleIndex(particleMain);
+
+            // 创建辅助特效 - 神圣光芒
+            const particleGlow = ParticleManager.CreateParticle(
+                'particles/items_fx/aegis_timer_c.vpcf',
+                ParticleAttachment.ABSORIGIN_FOLLOW,
+                hero
+            );
+            ParticleManager.ReleaseParticleIndex(particleGlow);
+
+            // 刷新属性
+            this.RefreshHeroModifier(hero);
+        }
+
+        this.SyncToClient(playerId);
+        print(`[ArtifactSystem] 玩家 ${playerId} 升级了 ${currentSlot.displayName} -> ${t1Info.displayName}`);
+        return true;
     }
 
     /**
@@ -240,17 +349,24 @@ export class ArtifactSystem {
         bonusArmorPen?: number;
         bonusHP?: number;
         bonusArmor?: number;
+        bonusConstitution?: number;
         bonusDivinity?: number;
+        bonusMartial?: number;
         bonusManaRegen?: number;
         bonusCritChance?: number;
         bonusCritDamage?: number;
         bonusMoveSpeed?: number;
+        bonusAgility?: number;
         bonusEvasion?: number;
         bonusAllStats?: number;
         bonusFinalDmgReduct?: number;
     } | null {
+        // 物品也使用 GetAbilityKeyValuesByName
         const kv = GetAbilityKeyValuesByName(itemName) as any;
-        if (!kv) return null;
+        if (!kv) {
+            print(`[ArtifactSystem] GetAbilityKeyValuesByName 返回null: ${itemName}`);
+            return null;
+        }
 
         return {
             slot: Number(kv.ArtifactSlot) || 0,
@@ -260,11 +376,14 @@ export class ArtifactSystem {
             bonusArmorPen: Number(kv.BonusArmorPen) || 0,
             bonusHP: Number(kv.BonusHP) || 0,
             bonusArmor: Number(kv.BonusArmor) || 0,
+            bonusConstitution: Number(kv.BonusConstitution) || 0,
             bonusDivinity: Number(kv.BonusDivinity) || 0,
+            bonusMartial: Number(kv.BonusMartial) || 0,
             bonusManaRegen: Number(kv.BonusManaRegen) || 0,
             bonusCritChance: Number(kv.BonusCritChance) || 0,
             bonusCritDamage: Number(kv.BonusCritDamage) || 0,
             bonusMoveSpeed: Number(kv.BonusMoveSpeed) || 0,
+            bonusAgility: Number(kv.BonusAgility) || 0,
             bonusEvasion: Number(kv.BonusEvasion) || 0,
             bonusAllStats: Number(kv.BonusAllStats) || 0,
             bonusFinalDmgReduct: Number(kv.BonusFinalDmgReduct) || 0,

@@ -4,6 +4,30 @@
     // 绑定神器 - Slot 0: 武器 (Zone 1)
     // =========================================================================
 
+    "item_artifact_weapon_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "2000"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_artifact_weapon_t1"
+        
+        "ItemDroppable"         "0"
+        "ItemSellable"          "0"
+        "ItemKillable"          "0"
+        "ItemPurchasable"       "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "1"
+        
+        // 自定义属性 - Tier 0 蒙尘
+        "ArtifactSlot"          "0"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "蒙尘武器"
+        "BonusDamage"           "10"
+        "BonusArmorPen"         "0"
+    }
+
     "item_artifact_weapon_t1"
     {
         "BaseClass"             "item_lua"
@@ -25,7 +49,6 @@
         "ArtifactTier"          "1"
         "ArtifactName"          "凡铁剑"
         "BonusDamage"           "50"
-        "BonusArmorPen"         "0"
     }
 
     "item_artifact_weapon_t2"
@@ -124,6 +147,30 @@
     // 绑定神器 - Slot 1: 护甲 (Zone 2)
     // =========================================================================
 
+    "item_artifact_armor_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "2010"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_artifact_armor_t1"
+        
+        "ItemDroppable"         "0"
+        "ItemSellable"          "0"
+        "ItemKillable"          "0"
+        "ItemPurchasable"       "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "1"
+        
+        // 自定义属性 - Tier 0 蒙尘
+        "ArtifactSlot"          "1"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "蒙尘衣甲"
+        "BonusHP"               "100"
+        "BonusArmor"            "0"
+    }
+
     "item_artifact_armor_t1"
     {
         "BaseClass"             "item_lua"
@@ -143,8 +190,7 @@
         "ArtifactSlot"          "1"
         "ArtifactTier"          "1"
         "ArtifactName"          "凡铁甲"
-        "BonusHP"               "500"
-        "BonusArmor"            "0"
+        "BonusConstitution"     "20"
     }
 
     "item_artifact_armor_t2"
@@ -243,6 +289,30 @@
     // 绑定神器 - Slot 2: 头盔 (Zone 3)
     // =========================================================================
 
+    "item_artifact_helm_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "2020"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_artifact_helm_t1"
+        
+        "ItemDroppable"         "0"
+        "ItemSellable"          "0"
+        "ItemKillable"          "0"
+        "ItemPurchasable"       "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "1"
+        
+        // 自定义属性 - Tier 0 蒙尘
+        "ArtifactSlot"          "2"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "蒙尘头冠"
+        "BonusDivinity"         "0"
+        "BonusManaRegen"        "1"
+    }
+
     "item_artifact_helm_t1"
     {
         "BaseClass"             "item_lua"
@@ -263,7 +333,7 @@
         "ArtifactTier"          "1"
         "ArtifactName"          "凡铁冠"
         "BonusDivinity"         "10"
-        "BonusManaRegen"        "0"
+        "BonusMartial"          "10"
     }
 
     "item_artifact_helm_t2"
@@ -362,6 +432,30 @@
     // 绑定神器 - Slot 3: 饰品 (Zone 4)
     // =========================================================================
 
+    "item_artifact_accessory_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "2030"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_artifact_accessory_t1"
+        
+        "ItemDroppable"         "0"
+        "ItemSellable"          "0"
+        "ItemKillable"          "0"
+        "ItemPurchasable"       "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "1"
+        
+        // 自定义属性 - Tier 0 蒙尘
+        "ArtifactSlot"          "3"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "蒙尘饰品"
+        "BonusCritChance"       "2"
+        "BonusCritDamage"       "0"
+    }
+
     "item_artifact_accessory_t1"
     {
         "BaseClass"             "item_lua"
@@ -382,7 +476,6 @@
         "ArtifactTier"          "1"
         "ArtifactName"          "凡铁戒"
         "BonusCritChance"       "5"
-        "BonusCritDamage"       "0"
     }
 
     "item_artifact_accessory_t2"
@@ -481,6 +574,30 @@
     // 绑定神器 - Slot 4: 鞋子 (Zone 5)
     // =========================================================================
 
+    "item_artifact_boots_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "2040"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_artifact_boots_t1"
+        
+        "ItemDroppable"         "0"
+        "ItemSellable"          "0"
+        "ItemKillable"          "0"
+        "ItemPurchasable"       "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "1"
+        
+        // 自定义属性 - Tier 0 蒙尘
+        "ArtifactSlot"          "4"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "蒙尘靴子"
+        "BonusMoveSpeed"        "15"
+        "BonusEvasion"          "0"
+    }
+
     "item_artifact_boots_t1"
     {
         "BaseClass"             "item_lua"
@@ -500,8 +617,7 @@
         "ArtifactSlot"          "4"
         "ArtifactTier"          "1"
         "ArtifactName"          "凡铁靴"
-        "BonusMoveSpeed"        "30"
-        "BonusEvasion"          "0"
+        "BonusAgility"          "10"
     }
 
     "item_artifact_boots_t2"
@@ -600,6 +716,30 @@
     // 绑定神器 - Slot 5: 护符 (Zone 6)
     // =========================================================================
 
+    "item_artifact_amulet_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ID"                    "2050"
+        "ItemCost"              "0"
+        "AbilityTextureName"    "item_artifact_amulet_t1"
+        
+        "ItemDroppable"         "0"
+        "ItemSellable"          "0"
+        "ItemKillable"          "0"
+        "ItemPurchasable"       "0"
+        "ItemStackable"         "0"
+        "ItemPermanent"         "1"
+        
+        // 自定义属性 - Tier 0 蒙尘
+        "ArtifactSlot"          "5"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "蒙尘护符"
+        "BonusAllStats"         "2"
+        "BonusFinalDmgReduct"   "0"
+    }
+
     "item_artifact_amulet_t1"
     {
         "BaseClass"             "item_lua"
@@ -620,7 +760,6 @@
         "ArtifactTier"          "1"
         "ArtifactName"          "凡铁令"
         "BonusAllStats"         "5"
-        "BonusFinalDmgReduct"   "0"
     }
 
     "item_artifact_amulet_t2"

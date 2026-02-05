@@ -129,6 +129,42 @@ const HeroHUD: FC = () => {
     // Q技能（soldier_war_strike）的实体索引
     const [qSkillEntityIndex, setQSkillEntityIndex] = useState(-1);
 
+    // 装备神器槽位 (6个槽位)
+    interface ArtifactSlotInfo {
+        itemName: string | null;
+        tier: number;
+        displayName: string;
+    }
+    const [artifactSlots, setArtifactSlots] = useState<ArtifactSlotInfo[]>([
+        { itemName: null, tier: 0, displayName: '' },
+        { itemName: null, tier: 0, displayName: '' },
+        { itemName: null, tier: 0, displayName: '' },
+        { itemName: null, tier: 0, displayName: '' },
+        { itemName: null, tier: 0, displayName: '' },
+        { itemName: null, tier: 0, displayName: '' },
+    ]);
+
+    // 神器悬停提示状态
+    const [hoveredArtifact, setHoveredArtifact] = useState<{ slotIndex: number; x: number; y: number } | null>(null);
+
+    // 神器信息映射
+    const ARTIFACT_INFO: Record<number, {
+        name: string;
+        desc: string;
+        t0Stats: string;
+        t1Stats: string;
+    }> = {
+        0: { name: '武器', desc: '提升攻击力', t0Stats: '+10 攻击', t1Stats: '+50 攻击' },
+        1: { name: '衣甲', desc: '提升根骨', t0Stats: '+5 根骨', t1Stats: '+20 根骨' },
+        2: { name: '头冠', desc: '提升神念与武道', t0Stats: '+2 神念', t1Stats: '+10 神念 +10 武道' },
+        3: { name: '饰品', desc: '提升暴击率', t0Stats: '+2% 暴击', t1Stats: '+5% 暴击' },
+        4: { name: '鞋履', desc: '提升身法', t0Stats: '+5 身法', t1Stats: '+10 身法' },
+        5: { name: '护符', desc: '提升全属性', t0Stats: '+2 全属性', t1Stats: '+5 全属性' },
+    };
+
+    // 正在播放唤醒动画的槽位
+    const [flashingSlots, setFlashingSlots] = useState<Set<number>>(new Set());
+
     // 隐藏状态 - 当其他面板打开时隐藏HeroHUD
     const [isHidden, setIsHidden] = useState(false);
 
@@ -267,6 +303,43 @@ const HeroHUD: FC = () => {
             updateApiStats();
             $.Schedule(0.2, hpLoop);
         });
+
+        // 神器装备更新函数 - 从 NetTable 读取玩家神器数据
+        const updateArtifacts = () => {
+            const playerId = Players.GetLocalPlayer();
+            // 后端使用 'artifacts' 表，key 格式为 'player_X'
+            const artifactData = CustomNetTables.GetTableValue('artifacts' as any, `player_${playerId}`) as any;
+            if (!artifactData) return;
+
+            const newSlots: ArtifactSlotInfo[] = [];
+            for (let i = 0; i < 6; i++) {
+                // 后端使用 slot_0, slot_1, ... 格式
+                const slot = artifactData[`slot_${i}`];
+                if (slot) {
+                    $.Msg(`[HeroHUD] 槽位 ${i} 收到 tier=${slot.tier}, displayName=${slot.displayName}`);
+                    newSlots.push({
+                        itemName: slot.itemName || null,
+                        tier: slot.tier || 0,
+                        displayName: slot.displayName || '',
+                    });
+                } else {
+                    newSlots.push({ itemName: null, tier: 0, displayName: '' });
+                }
+            }
+            $.Msg(`[HeroHUD] 更新神器槽位: ${JSON.stringify(newSlots)}`);
+            setArtifactSlots(newSlots);
+        };
+
+        // 监听神器 NetTable 变化
+        CustomNetTables.SubscribeNetTableListener('artifacts' as any, (table, key, data) => {
+            const playerId = Players.GetLocalPlayer();
+            if (key === `player_${playerId}`) {
+                updateArtifacts();
+            }
+        });
+
+        // 初始获取神器数据
+        $.Schedule(1.5, updateArtifacts);
 
         // Buff 更新函数 - 获取英雄当前所有可见的buff
         const updateBuffs = () => {
@@ -1192,103 +1265,264 @@ const HeroHUD: FC = () => {
                     width: '220px',
                     height: '140px',
                 }}>
-                    {/* 第一行 - 3个装备槽 */}
+                    {/* 第一行 - 3个装备槽 (武器、衣服、头盔) */}
                     <Panel style={{ flowChildren: 'right' as const, marginBottom: '4px' }}>
-                        {/* 武器槽 */}
-                        <Panel style={{
-                            width: '60px',
-                            height: '60px',
-                            marginRight: '6px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            border: '2px solid #a08050',
-                            borderRadius: '4px',
-                        }}>
-                            <Label text="武器" style={{
-                                align: 'center center',
-                                fontSize: '12px',
-                                color: '#b0a090',
-                            }} />
-                        </Panel>
-                        {/* 衣服槽 */}
-                        <Panel style={{
-                            width: '60px',
-                            height: '60px',
-                            marginRight: '6px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            border: '2px solid #a08050',
-                            borderRadius: '4px',
-                        }}>
-                            <Label text="衣服" style={{
-                                align: 'center center',
-                                fontSize: '12px',
-                                color: '#b0a090',
-                            }} />
-                        </Panel>
-                        {/* 饰品槽 */}
-                        <Panel style={{
-                            width: '60px',
-                            height: '60px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            border: '2px solid #a08050',
-                            borderRadius: '4px',
-                        }}>
-                            <Label text="饰品" style={{
-                                align: 'center center',
-                                fontSize: '12px',
-                                color: '#b0a090',
-                            }} />
-                        </Panel>
+                        {[0, 1, 2].map((slotIndex) => {
+                            const slot = artifactSlots[slotIndex];
+                            const isDormant = slot.tier === 0 && slot.itemName !== null;
+                            const tier = slot.tier || 1;
+                            const slotToIconName: Record<number, string> = {
+                                0: 'weapon', 1: 'armor', 2: 'helm',
+                                3: 'accessory', 4: 'boots', 5: 'amulet'
+                            };
+                            const iconName = slotToIconName[slotIndex];
+
+                            // 处理点击 - 蒙尘神器升级（带唤醒动画）
+                            const handleClick = () => {
+                                $.Msg(`[HeroHUD] 神器槽位 ${slotIndex} 被点击, isDormant=${isDormant}, itemName=${slot.itemName}`);
+                                if (isDormant) {
+                                    $.Msg(`[HeroHUD] 发送升级命令: cmd_upgrade_artifact, slot=${slotIndex}`);
+                                    // 发送服务器命令
+                                    GameEvents.SendCustomGameEventToServer('cmd_upgrade_artifact', { slot: slotIndex });
+
+                                    // 播放前端闪光动画
+                                    setFlashingSlots(prev => new Set(prev).add(slotIndex));
+
+                                    // 600ms后移除闪光效果
+                                    $.Schedule(0.6, () => {
+                                        setFlashingSlots(prev => {
+                                            const next = new Set(prev);
+                                            next.delete(slotIndex);
+                                            return next;
+                                        });
+                                    });
+
+                                    // 播放前端音效
+                                    Game.EmitSound('Item.MoonShard.Consume');
+                                }
+                            };
+
+                            // 判断是否正在闪光
+                            const isFlashing = flashingSlots.has(slotIndex);
+
+                            return (
+                                <Panel
+                                    key={slotIndex}
+                                    className={`ArtifactSlot${isFlashing ? ' ArtifactAwakening' : ''}`}
+                                    hittest={true}
+                                    style={{
+                                        width: '60px',
+                                        height: '60px',
+                                        marginRight: slotIndex < 2 ? '6px' : '0px',
+                                    }}
+                                    onactivate={handleClick}
+                                    onmouseover={() => setHoveredArtifact({ slotIndex, x: 66 * slotIndex, y: 0 })}
+                                    onmouseout={() => setHoveredArtifact(null)}
+                                >
+                                    {/* 背景层 - 根据tier显示不同背景，蓂尘时也变灰 */}
+                                    <Image
+                                        src={`file://{images}/custom_game/hud/artifact_bg_t${tier}.png`}
+                                        style={{
+                                            width: '60px',
+                                            height: '60px',
+                                            position: '0px 0px 0px' as const,
+                                            ...(isDormant ? {
+                                                saturation: '0.3',
+                                                brightness: '0.6',
+                                            } : {}),
+                                        }}
+                                    />
+                                    {/* 图标层 - 蒙尘时添加灰色效果 */}
+                                    <Image
+                                        src={`file://{images}/custom_game/hud/artifact_${iconName}_t1.png`}
+                                        style={{
+                                            width: '52px',
+                                            height: '52px',
+                                            position: '4px 4px 0px' as const,
+                                            ...(isDormant ? {
+                                                saturation: '0.0',
+                                                brightness: '0.5',
+                                                contrast: '0.8',
+                                                washColor: '#555555',
+                                            } : {}),
+                                        }}
+                                    />
+                                </Panel>
+                            );
+                        })}
                     </Panel>
 
-                    {/* 第二行 - 3个装备槽 */}
+                    {/* 第二行 - 3个装备槽 (饰品、鞋子、护符) */}
                     <Panel style={{ flowChildren: 'right' as const }}>
-                        {/* 鞋子槽 */}
-                        <Panel style={{
-                            width: '60px',
-                            height: '60px',
-                            marginRight: '6px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            border: '2px solid #a08050',
-                            borderRadius: '4px',
-                        }}>
-                            <Label text="鞋子" style={{
-                                align: 'center center',
-                                fontSize: '12px',
-                                color: '#b0a090',
-                            }} />
-                        </Panel>
-                        {/* 法宝槽 */}
-                        <Panel style={{
-                            width: '60px',
-                            height: '60px',
-                            marginRight: '6px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            border: '2px solid #a08050',
-                            borderRadius: '4px',
-                        }}>
-                            <Label text="法宝" style={{
-                                align: 'center center',
-                                fontSize: '12px',
-                                color: '#b0a090',
-                            }} />
-                        </Panel>
-                        {/* 秘籍槽 */}
-                        <Panel style={{
-                            width: '60px',
-                            height: '60px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            border: '2px solid #a08050',
-                            borderRadius: '4px',
-                        }}>
-                            <Label text="秘籍" style={{
-                                align: 'center center',
-                                fontSize: '12px',
-                                color: '#b0a090',
-                            }} />
-                        </Panel>
+                        {[3, 4, 5].map((slotIndex) => {
+                            const slot = artifactSlots[slotIndex];
+                            const isDormant = slot.tier === 0 && slot.itemName !== null;
+                            const tier = slot.tier || 1;
+                            const slotToIconName: Record<number, string> = {
+                                0: 'weapon', 1: 'armor', 2: 'helm',
+                                3: 'accessory', 4: 'boots', 5: 'amulet'
+                            };
+                            const iconName = slotToIconName[slotIndex];
+
+                            // 处理点击 - 蒙尘神器升级（带唤醒动画）
+                            const handleClick = () => {
+                                $.Msg(`[HeroHUD] 神器槽位 ${slotIndex} 被点击, isDormant=${isDormant}, itemName=${slot.itemName}`);
+                                if (isDormant) {
+                                    $.Msg(`[HeroHUD] 发送升级命令: cmd_upgrade_artifact, slot=${slotIndex}`);
+                                    // 发送服务器命令
+                                    GameEvents.SendCustomGameEventToServer('cmd_upgrade_artifact', { slot: slotIndex });
+
+                                    // 播放前端闪光动画
+                                    setFlashingSlots(prev => new Set(prev).add(slotIndex));
+
+                                    // 600ms后移除闪光效果
+                                    $.Schedule(0.6, () => {
+                                        setFlashingSlots(prev => {
+                                            const next = new Set(prev);
+                                            next.delete(slotIndex);
+                                            return next;
+                                        });
+                                    });
+
+                                    // 播放前端音效
+                                    Game.EmitSound('Item.MoonShard.Consume');
+                                }
+                            };
+
+                            // 判断是否正在闪光
+                            const isFlashing = flashingSlots.has(slotIndex);
+
+                            return (
+                                <Panel
+                                    key={slotIndex}
+                                    className={`ArtifactSlot${isFlashing ? ' ArtifactAwakening' : ''}`}
+                                    hittest={true}
+                                    style={{
+                                        width: '60px',
+                                        height: '60px',
+                                        marginRight: slotIndex < 5 ? '6px' : '0px',
+                                    }}
+                                    onactivate={handleClick}
+                                    onmouseover={() => setHoveredArtifact({ slotIndex, x: 66 * (slotIndex - 3), y: 66 })}
+                                    onmouseout={() => setHoveredArtifact(null)}
+                                >
+                                    {/* 背景层 - 蓂尘时也变灰 */}
+                                    <Image
+                                        src={`file://{images}/custom_game/hud/artifact_bg_t${tier}.png`}
+                                        style={{
+                                            width: '60px',
+                                            height: '60px',
+                                            position: '0px 0px 0px' as const,
+                                            ...(isDormant ? {
+                                                saturation: '0.3',
+                                                brightness: '0.6',
+                                            } : {}),
+                                        }}
+                                    />
+                                    {/* 图标层 - 蒙尘时添加灰色效果 */}
+                                    <Image
+                                        src={`file://{images}/custom_game/hud/artifact_${iconName}_t1.png`}
+                                        style={{
+                                            width: '52px',
+                                            height: '52px',
+                                            position: '4px 4px 0px' as const,
+                                            ...(isDormant ? {
+                                                saturation: '0.0',
+                                                brightness: '0.5',
+                                                contrast: '0.8',
+                                                washColor: '#555555',
+                                            } : {}),
+                                        }}
+                                    />
+                                </Panel>
+                            );
+                        })}
                     </Panel>
                 </Panel>
             </Panel>
+
+            {/* 神器悬停提示 */}
+            {hoveredArtifact && (
+                <Panel
+                    style={{
+                        position: `${894 + hoveredArtifact.x + 70}px ${330 + hoveredArtifact.y - 20}px 0px` as const,
+                        width: '140px',
+                        padding: '10px 12px',
+                        backgroundColor: 'rgba(25, 50, 55, 0.95)',
+                        border: '1px solid #c9a861',
+                        borderRadius: '6px',
+                        boxShadow: '0px 0px 12px 4px rgba(60, 120, 110, 0.35)',
+                        flowChildren: 'down' as const,
+                    }}
+                >
+                    {/* 标题 - 神器名称 */}
+                    <Label
+                        text={artifactSlots[hoveredArtifact.slotIndex].tier === 0
+                            ? `蒙尘${ARTIFACT_INFO[hoveredArtifact.slotIndex].name}`
+                            : `${ARTIFACT_INFO[hoveredArtifact.slotIndex].name}`}
+                        style={{
+                            color: artifactSlots[hoveredArtifact.slotIndex].tier === 0 ? '#888888' : '#ffd780',
+                            fontSize: '16px',
+                            fontWeight: 'bold' as const,
+                            textShadow: '0px 0px 6px #c9a861',
+                            horizontalAlign: 'center' as const,
+                            textAlign: 'center' as const,
+                            letterSpacing: '2px',
+                            marginBottom: '4px',
+                        }}
+                    />
+                    {/* 分割线 */}
+                    <Panel style={{
+                        width: '80%',
+                        height: '1px',
+                        backgroundColor: '#c9a861',
+                        horizontalAlign: 'center' as const,
+                        marginTop: '2px',
+                        marginBottom: '6px',
+                        opacity: '0.6',
+                    }} />
+                    {/* 描述 */}
+                    <Label
+                        text={ARTIFACT_INFO[hoveredArtifact.slotIndex].desc}
+                        style={{
+                            color: '#d4c4a8',
+                            fontSize: '12px',
+                            horizontalAlign: 'center' as const,
+                            textAlign: 'center' as const,
+                            opacity: '0.85',
+                            marginBottom: '4px',
+                        }}
+                    />
+                    {/* 属性加成 */}
+                    <Label
+                        text={artifactSlots[hoveredArtifact.slotIndex].tier === 0
+                            ? ARTIFACT_INFO[hoveredArtifact.slotIndex].t0Stats
+                            : ARTIFACT_INFO[hoveredArtifact.slotIndex].t1Stats}
+                        style={{
+                            color: '#66ff88',
+                            fontSize: '13px',
+                            fontWeight: 'bold' as const,
+                            textShadow: '0px 0px 6px #44cc66',
+                            horizontalAlign: 'center' as const,
+                            textAlign: 'center' as const,
+                            marginBottom: '4px',
+                        }}
+                    />
+                    {/* Tier 0 升级提示 - 呼吸动画 */}
+                    {artifactSlots[hoveredArtifact.slotIndex].tier === 0 && (
+                        <Label
+                            text="点击唤醒"
+                            className="TooltipActionHint"
+                            style={{
+                                fontSize: '12px',
+                                horizontalAlign: 'center' as const,
+                                textAlign: 'center' as const,
+                                marginTop: '2px',
+                            }}
+                        />
+                    )}
+                </Panel>
+            )}
         </Panel>
     );
 };

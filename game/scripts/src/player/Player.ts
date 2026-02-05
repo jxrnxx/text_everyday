@@ -154,7 +154,9 @@ export class Player {
      * 英雄出生时调用
      */
     OnHeroSpawned(): void {
-        // 可以在这里添加初始化逻辑
+        // 初始化神器系统 - 装备 Tier 0 蒙尘神器
+        const { ArtifactSystem } = require('../systems/ArtifactSystem');
+        ArtifactSystem.GetInstance().InitPlayerArtifacts(this.id);
     }
 
     /**

@@ -204,4 +204,10 @@ declare interface CustomGameEventDeclarations {
         storage_type: 'public' | 'private';
         item_index: number;
     };
+
+    // ===== Artifact System Events =====
+    /** Upgrade dormant artifact (Client -> Server) */
+    cmd_upgrade_artifact: {
+        slot: number;
+    };
 }
