@@ -244,6 +244,12 @@ export class KnapsackSystem {
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (!hero) return;
 
+        // 检查是否是神器物品
+        if (item.itemName.startsWith('item_artifact_')) {
+            this.EquipArtifactFromBackpack(playerId, storageType, item, index);
+            return;
+        }
+
         // 根据物品名称执行不同效果
         switch (item.itemName) {
             case 'item_book_martial_cleave_1':
@@ -283,6 +289,61 @@ export class KnapsackSystem {
 
             default:
                 print(`[KnapsackSystem] 未知物品: ${item.itemName}`);
+        }
+    }
+
+    /**
+     * 从背包装备神器
+     */
+    private EquipArtifactFromBackpack(
+        playerId: PlayerID,
+        storageType: 'public' | 'private',
+        item: KnapsackItem,
+        index: number
+    ): void {
+        // 动态导入 ArtifactSystem 避免循环依赖
+        const { ArtifactSystem } = require('./ArtifactSystem');
+        const artifactSystem = ArtifactSystem.GetInstance();
+
+        // 从 KV 获取槽位信息
+        const kv = GetAbilityKeyValuesByName(item.itemName) as any;
+        if (!kv) {
+            print(`[KnapsackSystem] 无法获取神器 KV: ${item.itemName}`);
+            return;
+        }
+
+        const slotIndex = Number(kv.ArtifactSlot) || 0;
+        const displayName = kv.ArtifactName || item.itemName;
+
+        // 装备神器
+        const success = artifactSystem.EquipArtifact(playerId, slotIndex, item.itemName);
+
+        if (success) {
+            // 从背包移除物品
+            this.ConsumeItem(playerId, storageType, index, 1);
+
+            // 播放装备音效
+            const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+            if (hero) {
+                EmitSoundOn('Item.PickUpGemShop', hero);
+            }
+
+            // 通知客户端
+            const player = PlayerResource.GetPlayer(playerId);
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: `装备了 ${displayName}`,
+                    duration: 2,
+                } as never);
+            }
+
+            print(`[KnapsackSystem] 玩家 ${playerId} 装备了神器: ${displayName}`);
+        } else {
+            // 装备失败
+            const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+            if (hero) {
+                EmitSoundOn('General.CastFail_NoMana', hero);
+            }
         }
     }
 

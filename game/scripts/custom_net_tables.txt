@@ -10,5 +10,6 @@
         "upgrade_system",
         "CustomValue",
         "knapsack",
+        "artifacts",
     ]
 }
