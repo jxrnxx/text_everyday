@@ -1,6 +1,7 @@
 import { reloadable } from '../utils/tstl-utils';
 import type { EasingFunctionName } from '../utils/tween';
 import { tween } from '../utils/tween';
+import { ArtifactSystem } from '../systems/ArtifactSystem';
 
 type DebugCallbackFunction = (hero: CDOTA_BaseNPC_Hero, ...args: string[]) => void;
 
@@ -63,6 +64,29 @@ const DebugCallbacks: Record<string, { desc: string; func: DebugCallbackFunction
                     return 0.03;
                 }
             });
+        },
+    },
+    ['-zhuangbei']: {
+        desc: '装备调试: -zhuangbei up (升级所有神器) / reset (重置为T0)',
+        func: (hero, ...args: string[]) => {
+            const playerId = hero.GetPlayerID();
+            const subCmd = args[0]?.toLowerCase();
+
+            if (subCmd === 'up') {
+                const count = ArtifactSystem.GetInstance().UpgradeAllArtifacts(playerId);
+                if (count > 0) {
+                    Say(hero, `神器全部升级! (${count}个槽位)`, false);
+                } else {
+                    Say(hero, '所有神器已达最高阶!', false);
+                }
+            } else if (subCmd === 'reset') {
+                // 重新初始化为 T0
+                (ArtifactSystem.GetInstance() as any).playerArtifacts.delete(playerId);
+                ArtifactSystem.GetInstance().InitPlayerArtifacts(playerId);
+                Say(hero, '神器已重置为蒙尘状态 (T0)', false);
+            } else {
+                Say(hero, '用法: -zhuangbei up / reset', false);
+            }
         },
     },
 };

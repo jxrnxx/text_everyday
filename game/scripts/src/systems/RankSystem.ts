@@ -49,8 +49,6 @@ export class RankSystem {
             const playerID = (event as any).PlayerID as PlayerID;
             this.TestRankUp(playerID);
         });
-
-        print('[RankSystem] Initialized');
     }
 
     /**

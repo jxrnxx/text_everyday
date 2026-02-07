@@ -2,7 +2,11 @@ import { DependencyList, useEffect } from 'react';
 import type { LocalEvent } from '../def/local_event_def';
 import { EventEmitter } from 'events';
 
-export function emitLocalEvent<EName extends keyof LocalEvent, EData extends LocalEvent[EName]>(eventName: EName, eventData: EData, ...args: any[]) {
+export function emitLocalEvent<EName extends keyof LocalEvent, EData extends LocalEvent[EName]>(
+    eventName: EName,
+    eventData: EData,
+    ...args: any[]
+) {
     GameUI.CustomUIConfig().EventBus!.emit(eventName, eventData, ...args);
 }
 
@@ -47,7 +51,6 @@ declare global {
 
 // remove all old event listeners
 if (GameUI.CustomUIConfig().EventBus != null) {
-    $.Msg(`remove all event listeners on GameUI.CustomUIConfig().EventBus`);
     GameUI.CustomUIConfig().EventBus?.removeAllListeners();
     GameUI.CustomUIConfig().EventBus = null;
 }

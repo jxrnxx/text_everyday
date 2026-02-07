@@ -17,7 +17,6 @@ export class item_artifact extends BaseItem {
         // 从 KV 获取槽位信息
         const kv = GetAbilityKeyValuesByName(itemName) as any;
         if (!kv) {
-            print(`[item_artifact] 无法获取物品 KV: ${itemName}`);
             return;
         }
 

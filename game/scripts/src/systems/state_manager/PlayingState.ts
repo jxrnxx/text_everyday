@@ -32,8 +32,6 @@ export class PlayingState extends BaseState {
     }
 
     OnStart() {
-        print('[PlayingState] 开始防守!');
-
         // 发送状态到客户端
         CustomNetTables.SetTableValue(
             'game_state' as never,
@@ -73,7 +71,5 @@ export class PlayingState extends BaseState {
         return this.time;
     }
 
-    OnEnd() {
-        print('[PlayingState] 防守阶段结束');
-    }
+    OnEnd() { }
 }

@@ -67,24 +67,18 @@ export class KnapsackSystem {
         });
 
         // 合成装备
-        CustomGameEventManager.RegisterListener('backpack_combine_equip', (_, event) => {
-            print(`[KnapsackSystem] 合成装备功能待实现`);
-        });
+        CustomGameEventManager.RegisterListener('backpack_combine_equip', (_, event) => { });
 
         // 合成技能
-        CustomGameEventManager.RegisterListener('backpack_combine_skill', (_, event) => {
-            print(`[KnapsackSystem] 合成技能功能待实现`);
-        });
+        CustomGameEventManager.RegisterListener('backpack_combine_skill', (_, event) => { });
 
         // 技能商人购买
         CustomGameEventManager.RegisterListener('cmd_ability_shop_purchase', (_, event) => {
-            print(`[KnapsackSystem] 收到购买事件: ${event.item_id} ${event.item_name} ${event.price}`);
             this.HandleAbilityShopPurchase(event.PlayerID, event.item_id, event.item_name, event.price, event.currency);
         });
 
         // 技能替换确认 (玩家选择了要替换的格子)
         CustomGameEventManager.RegisterListener('cmd_skill_replace_confirm', (_, event: any) => {
-            print(`[KnapsackSystem] 收到技能替换确认: slot=${event.slot_key}`);
             this.HandleSkillReplaceConfirm(
                 event.PlayerID,
                 event.slot_key,
@@ -108,8 +102,6 @@ export class KnapsackSystem {
         CustomGameEventManager.RegisterListener('backpack_sell_item', (_, event: any) => {
             this.SellItem(event.PlayerID, event.storageType, event.index, event.price);
         });
-
-        print('[KnapsackSystem] 事件监听器已注册 (backpack_* 前缀)');
     }
 
     /**
@@ -133,9 +125,6 @@ export class KnapsackSystem {
             });
 
             this.SyncToClient(playerId);
-            print(
-                `[KnapsackSystem] 玩家 ${playerId} 存储已初始化 (公用${this.PUBLIC_SIZE}格 + 私人${this.PRIVATE_SIZE}格)`
-            );
         }
     }
 
@@ -166,7 +155,6 @@ export class KnapsackSystem {
                 if (existingItem && existingItem.itemName === item.itemName) {
                     existingItem.charges += item.charges;
                     this.SyncToClient(playerId);
-                    print(`[KnapsackSystem] 物品 ${item.itemName} 已堆叠到 ${storageType} 槽位 ${i}`);
                     return true;
                 }
             }
@@ -177,7 +165,6 @@ export class KnapsackSystem {
             if (!items[i]) {
                 items[i] = item;
                 this.SyncToClient(playerId);
-                print(`[KnapsackSystem] 物品 ${item.itemName} 已添加到 ${storageType} 槽位 ${i}`);
                 return true;
             }
         }
@@ -190,7 +177,6 @@ export class KnapsackSystem {
                 duration: 3,
             } as never);
         }
-        print(`[KnapsackSystem] 玩家 ${playerId} ${storageType} 已满`);
         return false;
     }
 
@@ -254,29 +240,24 @@ export class KnapsackSystem {
         switch (item.itemName) {
             case 'item_book_martial_cleave_1':
                 // 技能书效果 - 学习技能
-                print(`[KnapsackSystem] 玩家 ${playerId} 使用了技能书: ${item.itemName}`);
                 this.LearnSkillFromBook(playerId, hero, item, storageType, index);
                 break;
 
             case 'item_scroll_gacha':
                 // 演武残卷 - 随机获得技能书
-                print(`[KnapsackSystem] 玩家 ${playerId} 使用了演武残卷`);
                 this.ConsumeItem(playerId, storageType, index, 1);
                 break;
 
             case 'item_ask_dao_lot':
                 // 问道签 - 打开选择界面
-                print(`[KnapsackSystem] 玩家 ${playerId} 使用了问道签`);
                 break;
 
             case 'item_derive_paper':
                 // 衍法灵笺 - 变换技能
-                print(`[KnapsackSystem] 玩家 ${playerId} 使用了衍法灵笺`);
                 break;
 
             case 'item_blank_rubbing':
                 // 空白拓本 - 剥离技能
-                print(`[KnapsackSystem] 玩家 ${playerId} 使用了空白拓本`);
                 break;
 
             case 'item_upgrade_stone_1':
@@ -284,11 +265,9 @@ export class KnapsackSystem {
             case 'item_upgrade_stone_3':
             case 'item_upgrade_stone_4':
                 // 强化石 - 需要选择技能
-                print(`[KnapsackSystem] 玩家 ${playerId} 尝试使用强化石 ${item.itemName}`);
                 break;
 
             default:
-                print(`[KnapsackSystem] 未知物品: ${item.itemName}`);
         }
     }
 
@@ -308,7 +287,6 @@ export class KnapsackSystem {
         // 从 KV 获取槽位信息
         const kv = GetAbilityKeyValuesByName(item.itemName) as any;
         if (!kv) {
-            print(`[KnapsackSystem] 无法获取神器 KV: ${item.itemName}`);
             return;
         }
 
@@ -336,8 +314,6 @@ export class KnapsackSystem {
                     duration: 2,
                 } as never);
             }
-
-            print(`[KnapsackSystem] 玩家 ${playerId} 装备了神器: ${displayName}`);
         } else {
             // 装备失败
             const hero = PlayerResource.GetSelectedHeroEntity(playerId);
@@ -391,7 +367,6 @@ export class KnapsackSystem {
     ): void {
         const abilityName = this.SKILL_BOOK_MAP[item.itemName];
         if (!abilityName) {
-            print(`[KnapsackSystem] 未知技能书: ${item.itemName}`);
             return;
         }
 
@@ -472,8 +447,6 @@ export class KnapsackSystem {
             storage_type: storageType,
             item_index: itemIndex,
         } as never);
-
-        print(`[KnapsackSystem] 玩家 ${playerId} 技能格已满，发送替换选择提示`);
     }
 
     /**
@@ -488,7 +461,6 @@ export class KnapsackSystem {
         const newAbility = hero.FindAbilityByName(abilityName);
 
         if (!newAbility) {
-            print(`[KnapsackSystem] 错误: 技能${abilityName}添加失败!`);
             return;
         }
 
@@ -498,7 +470,6 @@ export class KnapsackSystem {
         newAbility.SetActivated(true);
 
         const currentIndex = newAbility.GetAbilityIndex();
-        print(`[KnapsackSystem] 技能${abilityName}已添加到槽位: ${currentIndex}`);
 
         // 再次确保技能不隐藏（有时候需要延迟设置）
         Timers.CreateTimer(0.1, () => {
@@ -506,18 +477,13 @@ export class KnapsackSystem {
             if (ab) {
                 ab.SetHidden(false);
                 ab.SetActivated(true);
-                print(`[KnapsackSystem] 技能${abilityName}可见性已确认: Hidden=${ab.IsHidden()}`);
             }
         });
 
         // 打印学习后所有技能状态
-        print(`[KnapsackSystem] === 学习后技能状态 ===`);
         for (let i = 0; i < 24; i++) {
             const ab = hero.GetAbilityByIndex(i);
             if (ab && ab.GetAbilityName() !== 'generic_hidden') {
-                print(
-                    `[KnapsackSystem] 槽位${i}: ${ab.GetAbilityName()}, 等级${ab.GetLevel()}, Hidden=${ab.IsHidden()}`
-                );
             }
         }
 
@@ -534,8 +500,6 @@ export class KnapsackSystem {
 
         // 播放学习特效
         EmitSoundOn('General.LevelUp', hero);
-
-        print(`[KnapsackSystem] 玩家 ${playerId} 学习技能 ${abilityName} 成功`);
     }
 
     /**
@@ -564,15 +528,12 @@ export class KnapsackSystem {
                 slotIndex = 4;
                 break;
             default:
-                print(`[KnapsackSystem] 无效的槽位键: ${slotKey}`);
                 return;
         }
 
         // 执行替换
         this.DoLearnAbility(playerId, hero, skillToLearn, slotIndex);
         this.ConsumeItem(playerId, storageType, itemIndex, 1);
-
-        print(`[KnapsackSystem] 玩家 ${playerId} 替换技能到槽位 ${slotKey}`);
     }
 
     /**
@@ -603,9 +564,6 @@ export class KnapsackSystem {
         targetItems[targetIndex] = temp;
 
         this.SyncToClient(playerId);
-        print(
-            `[KnapsackSystem] 玩家 ${playerId} 交换物品 ${sourceType}[${sourceIndex}] <-> ${targetType}[${targetIndex}]`
-        );
     }
 
     /**
@@ -614,8 +572,6 @@ export class KnapsackSystem {
     private DropItem(playerId: PlayerID, storageType: 'public' | 'private', index: number, position: Vector): void {
         const item = this.RemoveItem(playerId, storageType, index);
         if (!item) return;
-
-        print(`[KnapsackSystem] 玩家 ${playerId} 丢弃物品 ${item.itemName} (物品已移除)`);
     }
 
     /**
@@ -631,7 +587,6 @@ export class KnapsackSystem {
         this.TidyStorage(storage.privateItems, this.PRIVATE_SIZE);
 
         this.SyncToClient(playerId);
-        print(`[KnapsackSystem] 玩家 ${playerId} 整理了背包`);
     }
 
     /**
@@ -677,7 +632,6 @@ export class KnapsackSystem {
     ): void {
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (!hero) {
-            print(`[KnapsackSystem] 玩家 ${playerId} 没有英雄`);
             return;
         }
 
@@ -693,7 +647,6 @@ export class KnapsackSystem {
                     duration: 3,
                 } as never);
             }
-            print(`[KnapsackSystem] 玩家 ${playerId} 信仰不足: ${currentFaith} < ${price}`);
             return;
         }
 
@@ -723,7 +676,6 @@ export class KnapsackSystem {
 
         const internalItemName = itemNameMap[itemId];
         if (!internalItemName) {
-            print(`[KnapsackSystem] 未知商品ID: ${itemId}`);
             return;
         }
 
@@ -765,8 +717,6 @@ export class KnapsackSystem {
                         duration: 2,
                     } as never);
                 }
-
-                print(`[KnapsackSystem] 玩家 ${playerId} 使用演武残卷，获得技能书: ${selectedBook.name}`);
             }
             return;
         }
@@ -796,17 +746,13 @@ export class KnapsackSystem {
                     duration: 2,
                 } as never);
             }
-
-            print(`[KnapsackSystem] 玩家 ${playerId} 购买 ${itemName} -> ${internalItemName}，进入私人背包`);
         }
     }
 
     /**
      * 分解物品 (待实现)
      */
-    private DecomposeItems(_playerId: PlayerID): void {
-        print('[KnapsackSystem] 分解功能待实现');
-    }
+    private DecomposeItems(_playerId: PlayerID): void { }
 
     /**
      * 存入仓库 (私人背包 → 公用仓库)
@@ -818,7 +764,6 @@ export class KnapsackSystem {
         // 获取私人背包中的物品
         const item = storage.privateItems[sourceIndex];
         if (!item) {
-            print(`[KnapsackSystem] 存入仓库失败: 槽位${sourceIndex}无物品`);
             return;
         }
 
@@ -848,7 +793,6 @@ export class KnapsackSystem {
         storage.privateItems[sourceIndex] = null;
 
         this.SyncToClient(playerId);
-        print(`[KnapsackSystem] 玩家 ${playerId} 存入物品 ${item.itemName} 到仓库槽位 ${emptySlot}`);
     }
 
     /**
@@ -861,7 +805,6 @@ export class KnapsackSystem {
         // 获取公用仓库中的物品
         const item = storage.publicItems[sourceIndex];
         if (!item) {
-            print(`[KnapsackSystem] 取出失败: 槽位${sourceIndex}无物品`);
             return;
         }
 
@@ -891,7 +834,6 @@ export class KnapsackSystem {
         storage.publicItems[sourceIndex] = null;
 
         this.SyncToClient(playerId);
-        print(`[KnapsackSystem] 玩家 ${playerId} 取出物品 ${item.itemName} 到背包槽位 ${emptySlot}`);
     }
 
     /**
@@ -905,7 +847,6 @@ export class KnapsackSystem {
         const item = items[index];
 
         if (!item) {
-            print(`[KnapsackSystem] 出售失败: 槽位无物品`);
             return;
         }
 
@@ -932,8 +873,6 @@ export class KnapsackSystem {
                 duration: 2,
             } as never);
         }
-
-        print(`[KnapsackSystem] 玩家 ${playerId} 出售物品 ${item.itemName}，获得 ${price} 信仰`);
     }
 
     /**
@@ -958,10 +897,6 @@ export class KnapsackSystem {
         // 写入 NetTable
         CustomNetTables.SetTableValue('public_storage' as any, `player_${playerId}`, publicData as any);
         CustomNetTables.SetTableValue('private_backpack' as any, `player_${playerId}`, privateData as any);
-
-        print(
-            `[KnapsackSystem] 同步到客户端: public_storage(${this.PUBLIC_SIZE}格) + private_backpack(${this.PRIVATE_SIZE}格)`
-        );
 
         // 发送事件通知客户端
         const player = PlayerResource.GetPlayer(playerId);

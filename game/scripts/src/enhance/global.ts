@@ -144,7 +144,6 @@ FindVecByName = function (name: string): Vector {
     if (entity) {
         return entity.GetAbsOrigin();
     }
-    print(`[FindVecByName] 未找到实体: ${name}`);
     return Vector(0, 0, 0);
 };
 

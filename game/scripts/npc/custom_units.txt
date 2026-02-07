@@ -1367,4 +1367,166 @@
 
 
 
+	"npc_guardian_zone_1" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/heroes/juggernaut/juggernaut.vmdl"
+		"ModelScale" "1.0"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "0"
+		"StatusHealth" "300"
+		"StatusHealthRegen" "1"
+		"AttackDamageMin" "20"
+		"AttackDamageMax" "20"
+		"AttackRate" "1.5000"
+		"AttackRange" "150"
+		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
+		"AttackAcquisitionRange" "600"
+	}
+	"npc_guardian_zone_2" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/heroes/treant/treant.vmdl"
+		"ModelScale" "0.8000"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "2"
+		"StatusHealth" "400"
+		"StatusHealthRegen" "1"
+		"AttackDamageMin" "15"
+		"AttackDamageMax" "15"
+		"AttackRate" "1.5000"
+		"AttackRange" "150"
+		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
+		"AttackAcquisitionRange" "600"
+	}
+	"npc_guardian_zone_3" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/heroes/ember_spirit/ember_spirit.vmdl"
+		"ModelScale" "1.0"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "0"
+		"StatusHealth" "300"
+		"StatusHealthRegen" "1"
+		"AttackDamageMin" "20"
+		"AttackDamageMax" "20"
+		"AttackRate" "1.5000"
+		"AttackRange" "150"
+		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
+		"AttackAcquisitionRange" "600"
+	}
+	"npc_guardian_zone_4" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/heroes/ancient_apparition/ancient_apparition.vmdl"
+		"ModelScale" "1.0"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "0"
+		"StatusHealth" "300"
+		"StatusHealthRegen" "1"
+		"AttackDamageMin" "20"
+		"AttackDamageMax" "20"
+		"AttackRate" "1.5000"
+		"AttackRange" "150"
+		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
+		"AttackAcquisitionRange" "600"
+	}
+	"npc_guardian_zone_5" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/creeps/neutral_creeps/n_creep_thunder_lizard/n_creep_thunder_lizard_small.vmdl"
+		"ModelScale" "0.9000"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "0"
+		"StatusHealth" "300"
+		"StatusHealthRegen" "1"
+		"AttackDamageMin" "25"
+		"AttackDamageMax" "25"
+		"AttackRate" "1.5000"
+		"AttackRange" "150"
+		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
+		"AttackAcquisitionRange" "600"
+	}
+	"npc_guardian_zone_6" {
+		"BaseClass" "npc_dota_creature"
+		"Model" "models/heroes/razor/razor.vmdl"
+		"ModelScale" "1.0"
+		"Creature" {
+			"AttachWearables" {
+			}
+		}
+		"Ability1" ""
+		"Ability2" ""
+		"Ability3" ""
+		"Ability4" ""
+		"Ability5" ""
+		"Ability6" ""
+		"MovementSpeed" "300"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
+		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
+		"ArmorPhysical" "1"
+		"StatusHealth" "350"
+		"StatusHealthRegen" "1"
+		"AttackDamageMin" "20"
+		"AttackDamageMax" "20"
+		"AttackRate" "1.5000"
+		"AttackRange" "150"
+		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
+		"AttackAcquisitionRange" "600"
+	}
 }

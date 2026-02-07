@@ -34,9 +34,7 @@ export class DamageSystem {
      * 初始化伤害系统
      * 在 GameMode.Activate 中调用
      */
-    public static Init(): void {
-        print('[DamageSystem] Initialized');
-    }
+    public static Init(): void { }
 
     /**
      * 伤害过滤器 - 所有伤害都会经过这里

@@ -11,10 +11,13 @@ export class modifier_artifact_bonus extends BaseModifier {
     private cachedDamage: number = 0;
     private cachedHP: number = 0;
     private cachedArmor: number = 0;
+    private cachedConstitution: number = 0;
+    private cachedMartial: number = 0;
     private cachedMoveSpeed: number = 0;
     private cachedManaRegen: number = 0;
     private cachedArmorPen: number = 0;
     private cachedDivinity: number = 0;
+    private cachedAgility: number = 0;
     private cachedCritChance: number = 0;
     private cachedCritDamage: number = 0;
     private cachedEvasion: number = 0;
@@ -59,10 +62,13 @@ export class modifier_artifact_bonus extends BaseModifier {
         this.cachedDamage = bonuses.damage || 0;
         this.cachedHP = bonuses.hp || 0;
         this.cachedArmor = bonuses.armor || 0;
+        this.cachedConstitution = bonuses.constitution || 0;
+        this.cachedMartial = bonuses.martial || 0;
         this.cachedMoveSpeed = bonuses.moveSpeed || 0;
         this.cachedManaRegen = bonuses.manaRegen || 0;
         this.cachedArmorPen = bonuses.armorPen || 0;
         this.cachedDivinity = bonuses.divinity || 0;
+        this.cachedAgility = bonuses.agility || 0;
         this.cachedCritChance = bonuses.critChance || 0;
         this.cachedCritDamage = bonuses.critDamage || 0;
         this.cachedEvasion = bonuses.evasion || 0;
@@ -144,9 +150,24 @@ export class modifier_artifact_bonus extends BaseModifier {
         return this.cachedArmorPen;
     }
 
+    // 获取额外根骨值 (用于 CustomStats 系统调用)
+    GetBonusConstitution(): number {
+        return this.cachedConstitution;
+    }
+
+    // 获取额外武道值 (用于 CustomStats 系统调用)
+    GetBonusMartial(): number {
+        return this.cachedMartial;
+    }
+
     // 获取额外神念值 (用于 CustomStats 系统调用)
     GetBonusDivinity(): number {
         return this.cachedDivinity;
+    }
+
+    // 获取额外身法值 (用于 CustomStats 系统调用)
+    GetBonusAgility(): number {
+        return this.cachedAgility;
     }
 
     // 获取全属性加成 (用于 CustomStats 系统调用)

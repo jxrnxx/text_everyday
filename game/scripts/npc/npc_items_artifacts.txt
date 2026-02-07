@@ -1,54 +1,172 @@
-"DOTAItems"
+﻿"DOTAItems"
 {
-    // =========================================================================
-    // 绑定神器 - Slot 0: 武器 (Zone 1)
-    // =========================================================================
-
     "item_artifact_weapon_t0"
     {
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2000"
+
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_weapon_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性 - Tier 0 蒙尘
+        "ItemSellable"          "0"
         "ArtifactSlot"          "0"
         "ArtifactTier"          "0"
-        "ArtifactName"          "蒙尘武器"
+        "ArtifactName"          "dormant_weapon"
         "BonusDamage"           "10"
-        "BonusArmorPen"         "0"
     }
 
-    "item_artifact_weapon_t1"
+    "item_artifact_armor_t0"
     {
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2001"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_weapon_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "1"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "dormant_armor"
+        "BonusHP"               "100"
+    }
+
+    "item_artifact_helm_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "2"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "dormant_helm"
+        "BonusDivinity"         "2"
+    }
+
+    "item_artifact_accessory_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "3"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "dormant_accessory"
+        "BonusCritChance"       "2"
+    }
+
+    "item_artifact_boots_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "4"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "dormant_boots"
+        "BonusMoveSpeed"        "10"
+    }
+
+    "item_artifact_amulet_t0"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "5"
+        "ArtifactTier"          "0"
+        "ArtifactName"          "dormant_amulet"
+        "BonusAllStats"         "2"
+    }
+
+    "item_artifact_weapon_tier1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
         "ArtifactSlot"          "0"
         "ArtifactTier"          "1"
-        "ArtifactName"          "凡铁剑"
+        "ArtifactName"          "iron_sword"
         "BonusDamage"           "50"
+    }
+
+    "item_artifact_armor_tier1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "1"
+        "ArtifactTier"          "1"
+        "ArtifactName"          "iron_armor"
+        "BonusHP"               "500"
+    }
+
+    "item_artifact_helm_tier1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "2"
+        "ArtifactTier"          "1"
+        "ArtifactName"          "iron_crown"
+        "BonusDivinity"         "10"
+    }
+
+    "item_artifact_accessory_tier1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "3"
+        "ArtifactTier"          "1"
+        "ArtifactName"          "iron_ring"
+        "BonusCritChance"       "5"
+    }
+
+    "item_artifact_boots_tier1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "4"
+        "ArtifactTier"          "1"
+        "ArtifactName"          "iron_boots"
+        "BonusMoveSpeed"        "30"
+    }
+
+    "item_artifact_amulet_tier1"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "5"
+        "ArtifactTier"          "1"
+        "ArtifactName"          "iron_token"
+        "BonusAllStats"         "5"
     }
 
     "item_artifact_weapon_t2"
@@ -56,141 +174,14 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2002"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_weapon_t2"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "0"
         "ArtifactTier"          "2"
-        "ArtifactName"          "精钢剑"
+        "ArtifactName"          "steel_sword"
         "BonusDamage"           "200"
         "BonusArmorPen"         "10"
-    }
-
-    "item_artifact_weapon_t3"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2003"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_weapon_t3"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "0"
-        "ArtifactTier"          "3"
-        "ArtifactName"          "玄玉剑"
-        "BonusDamage"           "1000"
-        "BonusArmorPen"         "30"
-    }
-
-    "item_artifact_weapon_t4"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2004"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_weapon_t4"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "0"
-        "ArtifactTier"          "4"
-        "ArtifactName"          "天仙剑"
-        "BonusDamage"           "5000"
-        "BonusArmorPen"         "80"
-    }
-
-    "item_artifact_weapon_t5"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2005"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_weapon_t5"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "0"
-        "ArtifactTier"          "5"
-        "ArtifactName"          "神魔剑"
-        "BonusDamage"           "30000"
-        "BonusArmorPen"         "200"
-    }
-
-    // =========================================================================
-    // 绑定神器 - Slot 1: 护甲 (Zone 2)
-    // =========================================================================
-
-    "item_artifact_armor_t0"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2010"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_armor_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性 - Tier 0 蒙尘
-        "ArtifactSlot"          "1"
-        "ArtifactTier"          "0"
-        "ArtifactName"          "蒙尘衣甲"
-        "BonusHP"               "100"
-        "BonusArmor"            "0"
-    }
-
-    "item_artifact_armor_t1"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2011"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_armor_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "1"
-        "ArtifactTier"          "1"
-        "ArtifactName"          "凡铁甲"
-        "BonusConstitution"     "20"
     }
 
     "item_artifact_armor_t2"
@@ -198,142 +189,14 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2012"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_armor_t2"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "1"
         "ArtifactTier"          "2"
-        "ArtifactName"          "精钢甲"
+        "ArtifactName"          "steel_armor"
         "BonusHP"               "3000"
         "BonusArmor"            "10"
-    }
-
-    "item_artifact_armor_t3"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2013"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_armor_t3"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "1"
-        "ArtifactTier"          "3"
-        "ArtifactName"          "玄玉甲"
-        "BonusHP"               "10000"
-        "BonusArmor"            "30"
-    }
-
-    "item_artifact_armor_t4"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2014"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_armor_t4"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "1"
-        "ArtifactTier"          "4"
-        "ArtifactName"          "天仙甲"
-        "BonusHP"               "100000"
-        "BonusArmor"            "80"
-    }
-
-    "item_artifact_armor_t5"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2015"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_armor_t5"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "1"
-        "ArtifactTier"          "5"
-        "ArtifactName"          "神魔甲"
-        "BonusHP"               "1000000"
-        "BonusArmor"            "200"
-    }
-
-    // =========================================================================
-    // 绑定神器 - Slot 2: 头盔 (Zone 3)
-    // =========================================================================
-
-    "item_artifact_helm_t0"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2020"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_helm_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性 - Tier 0 蒙尘
-        "ArtifactSlot"          "2"
-        "ArtifactTier"          "0"
-        "ArtifactName"          "蒙尘头冠"
-        "BonusDivinity"         "0"
-        "BonusManaRegen"        "1"
-    }
-
-    "item_artifact_helm_t1"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2021"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_helm_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "2"
-        "ArtifactTier"          "1"
-        "ArtifactName"          "凡铁冠"
-        "BonusDivinity"         "10"
-        "BonusMartial"          "10"
     }
 
     "item_artifact_helm_t2"
@@ -341,141 +204,14 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2022"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_helm_t2"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "2"
         "ArtifactTier"          "2"
-        "ArtifactName"          "精钢冠"
+        "ArtifactName"          "steel_crown"
         "BonusDivinity"         "50"
         "BonusManaRegen"        "5"
-    }
-
-    "item_artifact_helm_t3"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2023"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_helm_t3"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "2"
-        "ArtifactTier"          "3"
-        "ArtifactName"          "玄玉冠"
-        "BonusDivinity"         "200"
-        "BonusManaRegen"        "20"
-    }
-
-    "item_artifact_helm_t4"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2024"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_helm_t4"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "2"
-        "ArtifactTier"          "4"
-        "ArtifactName"          "天仙冠"
-        "BonusDivinity"         "1000"
-        "BonusManaRegen"        "50"
-    }
-
-    "item_artifact_helm_t5"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2025"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_helm_t5"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "2"
-        "ArtifactTier"          "5"
-        "ArtifactName"          "神魔冠"
-        "BonusDivinity"         "5000"
-        "BonusManaRegen"        "200"
-    }
-
-    // =========================================================================
-    // 绑定神器 - Slot 3: 饰品 (Zone 4)
-    // =========================================================================
-
-    "item_artifact_accessory_t0"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2030"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_accessory_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性 - Tier 0 蒙尘
-        "ArtifactSlot"          "3"
-        "ArtifactTier"          "0"
-        "ArtifactName"          "蒙尘饰品"
-        "BonusCritChance"       "2"
-        "BonusCritDamage"       "0"
-    }
-
-    "item_artifact_accessory_t1"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2031"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_accessory_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "3"
-        "ArtifactTier"          "1"
-        "ArtifactName"          "凡铁戒"
-        "BonusCritChance"       "5"
     }
 
     "item_artifact_accessory_t2"
@@ -483,141 +219,14 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2032"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_accessory_t2"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "3"
         "ArtifactTier"          "2"
-        "ArtifactName"          "精钢戒"
+        "ArtifactName"          "steel_ring"
         "BonusCritChance"       "10"
         "BonusCritDamage"       "20"
-    }
-
-    "item_artifact_accessory_t3"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2033"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_accessory_t3"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "3"
-        "ArtifactTier"          "3"
-        "ArtifactName"          "玄玉戒"
-        "BonusCritChance"       "15"
-        "BonusCritDamage"       "50"
-    }
-
-    "item_artifact_accessory_t4"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2034"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_accessory_t4"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "3"
-        "ArtifactTier"          "4"
-        "ArtifactName"          "天仙戒"
-        "BonusCritChance"       "20"
-        "BonusCritDamage"       "100"
-    }
-
-    "item_artifact_accessory_t5"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2035"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_accessory_t5"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "3"
-        "ArtifactTier"          "5"
-        "ArtifactName"          "神魔戒"
-        "BonusCritChance"       "25"
-        "BonusCritDamage"       "300"
-    }
-
-    // =========================================================================
-    // 绑定神器 - Slot 4: 鞋子 (Zone 5)
-    // =========================================================================
-
-    "item_artifact_boots_t0"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2040"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_boots_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性 - Tier 0 蒙尘
-        "ArtifactSlot"          "4"
-        "ArtifactTier"          "0"
-        "ArtifactName"          "蒙尘靴子"
-        "BonusMoveSpeed"        "15"
-        "BonusEvasion"          "0"
-    }
-
-    "item_artifact_boots_t1"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2041"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_boots_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "4"
-        "ArtifactTier"          "1"
-        "ArtifactName"          "凡铁靴"
-        "BonusAgility"          "10"
     }
 
     "item_artifact_boots_t2"
@@ -625,141 +234,14 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2042"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_boots_t2"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "4"
         "ArtifactTier"          "2"
-        "ArtifactName"          "精钢靴"
+        "ArtifactName"          "steel_boots"
         "BonusMoveSpeed"        "50"
         "BonusEvasion"          "5"
-    }
-
-    "item_artifact_boots_t3"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2043"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_boots_t3"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "4"
-        "ArtifactTier"          "3"
-        "ArtifactName"          "玄玉靴"
-        "BonusMoveSpeed"        "80"
-        "BonusEvasion"          "10"
-    }
-
-    "item_artifact_boots_t4"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2044"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_boots_t4"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "4"
-        "ArtifactTier"          "4"
-        "ArtifactName"          "天仙靴"
-        "BonusMoveSpeed"        "120"
-        "BonusEvasion"          "15"
-    }
-
-    "item_artifact_boots_t5"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2045"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_boots_t5"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "4"
-        "ArtifactTier"          "5"
-        "ArtifactName"          "神魔靴"
-        "BonusMoveSpeed"        "200"
-        "BonusEvasion"          "25"
-    }
-
-    // =========================================================================
-    // 绑定神器 - Slot 5: 护符 (Zone 6)
-    // =========================================================================
-
-    "item_artifact_amulet_t0"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2050"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_amulet_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        // 自定义属性 - Tier 0 蒙尘
-        "ArtifactSlot"          "5"
-        "ArtifactTier"          "0"
-        "ArtifactName"          "蒙尘护符"
-        "BonusAllStats"         "2"
-        "BonusFinalDmgReduct"   "0"
-    }
-
-    "item_artifact_amulet_t1"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2051"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_amulet_t1"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "5"
-        "ArtifactTier"          "1"
-        "ArtifactName"          "凡铁令"
-        "BonusAllStats"         "5"
     }
 
     "item_artifact_amulet_t2"
@@ -767,22 +249,89 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2052"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_amulet_t2"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "5"
         "ArtifactTier"          "2"
-        "ArtifactName"          "精钢令"
+        "ArtifactName"          "steel_token"
         "BonusAllStats"         "20"
         "BonusFinalDmgReduct"   "2"
+    }
+
+    "item_artifact_weapon_t3"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "0"
+        "ArtifactTier"          "3"
+        "ArtifactName"          "jade_sword"
+        "BonusDamage"           "500"
+        "BonusArmorPen"         "25"
+    }
+
+    "item_artifact_armor_t3"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "1"
+        "ArtifactTier"          "3"
+        "ArtifactName"          "jade_armor"
+        "BonusHP"               "8000"
+        "BonusArmor"            "25"
+    }
+
+    "item_artifact_helm_t3"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "2"
+        "ArtifactTier"          "3"
+        "ArtifactName"          "jade_crown"
+        "BonusDivinity"         "120"
+        "BonusManaRegen"        "12"
+    }
+
+    "item_artifact_accessory_t3"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "3"
+        "ArtifactTier"          "3"
+        "ArtifactName"          "jade_ring"
+        "BonusCritChance"       "18"
+        "BonusCritDamage"       "40"
+    }
+
+    "item_artifact_boots_t3"
+    {
+        "BaseClass"             "item_lua"
+        "ScriptFile"            "items/item_artifact"
+        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+        "ItemCost"              "0"
+        "ItemPurchasable"       "0"
+        "ItemSellable"          "0"
+        "ArtifactSlot"          "4"
+        "ArtifactTier"          "3"
+        "ArtifactName"          "jade_boots"
+        "BonusMoveSpeed"        "80"
+        "BonusEvasion"          "10"
     }
 
     "item_artifact_amulet_t3"
@@ -790,67 +339,13 @@
         "BaseClass"             "item_lua"
         "ScriptFile"            "items/item_artifact"
         "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2053"
         "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_amulet_t3"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
         "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
+        "ItemSellable"          "0"
         "ArtifactSlot"          "5"
         "ArtifactTier"          "3"
-        "ArtifactName"          "玄玉令"
-        "BonusAllStats"         "80"
+        "ArtifactName"          "jade_token"
+        "BonusAllStats"         "50"
         "BonusFinalDmgReduct"   "5"
-    }
-
-    "item_artifact_amulet_t4"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2054"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_amulet_t4"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "5"
-        "ArtifactTier"          "4"
-        "ArtifactName"          "天仙令"
-        "BonusAllStats"         "300"
-        "BonusFinalDmgReduct"   "10"
-    }
-
-    "item_artifact_amulet_t5"
-    {
-        "BaseClass"             "item_lua"
-        "ScriptFile"            "items/item_artifact"
-        "AbilityBehavior"       "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
-        "ID"                    "2055"
-        "ItemCost"              "0"
-        "AbilityTextureName"    "item_artifact_amulet_t5"
-        
-        "ItemDroppable"         "0"
-        "ItemSellable"          "0"
-        "ItemKillable"          "0"
-        "ItemPurchasable"       "0"
-        "ItemStackable"         "0"
-        "ItemPermanent"         "1"
-        
-        "ArtifactSlot"          "5"
-        "ArtifactTier"          "5"
-        "ArtifactName"          "神魔令"
-        "BonusAllStats"         "2000"
-        "BonusFinalDmgReduct"   "20"
     }
 }

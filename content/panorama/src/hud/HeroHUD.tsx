@@ -147,19 +147,149 @@ const HeroHUD: FC = () => {
     // 神器悬停提示状态
     const [hoveredArtifact, setHoveredArtifact] = useState<{ slotIndex: number; x: number; y: number } | null>(null);
 
+    // 属性颜色常量
+    const STAT_COLORS = {
+        attack: '#FF6644',   // 红橙 — 攻击/武道
+        hp: '#55FF55',       // 绿色 — 生命/根骨
+        divinity: '#66CCFF', // 蓝色 — 神念/回蓝
+        crit: '#FFAA33',     // 橙色 — 暴击
+        speed: '#AADDFF',    // 浅蓝 — 移速/身法
+        allStat: '#FFD700',  // 金色 — 全属性
+        armor: '#CCCCCC',    // 银色 — 护甲/破势
+    };
+
     // 神器信息映射
     const ARTIFACT_INFO: Record<number, {
         name: string;
-        desc: string;
-        t0Stats: string;
-        t1Stats: string;
+        lore: Record<number, string>;  // tier -> 故事描述
+        stats: Record<number, { label: string; value: string; color: string }[]>;  // tier -> 属性列表
     }> = {
-        0: { name: '武器', desc: '提升攻击力', t0Stats: '+10 攻击', t1Stats: '+50 攻击' },
-        1: { name: '衣甲', desc: '提升根骨', t0Stats: '+5 根骨', t1Stats: '+20 根骨' },
-        2: { name: '头冠', desc: '提升神念与武道', t0Stats: '+2 神念', t1Stats: '+10 神念 +10 武道' },
-        3: { name: '饰品', desc: '提升暴击率', t0Stats: '+2% 暴击', t1Stats: '+5% 暴击' },
-        4: { name: '鞋履', desc: '提升身法', t0Stats: '+5 身法', t1Stats: '+10 身法' },
-        5: { name: '护符', desc: '提升全属性', t0Stats: '+2 全属性', t1Stats: '+5 全属性' },
+        0: {
+            name: '武器',
+            lore: {
+                0: '蒙尘古剑，剑意未消，似在等待有缘人将其唤醒。',
+                1: '千锤百炼的凡铁之剑，虽非神兵，却能斩妖辟邪。',
+                2: '精钢淬炼，剑锋所指，万邪退避，破甲无双。',
+                3: '玄玉铸剑，剑气冲霄，斩尽天下不平事。',
+            },
+            stats: {
+                0: [{ label: '攻击', value: '+10', color: STAT_COLORS.attack }],
+                1: [{ label: '攻击', value: '+50', color: STAT_COLORS.attack }],
+                2: [
+                    { label: '攻击', value: '+200', color: STAT_COLORS.attack },
+                    { label: '破势', value: '+10', color: STAT_COLORS.armor },
+                ],
+                3: [
+                    { label: '攻击', value: '+500', color: STAT_COLORS.attack },
+                    { label: '破势', value: '+25', color: STAT_COLORS.armor },
+                ],
+            },
+        },
+        1: {
+            name: '衣甲',
+            lore: {
+                0: '残破衣甲，余温尚存，仿佛在诉说昔日荣光。',
+                1: '凡铁锻造的甲胄，虽朴实无华，却坚不可摧。',
+                2: '精钢铠甲，刀枪不入，护主周全，固若金汤。',
+                3: '玄玉灵甲，万法不侵，御敌于千里之外。',
+            },
+            stats: {
+                0: [{ label: '生命', value: '+100', color: STAT_COLORS.hp }],
+                1: [{ label: '生命', value: '+500', color: STAT_COLORS.hp }],
+                2: [
+                    { label: '生命', value: '+3000', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+10', color: STAT_COLORS.armor },
+                ],
+                3: [
+                    { label: '生命', value: '+8000', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+25', color: STAT_COLORS.armor },
+                ],
+            },
+        },
+        2: {
+            name: '头冠',
+            lore: {
+                0: '灵光黯淡的法冠，静待有缘人唤醒其中神念。',
+                1: '凡铁所铸法冠，灵力流转其间，增强神念感知。',
+                2: '精钢法冠，灵力涌动，心神澄明，法力不竭。',
+                3: '玄玉神冠，通天彻地，法力无边，万灵俯首。',
+            },
+            stats: {
+                0: [{ label: '神念', value: '+2', color: STAT_COLORS.divinity }],
+                1: [{ label: '神念', value: '+10', color: STAT_COLORS.divinity }],
+                2: [
+                    { label: '神念', value: '+50', color: STAT_COLORS.divinity },
+                    { label: '回蓝', value: '+5', color: STAT_COLORS.divinity },
+                ],
+                3: [
+                    { label: '神念', value: '+120', color: STAT_COLORS.divinity },
+                    { label: '回蓝', value: '+12', color: STAT_COLORS.divinity },
+                ],
+            },
+        },
+        3: {
+            name: '饰品',
+            lore: {
+                0: '蒙尘法戒，杀意犹存，隐隐散发凌厉之气。',
+                1: '凡铁精工之戒，佩戴者出手必中要害。',
+                2: '精钢法戒，会心四溢，一击致命，摧枯拉朽。',
+                3: '玄玉灵戒，一击必杀，天地为之变色。',
+            },
+            stats: {
+                0: [{ label: '暴击', value: '+2%', color: STAT_COLORS.crit }],
+                1: [{ label: '暴击', value: '+5%', color: STAT_COLORS.crit }],
+                2: [
+                    { label: '暴击', value: '+10%', color: STAT_COLORS.crit },
+                    { label: '爆伤', value: '+20%', color: STAT_COLORS.crit },
+                ],
+                3: [
+                    { label: '暴击', value: '+18%', color: STAT_COLORS.crit },
+                    { label: '爆伤', value: '+40%', color: STAT_COLORS.crit },
+                ],
+            },
+        },
+        4: {
+            name: '鞋履',
+            lore: {
+                0: '千里之行，始于足下，此靴似曾踏遍山河。',
+                1: '凡铁轻靴，履之如风，步若疾风追月。',
+                2: '精钢战靴，闪避自如，来去无踪，步法通神。',
+                3: '玄玉神行靴，缩地成寸，天地之间任我行。',
+            },
+            stats: {
+                0: [{ label: '移速', value: '+10', color: STAT_COLORS.speed }],
+                1: [{ label: '移速', value: '+30', color: STAT_COLORS.speed }],
+                2: [
+                    { label: '移速', value: '+50', color: STAT_COLORS.speed },
+                    { label: '闪避', value: '+5%', color: STAT_COLORS.speed },
+                ],
+                3: [
+                    { label: '移速', value: '+80', color: STAT_COLORS.speed },
+                    { label: '闪避', value: '+10%', color: STAT_COLORS.speed },
+                ],
+            },
+        },
+        5: {
+            name: '护符',
+            lore: {
+                0: '古旧符令，隐藏万法归一之力。',
+                1: '凡铁铸令，四维增益，万法归宗。',
+                2: '精钢符令，全属提升，减伤护体，攻守兼备。',
+                3: '玄玉符令，天地共鸣，万法归一，攻守无双。',
+            },
+            stats: {
+                0: [{ label: '全属性', value: '+2', color: STAT_COLORS.allStat }],
+                1: [{ label: '全属性', value: '+5', color: STAT_COLORS.allStat }],
+                2: [
+                    { label: '全属性', value: '+20', color: STAT_COLORS.allStat },
+                    { label: '减伤', value: '+2%', color: STAT_COLORS.allStat },
+                ],
+                3: [
+                    { label: '全属性', value: '+50', color: STAT_COLORS.allStat },
+                    { label: '减伤', value: '+5%', color: STAT_COLORS.allStat },
+                ],
+            },
+        },
     };
 
     // 正在播放唤醒动画的槽位
@@ -833,7 +963,7 @@ const HeroHUD: FC = () => {
                             src="file://{resources}/images/icon_attack.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
-                        <Label text="攻击12" style={statLabelStyle} />
+                        <Label text="攻击1" style={statLabelStyle} />
                         <Label text={String(stats.attack)} style={statValueStyle} />
                     </Panel>
 
@@ -1027,7 +1157,6 @@ const HeroHUD: FC = () => {
                         className="SkillSlot"
                         onmouseover={(panel) => {
                             if (qSkillEntityIndex !== -1) {
-                                // 使用技能实体索引显示原生tooltip - 需要abilityName和entityIndex
                                 // @ts-ignore
                                 $.DispatchEvent('DOTAShowAbilityTooltipForEntityIndex', panel, 'soldier_war_strike', qSkillEntityIndex);
                             }
@@ -1037,36 +1166,19 @@ const HeroHUD: FC = () => {
                             $.DispatchEvent('DOTAHideAbilityTooltip');
                         }}
                     >
-                        {/* 金色品质背景层 - 与公共技能一致 */}
-                        <Image
-                            src="file://{images}/custom_game/hud/rarity_bg_4.png"
-                            style={{
-                                width: '54px',
-                                height: '54px',
-                                position: '0px 0px 0px' as const,
-                            }}
-                        />
-                        {/* 技能图标层 - 调整尺寸与公共技能一致 */}
-                        <DOTAAbilityImage
-                            // @ts-ignore
-                            abilityname="soldier_war_strike"
-                            showtooltip={true}
-                            style={{
-                                width: '48px',
-                                height: '48px',
-                                position: '3px 3px 0px' as const,
-                            }}
-                        />
-                        {/* 金色边框层 - 放在图标上层 */}
-                        <Image
-                            src="file://{images}/custom_game/hud/slot_frame_gold.png"
-                            style={{
-                                width: '54px',
-                                height: '54px',
-                                position: '0px 0px 0px' as const,
-                            }}
-                        />
-                        {/* 键位标签 - 与公共技能样式一致 */}
+                        <Panel className="SkillSlotFrame">
+                            {/* 技能图标 */}
+                            <Image
+                                src="file://{images}/custom_game/hud/skill_q_soldier_war_strike.png"
+                                style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    horizontalAlign: 'center' as const,
+                                    verticalAlign: 'center' as const,
+                                }}
+                            />
+                        </Panel>
+                        {/* 键位标签 */}
                         <Panel
                             style={{
                                 position: '2px 2px 0px' as const,
@@ -1138,10 +1250,10 @@ const HeroHUD: FC = () => {
                             3: 'file://{images}/custom_game/hud/rarity_bg_3.png', // 仙品背景
                             4: 'file://{images}/custom_game/hud/rarity_bg_4.png', // 神品背景
                         };
-                        // 技能图标映射
+                        // 技能图标路径映射（使用 spellicons 目录下的标准图标）
                         const SKILL_ICONS: Record<string, string> = {
-                            'ability_public_martial_cleave': 'file://{images}/custom_game/hud/skill_cleave.png',
-                            // 未来添加更多技能图标
+                            'ability_public_martial_cleave': 'file://{images}/spellicons/ability_public_martial_cleave.png',
+                            // 未来添加更多公共技能图标
                         };
                         const frameImg = RARITY_FRAMES[skill.rarity] || RARITY_FRAMES[1];
                         const bgImg = RARITY_BGS[skill.rarity] || RARITY_BGS[1];
@@ -1174,13 +1286,13 @@ const HeroHUD: FC = () => {
                                                 position: '0px 0px 0px' as const,
                                             }}
                                         />
-                                        {/* 技能图标层 */}
+                                        {/* 技能图标层 - 使用直接路径加载 */}
                                         <Image
                                             src={iconImg}
                                             style={{
-                                                width: '44px',
-                                                height: '44px',
-                                                position: '5px 5px 0px' as const,
+                                                width: '48px',
+                                                height: '48px',
+                                                position: '3px 3px 0px' as const,
                                             }}
                                         />
                                         {/* 品质边框层 */}
@@ -1277,7 +1389,7 @@ const HeroHUD: FC = () => {
                             };
                             const iconName = slotToIconName[slotIndex];
 
-                            // 处理点击 - 蒙尘神器升级（带唤醒动画）
+                            // 处理点击 - 蒙尘神器升级（蒙尘破碎动画）
                             const handleClick = () => {
                                 $.Msg(`[HeroHUD] 神器槽位 ${slotIndex} 被点击, isDormant=${isDormant}, itemName=${slot.itemName}`);
                                 if (isDormant) {
@@ -1285,10 +1397,10 @@ const HeroHUD: FC = () => {
                                     // 发送服务器命令
                                     GameEvents.SendCustomGameEventToServer('cmd_upgrade_artifact', { slot: slotIndex });
 
-                                    // 播放前端闪光动画
+                                    // 触发破碎动画
                                     setFlashingSlots(prev => new Set(prev).add(slotIndex));
 
-                                    // 600ms后移除闪光效果
+                                    // 0.6s后清理碎片
                                     $.Schedule(0.6, () => {
                                         setFlashingSlots(prev => {
                                             const next = new Set(prev);
@@ -1298,12 +1410,16 @@ const HeroHUD: FC = () => {
                                     });
 
                                     // 播放前端音效
-                                    Game.EmitSound('Item.MoonShard.Consume');
+                                    Game.EmitSound('Artifact.Awaken');
                                 }
                             };
 
-                            // 判断是否正在闪光
+                            // 判断是否正在播放破碎动画
                             const isFlashing = flashingSlots.has(slotIndex);
+
+                            // 蒙尘状态：isFlashing时已移除蒙尘（露出彩色），否则保持蒙尘
+                            const bgClasses = `ArtifactBg${isDormant && !isFlashing ? ' IsDormantBg' : ''}`;
+                            const iconClasses = `ArtifactIcon${isDormant && !isFlashing ? ' IsDormantIcon' : ''}`;
 
                             return (
                                 <Panel
@@ -1319,34 +1435,37 @@ const HeroHUD: FC = () => {
                                     onmouseover={() => setHoveredArtifact({ slotIndex, x: 66 * slotIndex, y: 0 })}
                                     onmouseout={() => setHoveredArtifact(null)}
                                 >
-                                    {/* 背景层 - 根据tier显示不同背景，蓂尘时也变灰 */}
+                                    {/* 背景层 */}
                                     <Image
+                                        className={bgClasses}
                                         src={`file://{images}/custom_game/hud/artifact_bg_t${tier}.png`}
                                         style={{
                                             width: '60px',
                                             height: '60px',
                                             position: '0px 0px 0px' as const,
-                                            ...(isDormant ? {
-                                                saturation: '0.3',
-                                                brightness: '0.6',
-                                            } : {}),
                                         }}
                                     />
-                                    {/* 图标层 - 蒙尘时添加灰色效果 */}
+                                    {/* 图标层 */}
                                     <Image
-                                        src={`file://{images}/custom_game/hud/artifact_${iconName}_t1.png`}
+                                        className={iconClasses}
+                                        src={`file://{images}/custom_game/hud/artifact_${iconName}_t${tier}.png`}
                                         style={{
                                             width: '52px',
                                             height: '52px',
                                             position: '4px 4px 0px' as const,
-                                            ...(isDormant ? {
-                                                saturation: '0.0',
-                                                brightness: '0.5',
-                                                contrast: '0.8',
-                                                washColor: '#555555',
-                                            } : {}),
                                         }}
                                     />
+                                    {/* 唤醒闪光 */}
+                                    {isFlashing && (
+                                        <Panel
+                                            className="AwakenFlash"
+                                            style={{
+                                                width: '60px',
+                                                height: '60px',
+                                                position: '0px 0px 0px' as const,
+                                            }}
+                                        />
+                                    )}
                                 </Panel>
                             );
                         })}
@@ -1364,7 +1483,7 @@ const HeroHUD: FC = () => {
                             };
                             const iconName = slotToIconName[slotIndex];
 
-                            // 处理点击 - 蒙尘神器升级（带唤醒动画）
+                            // 处理点击 - 蒙尘神器升级（蒙尘破碎动画）
                             const handleClick = () => {
                                 $.Msg(`[HeroHUD] 神器槽位 ${slotIndex} 被点击, isDormant=${isDormant}, itemName=${slot.itemName}`);
                                 if (isDormant) {
@@ -1372,10 +1491,10 @@ const HeroHUD: FC = () => {
                                     // 发送服务器命令
                                     GameEvents.SendCustomGameEventToServer('cmd_upgrade_artifact', { slot: slotIndex });
 
-                                    // 播放前端闪光动画
+                                    // 触发破碎动画
                                     setFlashingSlots(prev => new Set(prev).add(slotIndex));
 
-                                    // 600ms后移除闪光效果
+                                    // 0.6s后清理碎片
                                     $.Schedule(0.6, () => {
                                         setFlashingSlots(prev => {
                                             const next = new Set(prev);
@@ -1385,12 +1504,16 @@ const HeroHUD: FC = () => {
                                     });
 
                                     // 播放前端音效
-                                    Game.EmitSound('Item.MoonShard.Consume');
+                                    Game.EmitSound('DOTA_Item.MantaStyle.Activate');
                                 }
                             };
 
-                            // 判断是否正在闪光
+                            // 判断是否正在播放破碎动画
                             const isFlashing = flashingSlots.has(slotIndex);
+
+                            // 蒙尘状态：isFlashing时已移除蒙尘（露出彩色），否则保持蒙尘
+                            const bgClasses = `ArtifactBg${isDormant && !isFlashing ? ' IsDormantBg' : ''}`;
+                            const iconClasses = `ArtifactIcon${isDormant && !isFlashing ? ' IsDormantIcon' : ''}`;
 
                             return (
                                 <Panel
@@ -1406,34 +1529,37 @@ const HeroHUD: FC = () => {
                                     onmouseover={() => setHoveredArtifact({ slotIndex, x: 66 * (slotIndex - 3), y: 66 })}
                                     onmouseout={() => setHoveredArtifact(null)}
                                 >
-                                    {/* 背景层 - 蓂尘时也变灰 */}
+                                    {/* 背景层 */}
                                     <Image
+                                        className={bgClasses}
                                         src={`file://{images}/custom_game/hud/artifact_bg_t${tier}.png`}
                                         style={{
                                             width: '60px',
                                             height: '60px',
                                             position: '0px 0px 0px' as const,
-                                            ...(isDormant ? {
-                                                saturation: '0.3',
-                                                brightness: '0.6',
-                                            } : {}),
                                         }}
                                     />
-                                    {/* 图标层 - 蒙尘时添加灰色效果 */}
+                                    {/* 图标层 */}
                                     <Image
-                                        src={`file://{images}/custom_game/hud/artifact_${iconName}_t1.png`}
+                                        className={iconClasses}
+                                        src={`file://{images}/custom_game/hud/artifact_${iconName}_t${tier}.png`}
                                         style={{
                                             width: '52px',
                                             height: '52px',
                                             position: '4px 4px 0px' as const,
-                                            ...(isDormant ? {
-                                                saturation: '0.0',
-                                                brightness: '0.5',
-                                                contrast: '0.8',
-                                                washColor: '#555555',
-                                            } : {}),
                                         }}
                                     />
+                                    {/* 唤醒闪光 */}
+                                    {isFlashing && (
+                                        <Panel
+                                            className="AwakenFlash"
+                                            style={{
+                                                width: '60px',
+                                                height: '60px',
+                                                position: '0px 0px 0px' as const,
+                                            }}
+                                        />
+                                    )}
                                 </Panel>
                             );
                         })}
@@ -1455,16 +1581,31 @@ const HeroHUD: FC = () => {
                         flowChildren: 'down' as const,
                     }}
                 >
-                    {/* 标题 - 神器名称 */}
+                    {/* 标题 - 神器名称 (从 NetTable 的 displayName 读取) */}
                     <Label
-                        text={artifactSlots[hoveredArtifact.slotIndex].tier === 0
-                            ? `蒙尘${ARTIFACT_INFO[hoveredArtifact.slotIndex].name}`
-                            : `${ARTIFACT_INFO[hoveredArtifact.slotIndex].name}`}
+                        text={artifactSlots[hoveredArtifact.slotIndex].displayName
+                            || ARTIFACT_INFO[hoveredArtifact.slotIndex].name}
                         style={{
-                            color: artifactSlots[hoveredArtifact.slotIndex].tier === 0 ? '#888888' : '#ffd780',
+                            color: (() => {
+                                const t = artifactSlots[hoveredArtifact.slotIndex].tier;
+                                if (t === 0) return '#888888';  // 蒙尘 - 灰色
+                                if (t === 1) return '#e0e0e0';  // 凡铁 - 银白
+                                if (t === 2) return '#66ccff';  // 精钢 - 青蓝
+                                if (t === 3) return '#cc66ff';  // 玄铁 - 紫色
+                                if (t === 4) return '#ff9933';  // 灵器 - 橙色
+                                return '#ffd700';               // 神器 - 金色
+                            })(),
                             fontSize: '16px',
                             fontWeight: 'bold' as const,
-                            textShadow: '0px 0px 6px #c9a861',
+                            textShadow: (() => {
+                                const t = artifactSlots[hoveredArtifact.slotIndex].tier;
+                                if (t === 0) return '0px 0px 4px #666666';
+                                if (t === 1) return '0px 0px 6px #aaaaaa';
+                                if (t === 2) return '0px 0px 8px #3399cc';
+                                if (t === 3) return '0px 0px 8px #9933cc';
+                                if (t === 4) return '0px 0px 10px #cc6600';
+                                return '0px 0px 10px #ccaa00';
+                            })(),
                             horizontalAlign: 'center' as const,
                             textAlign: 'center' as const,
                             letterSpacing: '2px',
@@ -1481,33 +1622,53 @@ const HeroHUD: FC = () => {
                         marginBottom: '6px',
                         opacity: '0.6',
                     }} />
-                    {/* 描述 */}
+                    {/* 故事描述 */}
                     <Label
-                        text={ARTIFACT_INFO[hoveredArtifact.slotIndex].desc}
+                        text={(() => {
+                            const tier = artifactSlots[hoveredArtifact.slotIndex].tier;
+                            const info = ARTIFACT_INFO[hoveredArtifact.slotIndex];
+                            return info.lore[tier] || info.lore[0];
+                        })()}
                         style={{
-                            color: '#d4c4a8',
-                            fontSize: '12px',
+                            color: '#c8b896',
+                            fontSize: '11px',
                             horizontalAlign: 'center' as const,
                             textAlign: 'center' as const,
-                            opacity: '0.85',
-                            marginBottom: '4px',
+                            opacity: '0.75',
+                            marginBottom: '6px',
+                            fontStyle: 'italic' as const,
                         }}
                     />
-                    {/* 属性加成 */}
-                    <Label
-                        text={artifactSlots[hoveredArtifact.slotIndex].tier === 0
-                            ? ARTIFACT_INFO[hoveredArtifact.slotIndex].t0Stats
-                            : ARTIFACT_INFO[hoveredArtifact.slotIndex].t1Stats}
-                        style={{
-                            color: '#66ff88',
-                            fontSize: '13px',
-                            fontWeight: 'bold' as const,
-                            textShadow: '0px 0px 6px #44cc66',
-                            horizontalAlign: 'center' as const,
-                            textAlign: 'center' as const,
-                            marginBottom: '4px',
-                        }}
-                    />
+                    {/* 分割线2 */}
+                    <Panel style={{
+                        width: '80%',
+                        height: '1px',
+                        backgroundColor: '#c9a861',
+                        horizontalAlign: 'center' as const,
+                        marginBottom: '6px',
+                        opacity: '0.4',
+                    }} />
+                    {/* 属性加成 - 每条独立着色 */}
+                    {(() => {
+                        const tier = artifactSlots[hoveredArtifact.slotIndex].tier;
+                        const info = ARTIFACT_INFO[hoveredArtifact.slotIndex];
+                        const statList = info.stats[tier] || info.stats[0];
+                        return statList.map((stat, i) => (
+                            <Label
+                                key={`stat-${i}`}
+                                text={`${stat.label}  ${stat.value}`}
+                                style={{
+                                    color: stat.color,
+                                    fontSize: '13px',
+                                    fontWeight: 'bold' as const,
+                                    textShadow: `0px 0px 6px ${stat.color}66`,
+                                    horizontalAlign: 'center' as const,
+                                    textAlign: 'center' as const,
+                                    marginBottom: '2px',
+                                }}
+                            />
+                        ));
+                    })()}
                     {/* Tier 0 升级提示 - 呼吸动画 */}
                     {artifactSlots[hoveredArtifact.slotIndex].tier === 0 && (
                         <Label
@@ -1517,7 +1678,7 @@ const HeroHUD: FC = () => {
                                 fontSize: '12px',
                                 horizontalAlign: 'center' as const,
                                 textAlign: 'center' as const,
-                                marginTop: '2px',
+                                marginTop: '4px',
                             }}
                         />
                     )}

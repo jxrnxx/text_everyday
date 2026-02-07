@@ -14,13 +14,8 @@ export class ability_public_martial_cleave extends BaseAbility {
     }
 
     Precache(context: CScriptPrecacheContext) {
-        // 横扫专属特效 - 独特于职业技能
-        PrecacheResource('particle', 'particles/units/heroes/hero_tusk/tusk_walruspunch_start.vpcf', context);
-        PrecacheResource(
-            'particle',
-            'particles/units/heroes/hero_ember_spirit/ember_spirit_sleightoffist_tgt.vpcf',
-            context
-        );
+        // 横扫特效 - 白色分裂弧光
+        PrecacheResource('particle', 'particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf', context);
     }
 }
 
@@ -90,29 +85,22 @@ export class modifier_public_martial_cleave extends BaseModifier {
         const origin = attacker.GetAbsOrigin();
         const targetPos = target.GetAbsOrigin();
 
-        // 使用攻击者到目标的方向作为溅射方向（而不是角色前向）
+        // 使用攻击者到目标的方向作为溅射方向
         const toTarget = (targetPos - origin) as Vector;
         toTarget.z = 0;
         const cleaveDirection = toTarget.Normalized();
 
-        // 主溅射特效 - 使用 Tusk 海象冲击环形波纹（独特于职业技能）
-        const ringEffect = ParticleManager.CreateParticle(
-            'particles/units/heroes/hero_tusk/tusk_walruspunch_start.vpcf',
+        // 分裂特效 - Sven大分裂白色弧光
+        const cleaveEffect = ParticleManager.CreateParticle(
+            'particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf',
             ParticleAttachment.ABSORIGIN_FOLLOW,
             attacker
         );
-        ParticleManager.SetParticleControl(ringEffect, 0, origin);
-        ParticleManager.SetParticleControl(ringEffect, 1, targetPos);
-        ParticleManager.ReleaseParticleIndex(ringEffect);
-
-        // 额外斩击特效 - Ember Spirit 火焰拳刃
-        const slashEffect = ParticleManager.CreateParticle(
-            'particles/units/heroes/hero_ember_spirit/ember_spirit_sleightoffist_tgt.vpcf',
-            ParticleAttachment.ABSORIGIN_FOLLOW,
-            target
-        );
-        ParticleManager.SetParticleControl(slashEffect, 0, targetPos);
-        ParticleManager.ReleaseParticleIndex(slashEffect);
+        // CP0 = 攻击者位置, CP1 = 前方方向点(控制弧光方向)
+        ParticleManager.SetParticleControl(cleaveEffect, 0, origin);
+        const forwardPoint = (origin + cleaveDirection * 300) as Vector;
+        ParticleManager.SetParticleControl(cleaveEffect, 1, forwardPoint);
+        ParticleManager.ReleaseParticleIndex(cleaveEffect);
 
         // 查找溅射范围内的敌人 (锥形区域)
         const enemies = FindUnitsInRadius(
@@ -149,9 +137,9 @@ export class modifier_public_martial_cleave extends BaseModifier {
                         ability: ability,
                     });
 
-                    // 击中特效 - Ember Spirit 火焰斩击
+                    // 击中反馈特效
                     const hitEffect = ParticleManager.CreateParticle(
-                        'particles/units/heroes/hero_ember_spirit/ember_spirit_sleightoffist_tgt.vpcf',
+                        'particles/generic_gameplay/generic_hit_blood.vpcf',
                         ParticleAttachment.ABSORIGIN_FOLLOW,
                         enemy
                     );

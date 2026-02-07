@@ -10,8 +10,6 @@ import { registrationStatus, BaseState, StateManager } from './state_manager';
 @reloadable
 export class DefeatState extends BaseState {
     OnStart() {
-        print('[DefeatState] 💀 游戏失败!');
-
         // 发送状态到客户端
         CustomNetTables.SetTableValue(
             'game_state' as never,
@@ -36,7 +34,5 @@ export class DefeatState extends BaseState {
         // 失败状态不需要持续更新
     }
 
-    OnEnd() {
-        print('[DefeatState] 结束');
-    }
+    OnEnd() { }
 }

@@ -26,7 +26,10 @@ interface ArtifactBonuses {
     armorPen?: number;
     hp?: number;
     armor?: number;
+    constitution?: number;
+    martial?: number;
     divinity?: number;
+    agility?: number;
     manaRegen?: number;
     critChance?: number;
     critDamage?: number;
@@ -207,12 +210,12 @@ export class ArtifactSystem {
 
         // 根据槽位确定 Tier 1 物品名称
         const slotToT1Item: Record<number, string> = {
-            0: 'item_artifact_weapon_t1',
-            1: 'item_artifact_armor_t1',
-            2: 'item_artifact_helm_t1',
-            3: 'item_artifact_accessory_t1',
-            4: 'item_artifact_boots_t1',
-            5: 'item_artifact_amulet_t1',
+            0: 'item_artifact_weapon_tier1',
+            1: 'item_artifact_armor_tier1',
+            2: 'item_artifact_helm_tier1',
+            3: 'item_artifact_accessory_tier1',
+            4: 'item_artifact_boots_tier1',
+            5: 'item_artifact_amulet_tier1',
         };
 
         const t1ItemName = slotToT1Item[slotIndex];
@@ -228,11 +231,28 @@ export class ArtifactSystem {
             return false;
         }
 
+        // KV 使用纯 ASCII 名，在此映射中文显示名
+        const chineseDisplayNames: Record<string, string> = {
+            item_artifact_weapon_tier1: '凡铁剑',
+            item_artifact_armor_tier1: '凡铁甲',
+            item_artifact_helm_tier1: '凡铁冠',
+            item_artifact_accessory_tier1: '凡铁戒',
+            item_artifact_boots_tier1: '凡铁靴',
+            item_artifact_amulet_tier1: '凡铁令',
+            item_artifact_weapon_t2: '精钢剑',
+            item_artifact_armor_t2: '精钢甲',
+            item_artifact_helm_t2: '精钢冠',
+            item_artifact_accessory_t2: '精钢戒',
+            item_artifact_boots_t2: '精钢靴',
+            item_artifact_amulet_t2: '精钢令',
+        };
+        const displayName = chineseDisplayNames[t1ItemName] || t1Info.displayName;
+
         // 升级到 Tier 1
         artifacts.slots[slotIndex] = {
             itemName: t1ItemName,
             tier: t1Info.tier,
-            displayName: t1Info.displayName,
+            displayName: displayName,
         };
         print(
             `[ArtifactSystem] 槽位 ${slotIndex} 升级后 tier=${artifacts.slots[slotIndex].tier}, displayName=${artifacts.slots[slotIndex].displayName}`
@@ -241,26 +261,28 @@ export class ArtifactSystem {
         // 播放音效和特效
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (hero) {
-            // 播放音效 - 月光碎片消耗音效
-            EmitSoundOn('Item.MoonShard.Consume', hero);
-            // 附加升级音效
-            EmitSoundOn('General.LevelUp', hero);
+            // 播放自定义破碎音效
+            EmitSoundOn('Artifact.Awaken', hero);
 
-            // 创建主特效 - 金色光柱 (TI10 升级特效)
+            // 创建主特效 - 升级光柱
             const particleMain = ParticleManager.CreateParticle(
-                'particles/econ/events/ti10/hero_levelup_ti10.vpcf',
+                'particles/generic_hero_status/hero_levelup.vpcf',
                 ParticleAttachment.ABSORIGIN_FOLLOW,
                 hero
             );
             ParticleManager.ReleaseParticleIndex(particleMain);
 
-            // 创建辅助特效 - 神圣光芒
+            // 创建辅助特效 - 物品获得光芒
             const particleGlow = ParticleManager.CreateParticle(
-                'particles/items_fx/aegis_timer_c.vpcf',
+                'particles/generic_gameplay/rune_doubledamage_owner.vpcf',
                 ParticleAttachment.ABSORIGIN_FOLLOW,
                 hero
             );
-            ParticleManager.ReleaseParticleIndex(particleGlow);
+            // 1.5秒后销毁辅助特效
+            Timers.CreateTimer(1.5, () => {
+                ParticleManager.DestroyParticle(particleGlow, false);
+                ParticleManager.ReleaseParticleIndex(particleGlow);
+            });
 
             // 刷新属性
             this.RefreshHeroModifier(hero);
@@ -272,6 +294,109 @@ export class ArtifactSystem {
     }
 
     /**
+     * [Debug] 升级所有神器到下一阶 (通用: T0→T1→T2→...)
+     * 返回成功升级的槽位数量
+     */
+    public UpgradeAllArtifacts(playerId: PlayerID): number {
+        const artifacts = this.playerArtifacts.get(playerId);
+        if (!artifacts) {
+            print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
+            return 0;
+        }
+
+        // 槽位类型名称
+        const slotTypes = ['weapon', 'armor', 'helm', 'accessory', 'boots', 'amulet'];
+
+        // 每个 tier 的物品名后缀 (适配不一致的命名: _t0, _tier1, _t2, _t3, _t4)
+        const tierSuffixes: Record<number, string> = {
+            0: '_t0',
+            1: '_tier1',
+            2: '_t2',
+            3: '_t3',
+            4: '_t4',
+        };
+
+        // 中文显示名
+        const tierDisplayNames: Record<string, Record<number, string>> = {
+            weapon: { 0: '蒙尘武器', 1: '凡铁剑', 2: '精钢剑', 3: '玄玉剑', 4: '天罡剑' },
+            armor: { 0: '蒙尘衣甲', 1: '凡铁甲', 2: '精钢甲', 3: '玄玉甲', 4: '天罡甲' },
+            helm: { 0: '蒙尘头冠', 1: '凡铁冠', 2: '精钢冠', 3: '玄玉冠', 4: '天罡冠' },
+            accessory: { 0: '蒙尘饰品', 1: '凡铁戒', 2: '精钢戒', 3: '玄玉戒', 4: '天罡戒' },
+            boots: { 0: '蒙尘靴子', 1: '凡铁靴', 2: '精钢靴', 3: '玄玉靴', 4: '天罡靴' },
+            amulet: { 0: '蒙尘护符', 1: '凡铁令', 2: '精钢令', 3: '玄玉令', 4: '天罡令' },
+        };
+
+        const MAX_TIER = 4;
+        let upgraded = 0;
+
+        for (let slot = 0; slot < this.SLOT_COUNT; slot++) {
+            const current = artifacts.slots[slot];
+            if (!current.itemName) continue;
+
+            const nextTier = current.tier + 1;
+            if (nextTier > MAX_TIER) {
+                print(`[ArtifactSystem] 槽位 ${slot} 已达最高阶 (T${current.tier})`);
+                continue;
+            }
+
+            const slotType = slotTypes[slot];
+            const nextSuffix = tierSuffixes[nextTier];
+            const nextItemName = `item_artifact_${slotType}${nextSuffix}`;
+
+            // 尝试获取 KV 信息 (如果 KV 中不存在该物品，仍然升级但用默认值)
+            const nextInfo = this.GetArtifactInfo(nextItemName);
+            const displayName =
+                tierDisplayNames[slotType]?.[nextTier] || nextInfo?.displayName || `T${nextTier} ${slotType}`;
+
+            artifacts.slots[slot] = {
+                itemName: nextItemName,
+                tier: nextTier,
+                displayName: displayName,
+            };
+
+            print(
+                `[ArtifactSystem] 槽位 ${slot} 升级: ${current.displayName} (T${current.tier}) -> ${displayName} (T${nextTier})`
+            );
+            upgraded++;
+        }
+
+        if (upgraded > 0) {
+            const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+            if (hero) {
+                // 播放音效
+                EmitSoundOn('Artifact.Awaken', hero);
+
+                // 升级光柱特效
+                const particleMain = ParticleManager.CreateParticle(
+                    'particles/generic_hero_status/hero_levelup.vpcf',
+                    ParticleAttachment.ABSORIGIN_FOLLOW,
+                    hero
+                );
+                ParticleManager.ReleaseParticleIndex(particleMain);
+
+                // 辅助光芒特效
+                const particleGlow = ParticleManager.CreateParticle(
+                    'particles/generic_gameplay/rune_doubledamage_owner.vpcf',
+                    ParticleAttachment.ABSORIGIN_FOLLOW,
+                    hero
+                );
+                Timers.CreateTimer(1.5, () => {
+                    ParticleManager.DestroyParticle(particleGlow, false);
+                    ParticleManager.ReleaseParticleIndex(particleGlow);
+                });
+
+                // 刷新属性
+                this.RefreshHeroModifier(hero);
+            }
+
+            this.SyncToClient(playerId);
+            print(`[ArtifactSystem] 玩家 ${playerId} 全部神器升级完成, 共 ${upgraded} 个槽位`);
+        }
+
+        return upgraded;
+    }
+
+    /**
      * 获取玩家神器数据
      */
     public GetPlayerArtifacts(playerId: PlayerID): PlayerArtifacts | null {
@@ -279,7 +404,7 @@ export class ArtifactSystem {
     }
 
     /**
-     * 计算玩家神器总加成
+     * 计算玩家神器总加成 (统一累加所有KV属性)
      */
     public CalculateTotalBonuses(playerId: PlayerID): ArtifactBonuses {
         const artifacts = this.playerArtifacts.get(playerId);
@@ -288,7 +413,10 @@ export class ArtifactSystem {
             armorPen: 0,
             hp: 0,
             armor: 0,
+            constitution: 0,
+            martial: 0,
             divinity: 0,
+            agility: 0,
             manaRegen: 0,
             critChance: 0,
             critDamage: 0,
@@ -306,33 +434,22 @@ export class ArtifactSystem {
             const info = this.GetArtifactInfo(slot.itemName);
             if (!info) continue;
 
-            // 根据槽位累加不同属性
-            switch (info.slot) {
-                case 0: // 武器
-                    bonuses.damage! += info.bonusDamage || 0;
-                    bonuses.armorPen! += info.bonusArmorPen || 0;
-                    break;
-                case 1: // 护甲
-                    bonuses.hp! += info.bonusHP || 0;
-                    bonuses.armor! += info.bonusArmor || 0;
-                    break;
-                case 2: // 头盔
-                    bonuses.divinity! += info.bonusDivinity || 0;
-                    bonuses.manaRegen! += info.bonusManaRegen || 0;
-                    break;
-                case 3: // 饰品
-                    bonuses.critChance! += info.bonusCritChance || 0;
-                    bonuses.critDamage! += info.bonusCritDamage || 0;
-                    break;
-                case 4: // 鞋子
-                    bonuses.moveSpeed! += info.bonusMoveSpeed || 0;
-                    bonuses.evasion! += info.bonusEvasion || 0;
-                    break;
-                case 5: // 护符
-                    bonuses.allStats! += info.bonusAllStats || 0;
-                    bonuses.finalDmgReduct! += info.bonusFinalDmgReduct || 0;
-                    break;
-            }
+            // 统一累加所有属性字段
+            bonuses.damage! += info.bonusDamage || 0;
+            bonuses.armorPen! += info.bonusArmorPen || 0;
+            bonuses.hp! += info.bonusHP || 0;
+            bonuses.armor! += info.bonusArmor || 0;
+            bonuses.constitution! += info.bonusConstitution || 0;
+            bonuses.martial! += info.bonusMartial || 0;
+            bonuses.divinity! += info.bonusDivinity || 0;
+            bonuses.agility! += info.bonusAgility || 0;
+            bonuses.manaRegen! += info.bonusManaRegen || 0;
+            bonuses.critChance! += info.bonusCritChance || 0;
+            bonuses.critDamage! += info.bonusCritDamage || 0;
+            bonuses.moveSpeed! += info.bonusMoveSpeed || 0;
+            bonuses.evasion! += info.bonusEvasion || 0;
+            bonuses.allStats! += info.bonusAllStats || 0;
+            bonuses.finalDmgReduct! += info.bonusFinalDmgReduct || 0;
         }
 
         return bonuses;

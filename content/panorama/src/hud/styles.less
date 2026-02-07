@@ -747,3 +747,304 @@
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
 }
+
+// ========================================
+// 神器槽位样式
+// ========================================
+
+// 神器槽位基础样式
+.ArtifactSlot {
+    transition-property: transform, box-shadow, brightness;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+    overflow: noclip;
+}
+
+// 神器槽位悬停效果 - 微弱发光 + 微缩放
+.ArtifactSlot:hover {
+    transform: scale3d(1.06, 1.06, 1.0);
+    brightness: 1.15;
+    box-shadow: 0px 0px 10px 3px rgba(120, 180, 220, 0.35), 0px 0px 20px 6px rgba(160, 210, 255, 0.15);
+}
+
+// 神器背景图 - 带平滑过渡（从蒙尘恢复时使用）
+.ArtifactBg {
+    brightness: 1.0;
+    saturation: 1.0;
+    transition-property: brightness, saturation;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-in;
+}
+
+// 神器图标 - 带平滑过渡（从蒙尘恢复时使用）
+.ArtifactIcon {
+    brightness: 1.0;
+    saturation: 1.0;
+    contrast: 1.0;
+    wash-color: none;
+    transition-property: brightness, saturation, contrast, wash-color, transform;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-in;
+}
+
+// 蒙尘状态 - 黑白 + 暗淡（用于背景和图标）
+.IsDormantBg {
+    saturation: 0.3;
+    brightness: 0.6;
+}
+
+.IsDormantIcon {
+    saturation: 0.0;
+    brightness: 0.5;
+    contrast: 0.8;
+    wash-color: #555555;
+}
+
+// 唤醒闪光覆盖层 - 冰蓝色灵力爆发
+@keyframes 'awaken-flash' {
+    0% {
+        opacity: 0.0;
+    }
+
+    10% {
+        opacity: 0.9;
+    }
+
+    40% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 0.0;
+    }
+}
+
+.AwakenFlash {
+    background-color: #c8e8ffaa;
+    opacity: 0.0;
+    animation-name: awaken-flash;
+    animation-duration: 0.6s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// ===== 碎片动画 - 8个方向飞散 =====
+
+// 碎片基础样式 - 略带蓝灰色调
+.Shard {
+    background-color: #4a5560ee;
+    opacity: 1.0;
+    overflow: noclip;
+}
+
+// 右上
+@keyframes 'shard-tr' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(40px) translateY(-35px) rotateZ(45deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardTR {
+    animation-name: shard-tr;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 右下
+@keyframes 'shard-br' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(35px) translateY(40px) rotateZ(-30deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardBR {
+    animation-name: shard-br;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 左下
+@keyframes 'shard-bl' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(-40px) translateY(35px) rotateZ(50deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardBL {
+    animation-name: shard-bl;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 左上
+@keyframes 'shard-tl' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(-35px) translateY(-40px) rotateZ(-45deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardTL {
+    animation-name: shard-tl;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 上
+@keyframes 'shard-t' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(5px) translateY(-45px) rotateZ(20deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardT {
+    animation-name: shard-t;
+    animation-duration: 0.45s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 下
+@keyframes 'shard-b' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(-5px) translateY(45px) rotateZ(-25deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardB {
+    animation-name: shard-b;
+    animation-duration: 0.45s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 右
+@keyframes 'shard-r' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(45px) translateY(5px) rotateZ(-15deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardR {
+    animation-name: shard-r;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 左
+@keyframes 'shard-l' {
+    0% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1.0;
+    }
+
+    100% {
+        transform: translateX(-45px) translateY(-5px) rotateZ(30deg);
+        opacity: 0.0;
+    }
+}
+
+.ShardL {
+    animation-name: shard-l;
+    animation-duration: 0.45s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+}
+
+// 神器槽位唤醒动画 - 冰蓝灵力光晕
+@keyframes 'artifact-awaken' {
+    0% {
+        box-shadow: 0px 0px 0px 0px rgba(140, 200, 255, 0);
+    }
+
+    15% {
+        box-shadow: 0px 0px 30px 10px rgba(140, 200, 255, 0.8);
+    }
+
+    50% {
+        box-shadow: 0px 0px 15px 5px rgba(180, 220, 255, 0.4);
+    }
+
+    100% {
+        box-shadow: 0px 0px 0px 0px rgba(140, 200, 255, 0);
+    }
+}
+
+.ArtifactAwakening {
+    animation-name: artifact-awaken;
+    animation-duration: 0.8s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+    overflow: noclip;
+}
+
+// "点击唤醒" 提示文字呼吸动画
+@keyframes 'TextBlink' {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1.0;
+        text-shadow: 0px 0px 6px #ff8800, 0px 0px 12px #ffcc0066;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
+}
+
+.TooltipActionHint {
+    color: #ffcc00;
+    font-weight: bold;
+    animation-name: TextBlink;
+    animation-duration: 1.0s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}

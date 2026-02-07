@@ -47,6 +47,8 @@ export default function Precache(context: CScriptPrecacheContext) {
             'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_trigger_crit_red.vpcf',
             'particles/units/heroes/hero_dragon_knight/dragon_knight_breathe_fire.vpcf',
             'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf',
+            // Martial Cleave (横扫) - white cleave arc
+            'particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf',
 
             // Cultivation Merchant
             'models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl',
@@ -55,6 +57,9 @@ export default function Precache(context: CScriptPrecacheContext) {
             'models/heroes/shopkeeper/shopkeeper.vmdl',
 
             // Blink Dash - 使用幽灵假人法，无需粒子特效
+
+            // Sound Events
+            'soundevents/custom_game/custom_soundevents.vsndevts',
         ],
         context
     );

@@ -8,6 +8,7 @@ import { DamageSystem } from './systems/DamageSystem';
 import { AbilityShopManager } from './systems/AbilityShopManager';
 import { knapsackSystem } from './systems/KnapsackSystem';
 import { InitGameStateManager, GetGameStateManager } from './systems/state_manager';
+import { ZoneManager } from './systems/ZoneManager';
 import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
 import './items/item_buy_stats';
@@ -592,6 +593,9 @@ export class GameMode {
 
         // 初始化波次管理器
         WaveManager.GetInstance().Initialize();
+
+        // 初始化域守卫管理器
+        ZoneManager.GetInstance().Initialize();
     }
 
     // 重置游戏 (软重启)
@@ -680,14 +684,22 @@ export class GameMode {
             // @ts-ignore
             const heroData = json_heroes[heroName];
 
-            // 添加配置中的技能（不再硬编码剑圣）
+            // 确保配置中的第一个技能已激活（KV中已定义Ability1，只需确保等级为1）
             if (heroData && heroData.Ability1 && playerId >= 0) {
                 const abilityName = heroData.Ability1;
                 if (abilityName && abilityName !== 'generic_hidden' && abilityName !== '') {
-                    hero.AddAbility(abilityName);
                     const ability = hero.FindAbilityByName(abilityName);
                     if (ability) {
-                        ability.SetLevel(1);
+                        if (ability.GetLevel() === 0) {
+                            ability.SetLevel(1);
+                        }
+                    } else {
+                        // 如果KV中没有定义（不应该发生），才添加
+                        hero.AddAbility(abilityName);
+                        const newAbility = hero.FindAbilityByName(abilityName);
+                        if (newAbility) {
+                            newAbility.SetLevel(1);
+                        }
                     }
                 }
             }

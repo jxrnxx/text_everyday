@@ -59,23 +59,23 @@ function UpdateAllStats() {
 
     if (netTableData) {
         const d = netTableData as any;
-        
+
         // 基础信息 (0=凡胎, 1=觉醒...)
         const rankLevel = d.rank ?? 0;
         // 使用服务端控制的 display_level（而不是引擎等级）
         const level = d.display_level ?? Entities.GetLevel(localHero);
-        
+
         // @ts-ignore
         const rankInfo = RANK_CONFIG[rankLevel] || DEFAULT_RANK;
         ($('#Val_Rank') as LabelPanel).text = rankInfo.name;
-        
+
         let professionKey = d.profession;
         const professionName = getLocalizedJobName(professionKey, "-");
         ($('#Val_Profession') as LabelPanel).text = professionName;
         ($('#Val_Level') as LabelPanel).text = level.toString();
-        
+
         // ===== 15个属性字段 =====
-        
+
         // 根骨 (Constitution) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const conBase = d.constitution_base || 0;
         const conGain = d.constitution_gain || 0;
@@ -86,7 +86,7 @@ function UpdateAllStats() {
         ($('#Val_Con_Gain') as LabelPanel).text = conGain.toString();
         ($('#Val_Con_Bonus') as LabelPanel).text = conBonus.toString();
         ($('#Val_Con_Panel') as LabelPanel).text = conPanel.toString();
-        
+
         // 武道 (Martial) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const marBase = d.martial_base || 0;
         const marGain = d.martial_gain || 0;
@@ -97,7 +97,7 @@ function UpdateAllStats() {
         ($('#Val_Mar_Gain') as LabelPanel).text = marGain.toString();
         ($('#Val_Mar_Bonus') as LabelPanel).text = marBonus.toString();
         ($('#Val_Mar_Panel') as LabelPanel).text = marPanel.toString();
-        
+
         // 神念 (Divinity) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const divBase = d.divinity_base || 0;
         const divGain = d.divinity_gain || 0;
@@ -108,7 +108,7 @@ function UpdateAllStats() {
         ($('#Val_Div_Gain') as LabelPanel).text = divGain.toString();
         ($('#Val_Div_Bonus') as LabelPanel).text = divBonus.toString();
         ($('#Val_Div_Panel') as LabelPanel).text = divPanel.toString();
-        
+
         // 身法 (Agility) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
         const agiBase = d.agility_base || 0;
         const agiGain = d.agility_gain || 0;
@@ -119,7 +119,7 @@ function UpdateAllStats() {
         ($('#Val_Agi_Gain') as LabelPanel).text = agiGain.toString();
         ($('#Val_Agi_Bonus') as LabelPanel).text = agiBonus.toString();
         ($('#Val_Agi_Panel') as LabelPanel).text = agiPanel.toString();
-        
+
         // 攻击力 (Damage) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成) + 主属性*1.5
         const dmgBase = d.damage_base || 0;
         const dmgGain = d.damage_gain || 0;
@@ -129,46 +129,46 @@ function UpdateAllStats() {
         ($('#Val_Dmg_Base') as LabelPanel).text = dmgBase.toString();
         ($('#Val_Dmg_Gain') as LabelPanel).text = dmgGain.toString();
         ($('#Val_Dmg_Bonus') as LabelPanel).text = dmgBonus.toString();
-        
+
         // 主属性计算 (主属性*1.5)
         const mainStat = d.main_stat || 'Martial';
         const mainPanel = mainStat === 'Martial' ? marPanel : divPanel;
         const totalDmg = dmgPanel + Math.floor(mainPanel * 1.5);
         ($('#Val_Dmg_Panel') as LabelPanel).text = totalDmg.toString();
         ($('#Val_Attack_Display') as LabelPanel).text = totalDmg.toString();
-        
+
         // Crit
         const critChance = d.crit_chance || 0;
         const critDmg = d.crit_damage || 150;
         ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
         ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
-        
+
         // 破势 (护甲穿透)
         const armorPen = d.armor_pen || 0;
         ($('#Val_ArmorPen') as LabelPanel).text = armorPen.toString();
-        
+
         // 攻击回血
         const lifeOnHit = d.life_on_hit || 0;
         const lifeOnHitBase = d.life_on_hit_base || 0;
         ($('#Val_LifeOnHit') as LabelPanel).text = lifeOnHit.toString();
-        
+
         // 游戏获取 (商店/技能/装备获得的额外属性)
         const extraAtkSpeed = d.extra_attack_speed || 0;
         const extraManaRegen = d.extra_mana_regen || 0;
         const extraArmor = d.extra_armor || 0;
         const extraLifeOnHit = lifeOnHit - lifeOnHitBase;  // 额外回血 = 面板 - 基础
         const extraDamage = d.extra_base_damage || 0;
-        
+
         ($('#Val_Shop_AtkSpeed') as LabelPanel).text = extraAtkSpeed.toString();
         ($('#Val_Shop_ManaRegen') as LabelPanel).text = extraManaRegen.toString();
         ($('#Val_Shop_Armor') as LabelPanel).text = extraArmor.toString();
         ($('#Val_Shop_LifeOnHit') as LabelPanel).text = extraLifeOnHit.toString();
         ($('#Val_Shop_Damage') as LabelPanel).text = extraDamage.toString();
-        
+
         // 计算攻速面板值
         const panelAtkSpeed = 100 + agiPanel + extraAtkSpeed;
         ($('#Val_AtkSpeed') as LabelPanel).text = panelAtkSpeed.toString();
-        
+
         // 公式说明 - 使用正确的公式（包含额外获得值）
         const mainStatCN = mainStat === 'Martial' ? '武道' : '神念';
         ($('#Debug_Con') as LabelPanel).text = `根骨: (${conBase}+(${level}-1)×${conGain}+${conExtra})×(1+${conBonus}) = ${conPanel}`;
@@ -178,7 +178,7 @@ function UpdateAllStats() {
         ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×1.5 = ${totalDmg}`;
         ($('#Debug_AtkSpeed') as LabelPanel).text = `攻速: 100 + 身法${agiPanel} + 额外${extraAtkSpeed} = ${panelAtkSpeed}`;
         ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×30 + 基础1 = ${conPanel * 30 + 1}`;
-        
+
         // 移速公式 - 从 NetTable 读取基础移速
         const agiMoveBonus = Math.floor(agiPanel * 0.4);
         const baseMoveSpeed = d.base_move_speed || 300;
@@ -195,7 +195,7 @@ function UpdateAllStats() {
     }
 
     // 3. Base Stats (API) - 只获取必要的 API 数据
-    
+
     // Armor - 从 API 获取（因为有游戏内其他来源）
     const armor = Entities.GetPhysicalArmorValue(localHero);
     ($('#Val_Armor') as LabelPanel).text = armor.toFixed(1);
@@ -208,7 +208,7 @@ function UpdateAllStats() {
 
     ($('#Val_Health') as LabelPanel).text = `${hp} / ${maxHp}`;
     ($('#Val_Mana') as LabelPanel).text = `${mana} / ${maxMana}`;
-    
+
     // 注意：攻击力和攻速已经在上面 netTableData 块中用公式计算并设置了
     // Val_Dmg_Panel = 计算的攻击力
     // Val_AtkSpeed = 计算的攻速 (100 + 身法 + 商店)
@@ -240,8 +240,8 @@ function Init() {
     try {
         // 注册到 PanelManager
         registerPanel('character_sheet', CloseCharSheet);
-        
-    // Register Command
+
+        // Register Command
         const cmdName = "ToggleCharSheet_" + Math.floor(Math.random() * 10000);
         Game.AddCommand(cmdName, ToggleCharSheet, '', 0);
         Game.CreateCustomKeyBind('C', cmdName);
@@ -255,10 +255,10 @@ function Init() {
 
         // Event Listener (Fallback / Alternative)
         GameEvents.Subscribe("custom_stats_update", (event: any) => {
-             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
-             if (event.entindex === localHero) {
-                 UpdateStatsFromEvent(event.stats);
-             }
+            const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+            if (event.entindex === localHero) {
+                UpdateStatsFromEvent(event.stats);
+            }
         });
 
         CustomNetTables.SubscribeNetTableListener('economy' as any, (table, key, data) => {
@@ -270,7 +270,6 @@ function Init() {
         // Start Loop
         AutoUpdate();
     } catch (e) {
-        $.Msg("[CharSheet] Error in init: " + e);
     }
 }
 
