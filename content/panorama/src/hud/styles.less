@@ -1048,3 +1048,102 @@
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
 }
+
+/* ===== Zone Notification Toast (水墨风区域通知) ===== */
+
+/* ====== Zone Plaque 匾额通知 ====== */
+.ZoneToast {
+    horizontal-align: center;
+    vertical-align: top;
+    margin-top: 5px;
+    width: 500px;
+    height: 280px;
+
+    /* 匾额底图 */
+    background-image: url("file://{images}/custom_game/hud/zone_plaque.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+
+    /* 默认隐藏 */
+    opacity: 0;
+    visibility: collapse;
+    z-index: 200;
+
+    /* transition 淡入淡出 */
+    transition-property: opacity;
+    transition-duration: 0.8s;
+    transition-timing-function: ease-in-out;
+}
+
+.ZoneToast.Show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.ZoneToast.Hide {
+    visibility: visible;
+    opacity: 0;
+    transition-duration: 0.5s;
+    /* 退出时快速淡出即可 */
+    transform: scale(0.9);
+}
+
+/* 文字容器 —— 定位到卷轴书写区 */
+.ZoneToast .TextWrapper {
+    width: 100%;
+    height: 100%;
+    horizontal-align: center;
+    vertical-align: center;
+}
+
+/* 字符行 —— 水平排列 */
+.ZoneToast .CharRow {
+    horizontal-align: center;
+    vertical-align: center;
+    margin-top: 5px;
+    margin-left: 20px;
+    flow-children: right;
+}
+
+/* 每个字的基础样式 */
+.ZoneToast .ZoneChar {
+    font-size: 26px;
+    /* 字体稍微加大一点以配合书法感 */
+    font-weight: bold;
+    font-family: 'Goudy Trajan Medium', 'FZKai-Z03S', 'LiSu', 'KaiTi', serif;
+    /* 尝试使用特拉杨（Dota2标题字体）或楷体/隶书 */
+    /* 尝试使用特拉杨（Dota2标题字体）或楷体/隶书 */
+    /* color 由 inline style 控制 */
+    margin-right: 6px;
+}
+
+/* 深色阴影：用于浅色字体（如金色），增加黑色衬底（加粗） */
+.ZoneToast .ZoneChar.ShadowDark {
+    text-shadow: 0px 0px 1px #000000, 0px 2px 4px #000000, 0px 0px 4px #000000;
+}
+
+/* 浅色光晕：用于深色字体（如水墨黑），增加黑色描边感（加粗）和白色磨砂光晕 */
+.ZoneToast .ZoneChar.ShadowLight {
+    text-shadow: 0px 0px 1px #000000, 0px 0px 2px rgba(0, 0, 0, 0.5), 0px 0px 5px rgba(255, 255, 255, 0.8), 0px 0px 10px rgba(255, 255, 255, 0.6);
+}
+
+/* 第1个字 —— 上移 */
+.ZoneToast .Char0 {
+    margin-top: -6px;
+}
+
+/* 第2个字 —— 上移 */
+.ZoneToast .Char1 {
+    margin-top: -4px;
+}
+
+/* 第3个字 —— 下移 */
+.ZoneToast .Char2 {
+    margin-top: 4px;
+}
+
+/* 第4个字 —— 略下 */
+.ZoneToast .Char3 {
+    margin-top: 2px;
+}

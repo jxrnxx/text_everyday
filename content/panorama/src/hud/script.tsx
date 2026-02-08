@@ -16,6 +16,7 @@ import HeroHUD from './HeroHUD';
 import EnemyPanel from './EnemyPanel';
 // import { KnapsackPanel } from './KnapsackPanel'; // 已废弃
 import { DefaultBackpackPanel } from './DefaultBackpackPanel';
+import ZoneNotification from './ZoneNotification';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
 const Root: FC = () => {
@@ -31,6 +32,7 @@ const Root: FC = () => {
             <EnemyPanel />
             {/* KnapsackPanel 已废弃，使用 DefaultBackpackPanel 替代 */}
             <DefaultBackpackPanel />
+            <ZoneNotification />
         </>
     );
 };
@@ -95,13 +97,13 @@ Game.AddCommand(cmdDashName, () => {
 // 绑定 D 键到冲刺命令
 Game.CreateCustomKeyBind('D', cmdDashName);
 
-// ===== Knapsack Toggle Keybind (B Key) =====
-const cmdKnapsackName = 'cmd_knapsack_' + Math.floor(Math.random() * 10000);
+// ===== Backpack Toggle Keybind (Tab Key) =====
+const cmdBackpackName = 'cmd_backpack_' + Math.floor(Math.random() * 10000);
 
-Game.AddCommand(cmdKnapsackName, () => {
-    if ((GameUI as any).ToggleKnapsack) {
-        (GameUI as any).ToggleKnapsack();
+Game.AddCommand(cmdBackpackName, () => {
+    if ((GameUI as any).ToggleBackpack) {
+        (GameUI as any).ToggleBackpack();
     }
 }, '', 0);
 
-Game.CreateCustomKeyBind('B', cmdKnapsackName);
+Game.CreateCustomKeyBind('TAB', cmdBackpackName);

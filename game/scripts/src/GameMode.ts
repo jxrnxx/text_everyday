@@ -102,6 +102,13 @@ export class GameMode {
             print('[GameMode] KnapsackSystem 已初始化');
         } catch (e) { }
 
+        // [Zone] 延迟初始化域守卫 (等待地图实体加载完成)
+        Timers.CreateTimer(5, () => {
+            print('[GameMode] 开始初始化域守卫系统...');
+            ZoneManager.GetInstance().Initialize();
+            return undefined;
+        });
+
         // [Level] 监听英雄升级事件，更新显示等级
         ListenToGameEvent(
             'dota_player_gained_level',
@@ -570,6 +577,14 @@ export class GameMode {
         // 监听验证成功后开始游戏
         CustomGameEventManager.RegisterListener('from_server_verify_result', (_, event) => {
             if ((event as any).success && !this.isGameStarted) {
+                this.StartGame();
+            }
+        });
+
+        // 监听状态机的 '游戏-开始' 事件 (PlayingState.OnStart 触发)
+        Event.on('游戏-开始', () => {
+            if (!this.isGameStarted) {
+                print('[GameMode] 收到 游戏-开始 事件，启动游戏...');
                 this.StartGame();
             }
         });

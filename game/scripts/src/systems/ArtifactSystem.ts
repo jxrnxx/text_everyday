@@ -190,7 +190,7 @@ export class ArtifactSystem {
     /**
      * 升级蒙尘神器 (Tier 0 -> Tier 1)
      */
-    public UpgradeDormantArtifact(playerId: PlayerID, slotIndex: number): boolean {
+    public UpgradeDormantArtifact(playerId: PlayerID, slotIndex: number, heroOverride?: CDOTA_BaseNPC_Hero): boolean {
         const artifacts = this.playerArtifacts.get(playerId);
         if (!artifacts) {
             print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
@@ -259,10 +259,10 @@ export class ArtifactSystem {
         );
 
         // 播放音效和特效
-        const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+        const hero = heroOverride || PlayerResource.GetSelectedHeroEntity(playerId);
         if (hero) {
-            // 播放自定义破碎音效
-            EmitSoundOn('Artifact.Awaken', hero);
+            // 播放宝石拾取音效
+            EmitSoundOn('Item.PickUpGemShop', hero);
 
             // 创建主特效 - 升级光柱
             const particleMain = ParticleManager.CreateParticle(
@@ -272,9 +272,9 @@ export class ArtifactSystem {
             );
             ParticleManager.ReleaseParticleIndex(particleMain);
 
-            // 创建辅助特效 - 物品获得光芒
+            // 创建辅助特效 - 白色光芒 (T0→T1 唤醒)
             const particleGlow = ParticleManager.CreateParticle(
-                'particles/generic_gameplay/rune_doubledamage_owner.vpcf',
+                'particles/artifact_upgrade_t1.vpcf',
                 ParticleAttachment.ABSORIGIN_FOLLOW,
                 hero
             );
@@ -294,6 +294,111 @@ export class ArtifactSystem {
     }
 
     /**
+     * 升级单个神器槽位到下一阶 (通用: T0→T1→T2→...)
+     * @returns 是否升级成功
+     */
+    public UpgradeSingleArtifact(playerId: PlayerID, slotIndex: number): boolean {
+        const artifacts = this.playerArtifacts.get(playerId);
+        if (!artifacts) {
+            print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
+            return false;
+        }
+
+        if (slotIndex < 0 || slotIndex >= this.SLOT_COUNT) {
+            print(`[ArtifactSystem] 无效槽位: ${slotIndex}`);
+            return false;
+        }
+
+        // 槽位类型名称
+        const slotTypes = ['weapon', 'armor', 'helm', 'accessory', 'boots', 'amulet'];
+
+        // 每个 tier 的物品名后缀
+        const tierSuffixes: Record<number, string> = {
+            0: '_t0',
+            1: '_tier1',
+            2: '_t2',
+            3: '_t3',
+            4: '_t4',
+            5: '_t5',
+        };
+
+        // 中文显示名
+        const tierDisplayNames: Record<string, Record<number, string>> = {
+            weapon: { 0: '蒙尘武器', 1: '凡铁剑', 2: '精钢剑', 3: '玄玉剑', 4: '天仙剑', 5: '神魔剑' },
+            armor: { 0: '蒙尘衣甲', 1: '凡铁甲', 2: '精钢甲', 3: '玄玉甲', 4: '天仙甲', 5: '神魔甲' },
+            helm: { 0: '蒙尘头冠', 1: '凡铁冠', 2: '精钢冠', 3: '玄玉冠', 4: '天仙冠', 5: '神魔冠' },
+            accessory: { 0: '蒙尘饰品', 1: '凡铁戒', 2: '精钢戒', 3: '玄玉戒', 4: '天仙戒', 5: '神魔戒' },
+            boots: { 0: '蒙尘靴子', 1: '凡铁靴', 2: '精钢靴', 3: '玄玉靴', 4: '天仙靴', 5: '神魔靴' },
+            amulet: { 0: '蒙尘护符', 1: '凡铁令', 2: '精钢令', 3: '玄玉令', 4: '天仙令', 5: '神魔令' },
+        };
+
+        const MAX_TIER = 5;
+        const current = artifacts.slots[slotIndex];
+        if (!current.itemName) {
+            print(`[ArtifactSystem] 槽位 ${slotIndex} 没有装备神器`);
+            return false;
+        }
+
+        const nextTier = current.tier + 1;
+        if (nextTier > MAX_TIER) {
+            print(`[ArtifactSystem] 槽位 ${slotIndex} 已达最高阶 (T${current.tier})`);
+            return false;
+        }
+
+        const slotType = slotTypes[slotIndex];
+        const nextSuffix = tierSuffixes[nextTier];
+        const nextItemName = `item_artifact_${slotType}${nextSuffix}`;
+
+        const nextInfo = this.GetArtifactInfo(nextItemName);
+        const displayName =
+            tierDisplayNames[slotType]?.[nextTier] || nextInfo?.displayName || `T${nextTier} ${slotType}`;
+
+        artifacts.slots[slotIndex] = {
+            itemName: nextItemName,
+            tier: nextTier,
+            displayName: displayName,
+        };
+
+        print(
+            `[ArtifactSystem] 槽位 ${slotIndex} 升级: ${current.displayName} (T${current.tier}) -> ${displayName} (T${nextTier})`
+        );
+
+        const hero = PlayerResource.GetSelectedHeroEntity(playerId);
+        if (hero) {
+            // 宝石拾取音效 (所有阶级通用)
+            EmitSoundOn('Item.PickUpGemShop', hero);
+
+            const particleMain = ParticleManager.CreateParticle(
+                'particles/generic_hero_status/hero_levelup.vpcf',
+                ParticleAttachment.ABSORIGIN_FOLLOW,
+                hero
+            );
+            ParticleManager.ReleaseParticleIndex(particleMain);
+
+            // 根据目标阶级选择不同颜色的光芒特效
+            const tierParticles: { [key: number]: string } = {
+                1: 'particles/artifact_upgrade_t1.vpcf',
+                2: 'particles/artifact_upgrade_t2.vpcf',
+                3: 'particles/artifact_upgrade_t3.vpcf',
+                4: 'particles/artifact_upgrade_t4.vpcf',
+                5: 'particles/artifact_upgrade_t5.vpcf',
+            };
+            const glowPath = tierParticles[nextTier] || 'particles/artifact_upgrade_t1.vpcf';
+
+            const particleGlow = ParticleManager.CreateParticle(glowPath, ParticleAttachment.ABSORIGIN_FOLLOW, hero);
+            Timers.CreateTimer(1.5, () => {
+                ParticleManager.DestroyParticle(particleGlow, false);
+                ParticleManager.ReleaseParticleIndex(particleGlow);
+            });
+
+            this.RefreshHeroModifier(hero);
+        }
+
+        this.SyncToClient(playerId);
+        return true;
+    }
+
+    /**
      * [Debug] 升级所有神器到下一阶 (通用: T0→T1→T2→...)
      * 返回成功升级的槽位数量
      */
@@ -307,27 +412,29 @@ export class ArtifactSystem {
         // 槽位类型名称
         const slotTypes = ['weapon', 'armor', 'helm', 'accessory', 'boots', 'amulet'];
 
-        // 每个 tier 的物品名后缀 (适配不一致的命名: _t0, _tier1, _t2, _t3, _t4)
+        // 每个 tier 的物品名后缀 (适配不一致的命名: _t0, _tier1, _t2, _t3, _t4, _t5)
         const tierSuffixes: Record<number, string> = {
             0: '_t0',
             1: '_tier1',
             2: '_t2',
             3: '_t3',
             4: '_t4',
+            5: '_t5',
         };
 
         // 中文显示名
         const tierDisplayNames: Record<string, Record<number, string>> = {
-            weapon: { 0: '蒙尘武器', 1: '凡铁剑', 2: '精钢剑', 3: '玄玉剑', 4: '天罡剑' },
-            armor: { 0: '蒙尘衣甲', 1: '凡铁甲', 2: '精钢甲', 3: '玄玉甲', 4: '天罡甲' },
-            helm: { 0: '蒙尘头冠', 1: '凡铁冠', 2: '精钢冠', 3: '玄玉冠', 4: '天罡冠' },
-            accessory: { 0: '蒙尘饰品', 1: '凡铁戒', 2: '精钢戒', 3: '玄玉戒', 4: '天罡戒' },
-            boots: { 0: '蒙尘靴子', 1: '凡铁靴', 2: '精钢靴', 3: '玄玉靴', 4: '天罡靴' },
-            amulet: { 0: '蒙尘护符', 1: '凡铁令', 2: '精钢令', 3: '玄玉令', 4: '天罡令' },
+            weapon: { 0: '蒙尘武器', 1: '凡铁剑', 2: '精钢剑', 3: '玄玉剑', 4: '天仙剑', 5: '神魔剑' },
+            armor: { 0: '蒙尘衣甲', 1: '凡铁甲', 2: '精钢甲', 3: '玄玉甲', 4: '天仙甲', 5: '神魔甲' },
+            helm: { 0: '蒙尘头冠', 1: '凡铁冠', 2: '精钢冠', 3: '玄玉冠', 4: '天仙冠', 5: '神魔冠' },
+            accessory: { 0: '蒙尘饰品', 1: '凡铁戒', 2: '精钢戒', 3: '玄玉戒', 4: '天仙戒', 5: '神魔戒' },
+            boots: { 0: '蒙尘靴子', 1: '凡铁靴', 2: '精钢靴', 3: '玄玉靴', 4: '天仙靴', 5: '神魔靴' },
+            amulet: { 0: '蒙尘护符', 1: '凡铁令', 2: '精钢令', 3: '玄玉令', 4: '天仙令', 5: '神魔令' },
         };
 
-        const MAX_TIER = 4;
+        const MAX_TIER = 5;
         let upgraded = 0;
+        let maxTierReached = 1;
 
         for (let slot = 0; slot < this.SLOT_COUNT; slot++) {
             const current = artifacts.slots[slot];
@@ -358,15 +465,16 @@ export class ArtifactSystem {
                 `[ArtifactSystem] 槽位 ${slot} 升级: ${current.displayName} (T${current.tier}) -> ${displayName} (T${nextTier})`
             );
             upgraded++;
+            if (nextTier > maxTierReached) maxTierReached = nextTier;
         }
 
         if (upgraded > 0) {
             const hero = PlayerResource.GetSelectedHeroEntity(playerId);
             if (hero) {
-                // 播放音效
-                EmitSoundOn('Artifact.Awaken', hero);
+                // 宝石拾取音效
+                EmitSoundOn('Item.PickUpGemShop', hero);
 
-                // 升级光柱特效
+                // 特效 - 升级光柱
                 const particleMain = ParticleManager.CreateParticle(
                     'particles/generic_hero_status/hero_levelup.vpcf',
                     ParticleAttachment.ABSORIGIN_FOLLOW,
@@ -374,9 +482,18 @@ export class ArtifactSystem {
                 );
                 ParticleManager.ReleaseParticleIndex(particleMain);
 
-                // 辅助光芒特效
+                // 根据目标阶级选择不同颜色的光芒特效
+                const tierParticles: { [key: number]: string } = {
+                    1: 'particles/artifact_upgrade_t1.vpcf',
+                    2: 'particles/artifact_upgrade_t2.vpcf',
+                    3: 'particles/artifact_upgrade_t3.vpcf',
+                    4: 'particles/artifact_upgrade_t4.vpcf',
+                    5: 'particles/artifact_upgrade_t5.vpcf',
+                };
+                const glowPath = tierParticles[maxTierReached] || 'particles/artifact_upgrade_t1.vpcf';
+
                 const particleGlow = ParticleManager.CreateParticle(
-                    'particles/generic_gameplay/rune_doubledamage_owner.vpcf',
+                    glowPath,
                     ParticleAttachment.ABSORIGIN_FOLLOW,
                     hero
                 );

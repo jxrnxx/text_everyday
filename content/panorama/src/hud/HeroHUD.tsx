@@ -171,6 +171,7 @@ const HeroHUD: FC = () => {
                 1: '千锤百炼的凡铁之剑，虽非神兵，却能斩妖辟邪。',
                 2: '精钢淬炼，剑锋所指，万邪退避，破甲无双。',
                 3: '玄玉铸剑，剑气冲霄，斩尽天下不平事。',
+                4: '天仙神剑，斩破苍穹，万物臣服于剑意之下。',
             },
             stats: {
                 0: [{ label: '攻击', value: '+10', color: STAT_COLORS.attack }],
@@ -183,6 +184,10 @@ const HeroHUD: FC = () => {
                     { label: '攻击', value: '+500', color: STAT_COLORS.attack },
                     { label: '破势', value: '+25', color: STAT_COLORS.armor },
                 ],
+                4: [
+                    { label: '攻击', value: '+1200', color: STAT_COLORS.attack },
+                    { label: '破势', value: '+50', color: STAT_COLORS.armor },
+                ],
             },
         },
         1: {
@@ -192,6 +197,7 @@ const HeroHUD: FC = () => {
                 1: '凡铁锻造的甲胄，虽朴实无华，却坚不可摧。',
                 2: '精钢铠甲，刀枪不入，护主周全，固若金汤。',
                 3: '玄玉灵甲，万法不侵，御敌于千里之外。',
+                4: '天仙圣甲，天地护佑，刀枪水火皆不侵。',
             },
             stats: {
                 0: [{ label: '生命', value: '+100', color: STAT_COLORS.hp }],
@@ -204,6 +210,10 @@ const HeroHUD: FC = () => {
                     { label: '生命', value: '+8000', color: STAT_COLORS.hp },
                     { label: '护甲', value: '+25', color: STAT_COLORS.armor },
                 ],
+                4: [
+                    { label: '生命', value: '+20000', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+50', color: STAT_COLORS.armor },
+                ],
             },
         },
         2: {
@@ -213,6 +223,7 @@ const HeroHUD: FC = () => {
                 1: '凡铁所铸法冠，灵力流转其间，增强神念感知。',
                 2: '精钢法冠，灵力涌动，心神澄明，法力不竭。',
                 3: '玄玉神冠，通天彻地，法力无边，万灵俯首。',
+                4: '天仙灵冠，洞悉天机，神念覆盖三千世界。',
             },
             stats: {
                 0: [{ label: '神念', value: '+2', color: STAT_COLORS.divinity }],
@@ -225,6 +236,10 @@ const HeroHUD: FC = () => {
                     { label: '神念', value: '+120', color: STAT_COLORS.divinity },
                     { label: '回蓝', value: '+12', color: STAT_COLORS.divinity },
                 ],
+                4: [
+                    { label: '神念', value: '+300', color: STAT_COLORS.divinity },
+                    { label: '回蓝', value: '+25', color: STAT_COLORS.divinity },
+                ],
             },
         },
         3: {
@@ -234,6 +249,7 @@ const HeroHUD: FC = () => {
                 1: '凡铁精工之戒，佩戴者出手必中要害。',
                 2: '精钢法戒，会心四溢，一击致命，摧枯拉朽。',
                 3: '玄玉灵戒，一击必杀，天地为之变色。',
+                4: '天仙神戒，触之即灭，天道亦为之颤抖。',
             },
             stats: {
                 0: [{ label: '暴击', value: '+2%', color: STAT_COLORS.crit }],
@@ -246,6 +262,10 @@ const HeroHUD: FC = () => {
                     { label: '暴击', value: '+18%', color: STAT_COLORS.crit },
                     { label: '爆伤', value: '+40%', color: STAT_COLORS.crit },
                 ],
+                4: [
+                    { label: '暴击', value: '+30%', color: STAT_COLORS.crit },
+                    { label: '爆伤', value: '+80%', color: STAT_COLORS.crit },
+                ],
             },
         },
         4: {
@@ -255,6 +275,7 @@ const HeroHUD: FC = () => {
                 1: '凡铁轻靴，履之如风，步若疾风追月。',
                 2: '精钢战靴，闪避自如，来去无踪，步法通神。',
                 3: '玄玉神行靴，缩地成寸，天地之间任我行。',
+                4: '天仙步云靴，踏虚御风，来去自如超脱尘世。',
             },
             stats: {
                 0: [{ label: '移速', value: '+10', color: STAT_COLORS.speed }],
@@ -267,6 +288,10 @@ const HeroHUD: FC = () => {
                     { label: '移速', value: '+80', color: STAT_COLORS.speed },
                     { label: '闪避', value: '+10%', color: STAT_COLORS.speed },
                 ],
+                4: [
+                    { label: '移速', value: '+120', color: STAT_COLORS.speed },
+                    { label: '闪避', value: '+18%', color: STAT_COLORS.speed },
+                ],
             },
         },
         5: {
@@ -276,6 +301,7 @@ const HeroHUD: FC = () => {
                 1: '凡铁铸令，四维增益，万法归宗。',
                 2: '精钢符令，全属提升，减伤护体，攻守兼备。',
                 3: '玄玉符令，天地共鸣，万法归一，攻守无双。',
+                4: '天仙法令，号令万灵，天地归心，无上至尊。',
             },
             stats: {
                 0: [{ label: '全属性', value: '+2', color: STAT_COLORS.allStat }],
@@ -288,12 +314,16 @@ const HeroHUD: FC = () => {
                     { label: '全属性', value: '+50', color: STAT_COLORS.allStat },
                     { label: '减伤', value: '+5%', color: STAT_COLORS.allStat },
                 ],
+                4: [
+                    { label: '全属性', value: '+100', color: STAT_COLORS.allStat },
+                    { label: '减伤', value: '+10%', color: STAT_COLORS.allStat },
+                ],
             },
         },
     };
 
     // 正在播放唤醒动画的槽位
-    const [flashingSlots, setFlashingSlots] = useState<Set<number>>(new Set());
+    const [flashingSlots, setFlashingSlots] = useState<Map<number, number>>(new Map());
 
     // 隐藏状态 - 当其他面板打开时隐藏HeroHUD
     const [isHidden, setIsHidden] = useState(false);
@@ -457,7 +487,34 @@ const HeroHUD: FC = () => {
                 }
             }
             $.Msg(`[HeroHUD] 更新神器槽位: ${JSON.stringify(newSlots)}`);
-            setArtifactSlots(newSlots);
+
+            // 检测阶级变化，自动触发闪光特效
+            setArtifactSlots(prev => {
+                for (let i = 0; i < 6; i++) {
+                    const oldTier = prev[i]?.tier || 0;
+                    const newTier = newSlots[i]?.tier || 0;
+                    if (newTier > oldTier && newTier >= 1) {
+                        $.Msg(`[HeroHUD] 检测到槽位 ${i} 阶级变化: T${oldTier} -> T${newTier}, 触发闪光`);
+                        // 触发对应颜色的闪光
+                        setFlashingSlots(prevFlash => {
+                            const next = new Map(prevFlash);
+                            next.set(i, newTier);
+                            return next;
+                        });
+                        // 0.8s后清理闪光
+                        $.Schedule(0.8, () => {
+                            setFlashingSlots(prevFlash => {
+                                const next = new Map(prevFlash);
+                                next.delete(i);
+                                return next;
+                            });
+                        });
+                        // 播放前端音效
+                        Game.EmitSound('Item.PickUpGemShop');
+                    }
+                }
+                return newSlots;
+            });
         };
 
         // 监听神器 NetTable 变化
@@ -1389,33 +1446,20 @@ const HeroHUD: FC = () => {
                             };
                             const iconName = slotToIconName[slotIndex];
 
-                            // 处理点击 - 蒙尘神器升级（蒙尘破碎动画）
+                            // 处理点击 - 蒙尘神器: 传送到对应域
                             const handleClick = () => {
                                 $.Msg(`[HeroHUD] 神器槽位 ${slotIndex} 被点击, isDormant=${isDormant}, itemName=${slot.itemName}`);
                                 if (isDormant) {
-                                    $.Msg(`[HeroHUD] 发送升级命令: cmd_upgrade_artifact, slot=${slotIndex}`);
-                                    // 发送服务器命令
-                                    GameEvents.SendCustomGameEventToServer('cmd_upgrade_artifact', { slot: slotIndex });
-
-                                    // 触发破碎动画
-                                    setFlashingSlots(prev => new Set(prev).add(slotIndex));
-
-                                    // 0.6s后清理碎片
-                                    $.Schedule(0.6, () => {
-                                        setFlashingSlots(prev => {
-                                            const next = new Set(prev);
-                                            next.delete(slotIndex);
-                                            return next;
-                                        });
-                                    });
-
-                                    // 播放前端音效
-                                    Game.EmitSound('Artifact.Awaken');
+                                    $.Msg(`[HeroHUD] 传送到域 ${slotIndex + 1}`);
+                                    // 发送传送命令到服务器 (slot index 对应 zone id: slot 0 -> zone 1)
+                                    GameEvents.SendCustomGameEventToServer('cmd_teleport_to_zone', { slot: slotIndex });
                                 }
                             };
 
                             // 判断是否正在播放破碎动画
                             const isFlashing = flashingSlots.has(slotIndex);
+                            const flashTier = flashingSlots.get(slotIndex) || 1;
+                            const awakenClass = isFlashing ? ` ArtifactAwakening${flashTier >= 2 ? `--t${flashTier}` : ''}` : '';
 
                             // 蒙尘状态：isFlashing时已移除蒙尘（露出彩色），否则保持蒙尘
                             const bgClasses = `ArtifactBg${isDormant && !isFlashing ? ' IsDormantBg' : ''}`;
@@ -1424,7 +1468,7 @@ const HeroHUD: FC = () => {
                             return (
                                 <Panel
                                     key={slotIndex}
-                                    className={`ArtifactSlot${isFlashing ? ' ArtifactAwakening' : ''}`}
+                                    className={`ArtifactSlot${awakenClass}`}
                                     hittest={true}
                                     style={{
                                         width: '60px',
@@ -1458,7 +1502,7 @@ const HeroHUD: FC = () => {
                                     {/* 唤醒闪光 */}
                                     {isFlashing && (
                                         <Panel
-                                            className="AwakenFlash"
+                                            className={`AwakenFlash AwakenFlash--t${flashTier}`}
                                             style={{
                                                 width: '60px',
                                                 height: '60px',
@@ -1483,33 +1527,20 @@ const HeroHUD: FC = () => {
                             };
                             const iconName = slotToIconName[slotIndex];
 
-                            // 处理点击 - 蒙尘神器升级（蒙尘破碎动画）
+                            // 处理点击 - 蒙尘神器: 传送到对应域
                             const handleClick = () => {
                                 $.Msg(`[HeroHUD] 神器槽位 ${slotIndex} 被点击, isDormant=${isDormant}, itemName=${slot.itemName}`);
                                 if (isDormant) {
-                                    $.Msg(`[HeroHUD] 发送升级命令: cmd_upgrade_artifact, slot=${slotIndex}`);
-                                    // 发送服务器命令
-                                    GameEvents.SendCustomGameEventToServer('cmd_upgrade_artifact', { slot: slotIndex });
-
-                                    // 触发破碎动画
-                                    setFlashingSlots(prev => new Set(prev).add(slotIndex));
-
-                                    // 0.6s后清理碎片
-                                    $.Schedule(0.6, () => {
-                                        setFlashingSlots(prev => {
-                                            const next = new Set(prev);
-                                            next.delete(slotIndex);
-                                            return next;
-                                        });
-                                    });
-
-                                    // 播放前端音效
-                                    Game.EmitSound('DOTA_Item.MantaStyle.Activate');
+                                    $.Msg(`[HeroHUD] 传送到域 ${slotIndex + 1}`);
+                                    // 发送传送命令到服务器 (slot index 对应 zone id: slot 0 -> zone 1)
+                                    GameEvents.SendCustomGameEventToServer('cmd_teleport_to_zone', { slot: slotIndex });
                                 }
                             };
 
                             // 判断是否正在播放破碎动画
                             const isFlashing = flashingSlots.has(slotIndex);
+                            const flashTier = flashingSlots.get(slotIndex) || 1;
+                            const awakenClass = isFlashing ? ` ArtifactAwakening${flashTier >= 2 ? `--t${flashTier}` : ''}` : '';
 
                             // 蒙尘状态：isFlashing时已移除蒙尘（露出彩色），否则保持蒙尘
                             const bgClasses = `ArtifactBg${isDormant && !isFlashing ? ' IsDormantBg' : ''}`;
@@ -1518,7 +1549,7 @@ const HeroHUD: FC = () => {
                             return (
                                 <Panel
                                     key={slotIndex}
-                                    className={`ArtifactSlot${isFlashing ? ' ArtifactAwakening' : ''}`}
+                                    className={`ArtifactSlot${awakenClass}`}
                                     hittest={true}
                                     style={{
                                         width: '60px',
@@ -1552,7 +1583,7 @@ const HeroHUD: FC = () => {
                                     {/* 唤醒闪光 */}
                                     {isFlashing && (
                                         <Panel
-                                            className="AwakenFlash"
+                                            className={`AwakenFlash AwakenFlash--t${flashTier}`}
                                             style={{
                                                 width: '60px',
                                                 height: '60px',
@@ -1590,10 +1621,10 @@ const HeroHUD: FC = () => {
                                 const t = artifactSlots[hoveredArtifact.slotIndex].tier;
                                 if (t === 0) return '#888888';  // 蒙尘 - 灰色
                                 if (t === 1) return '#e0e0e0';  // 凡铁 - 银白
-                                if (t === 2) return '#66ccff';  // 精钢 - 青蓝
-                                if (t === 3) return '#cc66ff';  // 玄铁 - 紫色
-                                if (t === 4) return '#ff9933';  // 灵器 - 橙色
-                                return '#ffd700';               // 神器 - 金色
+                                if (t === 2) return '#66ff99';  // 精钢 - 绿色
+                                if (t === 3) return '#66ccff';  // 玄玉 - 蓝色
+                                if (t === 4) return '#cc66ff';  // 天仙 - 紫色
+                                return '#ff9933';               // 神魔 - 橙色
                             })(),
                             fontSize: '16px',
                             fontWeight: 'bold' as const,
@@ -1601,10 +1632,10 @@ const HeroHUD: FC = () => {
                                 const t = artifactSlots[hoveredArtifact.slotIndex].tier;
                                 if (t === 0) return '0px 0px 4px #666666';
                                 if (t === 1) return '0px 0px 6px #aaaaaa';
-                                if (t === 2) return '0px 0px 8px #3399cc';
-                                if (t === 3) return '0px 0px 8px #9933cc';
-                                if (t === 4) return '0px 0px 10px #cc6600';
-                                return '0px 0px 10px #ccaa00';
+                                if (t === 2) return '0px 0px 8px #33cc66';
+                                if (t === 3) return '0px 0px 8px #3399cc';
+                                if (t === 4) return '0px 0px 10px #9933cc';
+                                return '0px 0px 10px #cc6600';
                             })(),
                             horizontalAlign: 'center' as const,
                             textAlign: 'center' as const,

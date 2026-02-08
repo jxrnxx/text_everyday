@@ -69,11 +69,11 @@ const TopHUD: FC = () => {
 
     // ESC键监听 - 弹出结束确认框
     useEffect(() => {
-        const panel = $.GetContextPanel();
-        panel.SetPanelEvent('oncancel', () => {
+        $.GetContextPanel().SetPanelEvent('oncancel', () => {
             setShowEndConfirm(prev => !prev);
         });
     }, []);
+
 
     const formatTime = (seconds: number): string => {
         if (seconds <= 0) return '00:00';

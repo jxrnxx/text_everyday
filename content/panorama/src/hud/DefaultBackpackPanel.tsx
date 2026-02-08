@@ -1101,9 +1101,19 @@ export function DefaultBackpackPanel() {
     };
 
     // 切换背包可见性
+    const toggleInventoryRef = useRef<() => void>(() => { });
+    toggleInventoryRef.current = () => setIsOpen(prev => !prev);
+
     const toggleInventory = () => {
-        setIsOpen(!isOpen);
+        toggleInventoryRef.current();
     };
+
+    // 暴露 toggle 到全局，供 B 键快捷键调用
+    useEffect(() => {
+        (GameUI as any).ToggleBackpack = () => {
+            toggleInventoryRef.current();
+        };
+    }, []);
 
     // 使用物品
     const handleUseItem = (index: number, storageType: 'public' | 'private') => {

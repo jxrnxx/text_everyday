@@ -210,4 +210,9 @@ declare interface CustomGameEventDeclarations {
     cmd_upgrade_artifact: {
         slot: number;
     };
+
+    /** Teleport to zone (Client -> Server) */
+    cmd_teleport_to_zone: {
+        slot: number;
+    };
 }

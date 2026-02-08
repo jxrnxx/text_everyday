@@ -67,7 +67,7 @@ const DebugCallbacks: Record<string, { desc: string; func: DebugCallbackFunction
         },
     },
     ['-zhuangbei']: {
-        desc: '装备调试: -zhuangbei up (升级所有神器) / reset (重置为T0)',
+        desc: '装备调试: -zhuangbei up (全部升级) / up1~up6 (单个升级) / reset (重置为T0)',
         func: (hero, ...args: string[]) => {
             const playerId = hero.GetPlayerID();
             const subCmd = args[0]?.toLowerCase();
@@ -79,13 +79,32 @@ const DebugCallbacks: Record<string, { desc: string; func: DebugCallbackFunction
                 } else {
                     Say(hero, '所有神器已达最高阶!', false);
                 }
+            } else if (subCmd && subCmd.length === 3 && subCmd.substr(0, 2) === 'up') {
+                const slotNum = tonumber(subCmd.substr(2, 1));
+                if (slotNum && slotNum >= 1 && slotNum <= 6) {
+                    const slotNames = ['武器', '护甲', '头冠', '饰品', '靴子', '护符'];
+                    const slotIndex = slotNum - 1;
+                    const success = ArtifactSystem.GetInstance().UpgradeSingleArtifact(playerId, slotIndex);
+                    if (success) {
+                        const artifacts = ArtifactSystem.GetInstance().GetPlayerArtifacts(playerId);
+                        const slotData = artifacts?.slots[slotIndex];
+                        Say(
+                            hero,
+                            `${slotNames[slotIndex]}升级! → ${slotData?.displayName} (T${slotData?.tier})`,
+                            false
+                        );
+                    } else {
+                        Say(hero, `${slotNames[slotIndex]}已达最高阶!`, false);
+                    }
+                } else {
+                    Say(hero, '用法: up1=武器 up2=护甲 up3=头冠 up4=饰品 up5=靴子 up6=护符', false);
+                }
             } else if (subCmd === 'reset') {
-                // 重新初始化为 T0
                 (ArtifactSystem.GetInstance() as any).playerArtifacts.delete(playerId);
                 ArtifactSystem.GetInstance().InitPlayerArtifacts(playerId);
                 Say(hero, '神器已重置为蒙尘状态 (T0)', false);
             } else {
-                Say(hero, '用法: -zhuangbei up / reset', false);
+                Say(hero, '用法: -zhuangbei up / up1~up6 / reset', false);
             }
         },
     },

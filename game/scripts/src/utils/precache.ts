@@ -58,6 +58,13 @@ export default function Precache(context: CScriptPrecacheContext) {
 
             // Blink Dash - 使用幽灵假人法，无需粒子特效
 
+            // Artifact Upgrade Effects (per-tier colors)
+            'particles/artifact_upgrade_t1.vpcf',
+            'particles/artifact_upgrade_t2.vpcf',
+            'particles/artifact_upgrade_t3.vpcf',
+            'particles/artifact_upgrade_t4.vpcf',
+            'particles/artifact_upgrade_t5.vpcf',
+
             // Sound Events
             'soundevents/custom_game/custom_soundevents.vsndevts',
         ],
