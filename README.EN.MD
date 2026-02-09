@@ -80,3 +80,6 @@ English translated with [DeepSeek](https://www.deepseek.com/)
 -lvlup <N>  升级 N 级  -lvlup 30
 -gold <N>   添加灵石    -gold 9999
 -faith <N>  添加信仰值   -faith 9999
+-zhuangbei up1~up6 手动升阶
+-zhuangbeilevel 50 给所有装备加经验
+-zhuangbei1 100 给1号装备加经验

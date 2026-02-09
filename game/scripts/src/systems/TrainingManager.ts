@@ -16,7 +16,7 @@ export class TrainingManager {
     private playerData: Map<PlayerID, TrainingData> = new Map();
     private spawnTimer: Map<PlayerID, string> = new Map();
 
-    private readonly MONSTER_UNIT_NAME = 'npc_enemy_zombie_lvl1';
+    private readonly MONSTER_UNIT_NAME = 'npc_creep_train_tier1';
     private readonly MERCHANT_UNIT_NAME = 'npc_cultivation_merchant';
     private readonly MAX_MONSTERS_DEFAULT = 5;
 

@@ -93,7 +93,7 @@ export class PlayerRegister {
         const assets = GetPlayerSys(playerId, 'assets') as Player;
 
         if (assets) {
-            assets.OnHeroSpawned();
+            assets.OnHeroSpawned(unit as CDOTA_BaseNPC_Hero);
         }
     }
 

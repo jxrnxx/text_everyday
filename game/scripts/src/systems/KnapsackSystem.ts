@@ -480,13 +480,6 @@ export class KnapsackSystem {
             }
         });
 
-        // 打印学习后所有技能状态
-        for (let i = 0; i < 24; i++) {
-            const ab = hero.GetAbilityByIndex(i);
-            if (ab && ab.GetAbilityName() !== 'generic_hidden') {
-            }
-        }
-
         // 槽位 2/3/4 对应 F/G/R
         const slotKey = slotIndex === 2 ? 'F' : slotIndex === 3 ? 'G' : 'R';
 

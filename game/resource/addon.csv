@@ -1,7 +1,7 @@
 ﻿Tokens,English,SChinese
 addon_game_name,YOUR ADDON NAME,你的游戏名
 DOTA_Tooltip_ability_soldier_war_strike,War Strike,兵伐 · 裂空
-DOTA_Tooltip_ability_soldier_war_strike_Description,"Passive: Every 3rd attack deals 250% critical damage and cleaves enemies in a frontal cone within 400 range.","被动：每第3次攻击造成250%%暴击伤害，并对前方扇形区域400范围内的敌人造成等额物理伤害。"
+DOTA_Tooltip_ability_soldier_war_strike_Description,Passive: Every 3rd attack deals 250% critical damage and cleaves enemies in a frontal cone within 400 range.,被动：每第3次攻击造成250%%暴击伤害，并对前方扇形区域400范围内的敌人造成等额物理伤害。
 DOTA_Tooltip_modifier_soldier_war_strike,War Strike,兵伐 · 裂空
 DOTA_Tooltip_modifier_soldier_war_strike_Description,Attack counter: %dMODIFIER_PROPERTY_TOOLTIP%/3. On the 3rd hit: 250% crit + AoE cleave.,攻击计数：%dMODIFIER_PROPERTY_TOOLTIP%/3。第3次攻击时：造成250%暴击伤害并分裂。
 CharSheet_Title,Character Sheet,角色详情
@@ -25,6 +25,54 @@ CharSheet_KillsFaith,Kills / Faith,信仰
 CharSheet_SpiritCoin,Spirit Coin,灵石
 CharSheet_CloseTip,Press [C] to Close,按 [C] 关闭
 DOTA_Tooltip_ability_ability_public_martial_cleave,Martial Cleave,武道 · 横扫
-DOTA_Tooltip_ability_ability_public_martial_cleave_Description,"Passive: Each attack cleaves enemies in a frontal cone within 650 range for 30%% physical damage.","被动：每次普通攻击对前方扇形区域650范围内的敌人造成30%%的分裂物理伤害。"
+DOTA_Tooltip_ability_ability_public_martial_cleave_Description,Passive: Each attack cleaves enemies in a frontal cone within 650 range for 30%% physical damage.,被动：每次普通攻击对前方扇形区域650范围内的敌人造成30%%的分裂物理伤害。
 DOTA_Tooltip_ability_ability_public_martial_cleave_cleave_percent,Cleave Damage,分裂伤害
 DOTA_Tooltip_ability_ability_public_martial_cleave_cleave_distance,Cleave Distance,分裂距离
+DOTA_Tooltip_ability_item_artifact_weapon_t0,Dormant Weapon,蒙尘·兵刃
+DOTA_Tooltip_ability_item_artifact_armor_t0,Dormant Armor,蒙尘·甲胄
+DOTA_Tooltip_ability_item_artifact_helm_t0,Dormant Helm,蒙尘·冠冕
+DOTA_Tooltip_ability_item_artifact_accessory_t0,Dormant Accessory,蒙尘·饰物
+DOTA_Tooltip_ability_item_artifact_boots_t0,Dormant Boots,蒙尘·履靴
+DOTA_Tooltip_ability_item_artifact_amulet_t0,Dormant Amulet,蒙尘·符印
+DOTA_Tooltip_ability_item_artifact_weapon_tier1,Iron Sword,凡铁·利剑
+DOTA_Tooltip_ability_item_artifact_armor_tier1,Iron Armor,凡铁·重甲
+DOTA_Tooltip_ability_item_artifact_helm_tier1,Iron Crown,凡铁·铁冠
+DOTA_Tooltip_ability_item_artifact_accessory_tier1,Iron Ring,凡铁·铁环
+DOTA_Tooltip_ability_item_artifact_boots_tier1,Iron Boots,凡铁·战靴
+DOTA_Tooltip_ability_item_artifact_amulet_tier1,Iron Token,凡铁·铁符
+DOTA_Tooltip_ability_item_artifact_weapon_t2,Steel Sword,精钢·锻刃
+DOTA_Tooltip_ability_item_artifact_armor_t2,Steel Armor,精钢·锻甲
+DOTA_Tooltip_ability_item_artifact_helm_t2,Steel Crown,精钢·锻冠
+DOTA_Tooltip_ability_item_artifact_accessory_t2,Steel Ring,精钢·锻环
+DOTA_Tooltip_ability_item_artifact_boots_t2,Steel Boots,精钢·锻靴
+DOTA_Tooltip_ability_item_artifact_amulet_t2,Steel Token,精钢·锻符
+DOTA_Tooltip_ability_item_artifact_weapon_t3,Jade Sword,玄玉·仙剑
+DOTA_Tooltip_ability_item_artifact_armor_t3,Jade Armor,玄玉·仙甲
+DOTA_Tooltip_ability_item_artifact_helm_t3,Jade Crown,玄玉·仙冠
+DOTA_Tooltip_ability_item_artifact_accessory_t3,Jade Ring,玄玉·仙环
+DOTA_Tooltip_ability_item_artifact_boots_t3,Jade Boots,玄玉·仙靴
+DOTA_Tooltip_ability_item_artifact_amulet_t3,Jade Token,玄玉·仙符
+DOTA_Tooltip_ability_item_artifact_weapon_t4,Celestial Sword,天仙·神兵
+DOTA_Tooltip_ability_item_artifact_armor_t4,Celestial Armor,天仙·神甲
+DOTA_Tooltip_ability_item_artifact_helm_t4,Celestial Crown,天仙·神冠
+DOTA_Tooltip_ability_item_artifact_accessory_t4,Celestial Ring,天仙·神环
+DOTA_Tooltip_ability_item_artifact_boots_t4,Celestial Boots,天仙·神靴
+DOTA_Tooltip_ability_item_artifact_amulet_t4,Celestial Token,天仙·神符
+DOTA_Tooltip_ability_item_artifact_weapon_t5,Divine Sword,神魔·天诛
+DOTA_Tooltip_ability_item_artifact_armor_t5,Divine Armor,神魔·天铠
+DOTA_Tooltip_ability_item_artifact_helm_t5,Divine Crown,神魔·天冕
+DOTA_Tooltip_ability_item_artifact_accessory_t5,Divine Ring,神魔·天环
+DOTA_Tooltip_ability_item_artifact_boots_t5,Divine Boots,神魔·天履
+DOTA_Tooltip_ability_item_artifact_amulet_t5,Divine Token,神魔·天印
+DOTA_Tooltip_ability_item_buy_constitution,Constitution Pill,根骨丹
+DOTA_Tooltip_ability_item_buy_martial,Martial Pill,武道丹
+DOTA_Tooltip_ability_item_buy_divinity,Divinity Pill,神念丹
+DOTA_Tooltip_ability_item_scroll_gacha,Gacha Scroll,演武残卷
+DOTA_Tooltip_ability_item_ask_dao_lot,Ask Dao Lot,问道签
+DOTA_Tooltip_ability_item_derive_paper,Derive Paper,衍法灵笺
+DOTA_Tooltip_ability_item_blank_rubbing,Blank Rubbing,空白拓本
+DOTA_Tooltip_ability_item_upgrade_stone_1,Upgrade Stone I,悟道石·凡
+DOTA_Tooltip_ability_item_upgrade_stone_2,Upgrade Stone II,悟道石·灵
+DOTA_Tooltip_ability_item_upgrade_stone_3,Upgrade Stone III,悟道石·仙
+DOTA_Tooltip_ability_item_upgrade_stone_4,Upgrade Stone IV,悟道石·神
+DOTA_Tooltip_ability_item_book_martial_cleave_1,Martial Cleave Book,武道·横扫 技能书

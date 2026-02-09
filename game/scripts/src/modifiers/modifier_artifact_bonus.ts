@@ -1,5 +1,4 @@
 import { BaseModifier, registerModifier } from '../utils/dota_ts_adapter';
-import { ArtifactSystem } from '../systems/ArtifactSystem';
 
 /**
  * 神器属性修饰器
@@ -23,6 +22,9 @@ export class modifier_artifact_bonus extends BaseModifier {
     private cachedEvasion: number = 0;
     private cachedAllStats: number = 0;
     private cachedFinalDmgReduct: number = 0;
+    private cachedSpellDamage: number = 0;
+    private cachedBlock: number = 0;
+    private cachedFinalDmgIncrease: number = 0;
 
     IsHidden(): boolean {
         return true;
@@ -56,8 +58,11 @@ export class modifier_artifact_bonus extends BaseModifier {
         if (!parent || parent.IsNull() || !parent.IsRealHero()) return;
 
         const playerId = parent.GetPlayerOwnerID();
+        // 使用延迟 require 避免循环依赖导致注册失败
+        const { ArtifactSystem } = require('../systems/ArtifactSystem') as { ArtifactSystem: any };
         const artifactSystem = ArtifactSystem.GetInstance();
         const bonuses = artifactSystem.CalculateTotalBonuses(playerId);
+
 
         this.cachedDamage = bonuses.damage || 0;
         this.cachedHP = bonuses.hp || 0;
@@ -74,6 +79,9 @@ export class modifier_artifact_bonus extends BaseModifier {
         this.cachedEvasion = bonuses.evasion || 0;
         this.cachedAllStats = bonuses.allStats || 0;
         this.cachedFinalDmgReduct = bonuses.finalDmgReduct || 0;
+        this.cachedSpellDamage = bonuses.spellDamage || 0;
+        this.cachedBlock = bonuses.block || 0;
+        this.cachedFinalDmgIncrease = bonuses.finalDmgIncrease || 0;
     }
 
     /**
@@ -83,66 +91,14 @@ export class modifier_artifact_bonus extends BaseModifier {
         this.RecalculateBonuses();
     }
 
-    DeclareFunctions(): ModifierFunction[] {
-        return [
-            ModifierFunction.EXTRA_HEALTH_BONUS,
-            ModifierFunction.BASEATTACK_BONUSDAMAGE,
-            ModifierFunction.PHYSICAL_ARMOR_BONUS,
-            ModifierFunction.MOVESPEED_BONUS_CONSTANT,
-            ModifierFunction.MANA_REGEN_CONSTANT,
-            ModifierFunction.PREATTACK_CRITICALSTRIKE,
-            ModifierFunction.EVASION_CONSTANT,
-            ModifierFunction.INCOMING_DAMAGE_PERCENTAGE,
-        ];
-    }
+    // 注意: 不声明任何 DeclareFunctions / GetModifier* 方法
+    // 所有引擎级属性（HP/攻击/护甲/移速/回蓝/暴击/闪避/技伤）
+    // 全部由 modifier_custom_stats_handler 统一计算和应用
+    // 本 modifier 仅作为数据缓存层，供 stats_handler 读取
 
-    // 额外生命值 (护甲槽位)
-    GetModifierExtraHealthBonus(): number {
-        return this.cachedHP;
-    }
-
-    // 额外攻击力 (武器槽位)
-    GetModifierBaseAttack_BonusDamage(): number {
-        return this.cachedDamage;
-    }
-
-    // 额外护甲 (护甲槽位)
-    GetModifierPhysicalArmorBonus(): number {
-        return this.cachedArmor;
-    }
-
-    // 额外移速 (鞋子槽位)
-    GetModifierMoveSpeedBonus_Constant(): number {
-        return this.cachedMoveSpeed;
-    }
-
-    // 额外回蓝 (头盔槽位)
-    GetModifierConstantManaRegen(): number {
-        return this.cachedManaRegen;
-    }
-
-    // 暴击 (饰品槽位)
-    GetModifierPreAttack_CriticalStrike(event: ModifierAttackEvent): number {
-        if (!IsServer()) return 0;
-        if (this.cachedCritChance <= 0) return 0;
-
-        // 检查是否触发暴击
-        if (RandomFloat(0, 100) < this.cachedCritChance) {
-            // 返回暴击倍率 (150% 基础 + 额外暴击伤害)
-            return 150 + this.cachedCritDamage;
-        }
-        return 0;
-    }
-
-    // 闪避 (鞋子槽位)
-    GetModifierEvasion_Constant(): number {
-        return this.cachedEvasion;
-    }
-
-    // 最终减伤 (护符槽位)
-    GetModifierIncomingDamage_Percentage(): number {
-        // 负值表示减少伤害
-        return -this.cachedFinalDmgReduct;
+    // 获取技伤%值 (用于 CustomStats 同步到 NetTable)
+    GetBonusSpellDamage(): number {
+        return this.cachedSpellDamage;
     }
 
     // 获取护甲穿透值 (用于伤害计算系统调用)
@@ -171,7 +127,38 @@ export class modifier_artifact_bonus extends BaseModifier {
     }
 
     // 获取全属性加成 (用于 CustomStats 系统调用)
+    // 全属性 = 根骨 + 武道 + 神念 (不含身法)
     GetBonusAllStats(): number {
         return this.cachedAllStats;
+    }
+
+    // 获取会心加成 (用于 CustomStats 同步)
+    GetBonusCritChance(): number {
+        return this.cachedCritChance;
+    }
+
+    // 获取爆伤加成 (用于 CustomStats 同步)
+    GetBonusCritDamage(): number {
+        return this.cachedCritDamage;
+    }
+
+    // 获取格挡值 (用于 DamageSystem 调用)
+    GetBonusBlock(): number {
+        return this.cachedBlock;
+    }
+
+    // 获取终伤增% (用于 DamageSystem 调用)
+    GetBonusFinalDmgIncrease(): number {
+        return this.cachedFinalDmgIncrease;
+    }
+
+    // 获取终伤减% (用于 DamageSystem 调用)
+    GetBonusFinalDmgReduct(): number {
+        return this.cachedFinalDmgReduct;
+    }
+
+    // 获取闪避% (用于 CustomStats 同步)
+    GetBonusEvasion(): number {
+        return this.cachedEvasion;
     }
 }

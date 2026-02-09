@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { openPanel, markPanelClosed, registerPanel } from './PanelManager';
+import { getLocalizedName, getLocalizedDesc, ITEM_CONFIG_MAP } from './itemRarityConfig';
 
 const AbilityShopPanel: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -32,66 +33,50 @@ const AbilityShopPanel: React.FC = () => {
         // === 第一行：功能道具 ===
         {
             id: 1,
-            name: '演武残卷',
-            desc: '天地为台，众生为戏。\n随机获得<font color="#c0c0c0">1星</font><font color="#66cc66">2星</font>技能书。极小概率获得<font color="#ffaa00">4星</font>技能书。',
-            icon: 'file://{resources}/images/custom_items/skill_book_blue.png',
+            itemKey: 'item_scroll_gacha',
             price: 500,
             currency: '信仰',
         },
         {
             id: 2,
-            name: '问道签',
-            desc: '大道三千，弱水三千。\n选择<font color="#ff6666">武道</font>/<font color="#66ccff">神念</font>/<font color="#ffcc66">被动</font>，必得指定类型技能书。',
-            icon: 'file://{images}/custom_game/hud/skill_fortune_sticks.png',
+            itemKey: 'item_ask_dao_lot',
             price: 1000,
             currency: '信仰',
         },
         {
             id: 3,
-            name: '衍法灵笺',
-            desc: '法无定法，式无定式。\n将技能随机变为<font color="#66ccff">同星级</font>的另一个技能。',
-            icon: 'file://{resources}/images/custom_items/derivation_paper.png',
+            itemKey: 'item_derive_paper',
             price: 1000,
             currency: '信仰',
         },
         {
             id: 4,
-            name: '空白拓本',
-            desc: '前尘影事，皆可拓印。\n将已学技能<font color="#ff6666">剥离</font>，变回<font color="#66ccff">技能书</font>放入背包。',
-            icon: 'file://{resources}/images/custom_items/blank_rubbing.png',
+            itemKey: 'item_blank_rubbing',
             price: 2000,
             currency: '信仰',
         },
         // === 第二行：强化石 ===
         {
             id: 5,
-            name: '悟道石·凡',
-            desc: '初窥门径，略有所得。\n将<font color="#c0c0c0">1级</font>技能强化至<font color="#66cc66">2级</font>。',
-            icon: 'file://{resources}/images/custom_items/upgrade_stone_white.png',
+            itemKey: 'item_upgrade_stone_1',
             price: 1000,
             currency: '信仰',
         },
         {
             id: 6,
-            name: '悟道石·灵',
-            desc: '灵光一闪，融会贯通。\n将<font color="#66cc66">2级</font>技能强化至<font color="#cc66ff">3级</font>。',
-            icon: 'file://{resources}/images/custom_items/upgrade_stone_green.png',
+            itemKey: 'item_upgrade_stone_2',
             price: 3000,
             currency: '信仰',
         },
         {
             id: 7,
-            name: '悟道石·仙',
-            desc: '羽化登仙，超脱凡俗。\n将<font color="#cc66ff">3级</font>技能强化至<font color="#ffaa00">4级</font>。',
-            icon: 'file://{resources}/images/custom_items/upgrade_stone_purple.png',
+            itemKey: 'item_upgrade_stone_3',
             price: 8000,
             currency: '信仰',
         },
         {
             id: 8,
-            name: '武道石·神',
-            desc: '神恩如海，神威如狱。\n强化<font color="#ffaa00">4星</font>技能至<font color="#ff6666">等级上限</font>。',
-            icon: 'file://{resources}/images/custom_items/upgrade_stone_gold.png',
+            itemKey: 'item_upgrade_stone_4',
             price: 20000,
             currency: '信仰',
         },
@@ -231,7 +216,7 @@ const AbilityShopPanel: React.FC = () => {
         // 发送购买事件到服务端
         GameEvents.SendCustomGameEventToServer('cmd_ability_shop_purchase', {
             item_id: item.id,
-            item_name: item.name,
+            item_name: getLocalizedName(item.itemKey),
             price: item.price,
             currency: item.currency,
         } as never);
@@ -303,7 +288,7 @@ const AbilityShopPanel: React.FC = () => {
                                 style={styles.slotFrame}
                             />
                             {/* 商品图标 */}
-                            <Image src={item.icon} style={styles.itemIcon} />
+                            <Image src={ITEM_CONFIG_MAP[item.itemKey]?.icon || ''} style={styles.itemIcon} />
                         </Panel>
                     ))}
 
@@ -328,9 +313,9 @@ const AbilityShopPanel: React.FC = () => {
                             }}
                             className="JadeTooltip"
                         >
-                            <Label text={shopItems[hoveredItem].name} style={styles.tooltipTitle} />
+                            <Label text={getLocalizedName(shopItems[hoveredItem].itemKey)} style={styles.tooltipTitle} />
                             <Panel style={styles.tooltipDivider} />
-                            <Label text={shopItems[hoveredItem].desc} style={styles.tooltipDesc} html={true} />
+                            <Label text={getLocalizedDesc(shopItems[hoveredItem].itemKey)} style={styles.tooltipDesc} html={true} />
                             <Panel style={styles.tooltipPriceRow}>
                                 <Label text={`${shopItems[hoveredItem].price}`} style={styles.tooltipPrice} />
                                 <Label text={` ${shopItems[hoveredItem].currency}`} style={styles.tooltipCurrency} />

@@ -134,14 +134,16 @@ const HeroHUD: FC = () => {
         itemName: string | null;
         tier: number;
         displayName: string;
+        xp: number;
+        xpRequired: number;
     }
     const [artifactSlots, setArtifactSlots] = useState<ArtifactSlotInfo[]>([
-        { itemName: null, tier: 0, displayName: '' },
-        { itemName: null, tier: 0, displayName: '' },
-        { itemName: null, tier: 0, displayName: '' },
-        { itemName: null, tier: 0, displayName: '' },
-        { itemName: null, tier: 0, displayName: '' },
-        { itemName: null, tier: 0, displayName: '' },
+        { itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 },
+        { itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 },
+        { itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 },
+        { itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 },
+        { itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 },
+        { itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 },
     ]);
 
     // 神器悬停提示状态
@@ -156,167 +158,150 @@ const HeroHUD: FC = () => {
         speed: '#AADDFF',    // 浅蓝 — 移速/身法
         allStat: '#FFD700',  // 金色 — 全属性
         armor: '#CCCCCC',    // 银色 — 护甲/破势
+        spell: '#BB77FF',    // 紫色 — 技能伤害
+        finalDmg: '#FF88CC', // 粉色 — 终伤增/减
     };
 
     // 神器信息映射
     const ARTIFACT_INFO: Record<number, {
         name: string;
-        lore: Record<number, string>;  // tier -> 故事描述
         stats: Record<number, { label: string; value: string; color: string }[]>;  // tier -> 属性列表
     }> = {
         0: {
             name: '武器',
-            lore: {
-                0: '蒙尘古剑，剑意未消，似在等待有缘人将其唤醒。',
-                1: '千锤百炼的凡铁之剑，虽非神兵，却能斩妖辟邪。',
-                2: '精钢淬炼，剑锋所指，万邪退避，破甲无双。',
-                3: '玄玉铸剑，剑气冲霄，斩尽天下不平事。',
-                4: '天仙神剑，斩破苍穹，万物臣服于剑意之下。',
-            },
             stats: {
-                0: [{ label: '攻击', value: '+10', color: STAT_COLORS.attack }],
-                1: [{ label: '攻击', value: '+50', color: STAT_COLORS.attack }],
+                0: [{ label: '攻击', value: '+15', color: STAT_COLORS.attack }],
+                1: [{ label: '攻击', value: '+60', color: STAT_COLORS.attack }],
                 2: [
-                    { label: '攻击', value: '+200', color: STAT_COLORS.attack },
+                    { label: '攻击', value: '+300', color: STAT_COLORS.attack },
                     { label: '破势', value: '+10', color: STAT_COLORS.armor },
                 ],
                 3: [
-                    { label: '攻击', value: '+500', color: STAT_COLORS.attack },
-                    { label: '破势', value: '+25', color: STAT_COLORS.armor },
+                    { label: '攻击', value: '+1500', color: STAT_COLORS.attack },
+                    { label: '破势', value: '+40', color: STAT_COLORS.armor },
                 ],
                 4: [
-                    { label: '攻击', value: '+1200', color: STAT_COLORS.attack },
-                    { label: '破势', value: '+50', color: STAT_COLORS.armor },
+                    { label: '攻击', value: '+8000', color: STAT_COLORS.attack },
+                    { label: '破势', value: '+150', color: STAT_COLORS.armor },
+                ],
+                5: [
+                    { label: '攻击', value: '+50000', color: STAT_COLORS.attack },
+                    { label: '破势', value: '+500', color: STAT_COLORS.armor },
                 ],
             },
         },
         1: {
             name: '衣甲',
-            lore: {
-                0: '残破衣甲，余温尚存，仿佛在诉说昔日荣光。',
-                1: '凡铁锻造的甲胄，虽朴实无华，却坚不可摧。',
-                2: '精钢铠甲，刀枪不入，护主周全，固若金汤。',
-                3: '玄玉灵甲，万法不侵，御敌于千里之外。',
-                4: '天仙圣甲，天地护佑，刀枪水火皆不侵。',
-            },
             stats: {
-                0: [{ label: '生命', value: '+100', color: STAT_COLORS.hp }],
-                1: [{ label: '生命', value: '+500', color: STAT_COLORS.hp }],
+                0: [{ label: '根骨', value: '+5', color: STAT_COLORS.hp }],
+                1: [
+                    { label: '根骨', value: '+20', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+2', color: STAT_COLORS.armor },
+                ],
                 2: [
-                    { label: '生命', value: '+3000', color: STAT_COLORS.hp },
-                    { label: '护甲', value: '+10', color: STAT_COLORS.armor },
+                    { label: '根骨', value: '+100', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+8', color: STAT_COLORS.armor },
                 ],
                 3: [
-                    { label: '生命', value: '+8000', color: STAT_COLORS.hp },
-                    { label: '护甲', value: '+25', color: STAT_COLORS.armor },
+                    { label: '根骨', value: '+500', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+20', color: STAT_COLORS.armor },
                 ],
                 4: [
-                    { label: '生命', value: '+20000', color: STAT_COLORS.hp },
-                    { label: '护甲', value: '+50', color: STAT_COLORS.armor },
+                    { label: '根骨', value: '+3000', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+40', color: STAT_COLORS.armor },
+                ],
+                5: [
+                    { label: '根骨', value: '+20000', color: STAT_COLORS.hp },
+                    { label: '护甲', value: '+60', color: STAT_COLORS.armor },
                 ],
             },
         },
         2: {
             name: '头冠',
-            lore: {
-                0: '灵光黯淡的法冠，静待有缘人唤醒其中神念。',
-                1: '凡铁所铸法冠，灵力流转其间，增强神念感知。',
-                2: '精钢法冠，灵力涌动，心神澄明，法力不竭。',
-                3: '玄玉神冠，通天彻地，法力无边，万灵俯首。',
-                4: '天仙灵冠，洞悉天机，神念覆盖三千世界。',
-            },
             stats: {
-                0: [{ label: '神念', value: '+2', color: STAT_COLORS.divinity }],
-                1: [{ label: '神念', value: '+10', color: STAT_COLORS.divinity }],
+                0: [
+                    { label: '技伤', value: '+2%', color: STAT_COLORS.spell },
+                    { label: '格挡', value: '+10', color: STAT_COLORS.armor },
+                ],
+                1: [
+                    { label: '技伤', value: '+10%', color: STAT_COLORS.spell },
+                    { label: '格挡', value: '+30', color: STAT_COLORS.armor },
+                ],
                 2: [
-                    { label: '神念', value: '+50', color: STAT_COLORS.divinity },
-                    { label: '回蓝', value: '+5', color: STAT_COLORS.divinity },
+                    { label: '技伤', value: '+25%', color: STAT_COLORS.spell },
+                    { label: '格挡', value: '+80', color: STAT_COLORS.armor },
                 ],
                 3: [
-                    { label: '神念', value: '+120', color: STAT_COLORS.divinity },
-                    { label: '回蓝', value: '+12', color: STAT_COLORS.divinity },
+                    { label: '技伤', value: '+50%', color: STAT_COLORS.spell },
+                    { label: '减伤', value: '+5%', color: STAT_COLORS.finalDmg },
                 ],
                 4: [
-                    { label: '神念', value: '+300', color: STAT_COLORS.divinity },
-                    { label: '回蓝', value: '+25', color: STAT_COLORS.divinity },
+                    { label: '技伤', value: '+100%', color: STAT_COLORS.spell },
+                    { label: '减伤', value: '+10%', color: STAT_COLORS.finalDmg },
+                ],
+                5: [
+                    { label: '技伤', value: '+200%', color: STAT_COLORS.spell },
+                    { label: '减伤', value: '+20%', color: STAT_COLORS.finalDmg },
                 ],
             },
         },
         3: {
             name: '饰品',
-            lore: {
-                0: '蒙尘法戒，杀意犹存，隐隐散发凌厉之气。',
-                1: '凡铁精工之戒，佩戴者出手必中要害。',
-                2: '精钢法戒，会心四溢，一击致命，摧枯拉朽。',
-                3: '玄玉灵戒，一击必杀，天地为之变色。',
-                4: '天仙神戒，触之即灭，天道亦为之颤抖。',
-            },
             stats: {
                 0: [{ label: '暴击', value: '+2%', color: STAT_COLORS.crit }],
                 1: [{ label: '暴击', value: '+5%', color: STAT_COLORS.crit }],
-                2: [
-                    { label: '暴击', value: '+10%', color: STAT_COLORS.crit },
-                    { label: '爆伤', value: '+20%', color: STAT_COLORS.crit },
-                ],
+                2: [{ label: '暴击', value: '+10%', color: STAT_COLORS.crit }],
                 3: [
-                    { label: '暴击', value: '+18%', color: STAT_COLORS.crit },
-                    { label: '爆伤', value: '+40%', color: STAT_COLORS.crit },
+                    { label: '暴击', value: '+15%', color: STAT_COLORS.crit },
+                    { label: '爆伤', value: '+30%', color: STAT_COLORS.crit },
                 ],
                 4: [
-                    { label: '暴击', value: '+30%', color: STAT_COLORS.crit },
+                    { label: '暴击', value: '+20%', color: STAT_COLORS.crit },
                     { label: '爆伤', value: '+80%', color: STAT_COLORS.crit },
+                ],
+                5: [
+                    { label: '暴击', value: '+25%', color: STAT_COLORS.crit },
+                    { label: '爆伤', value: '+200%', color: STAT_COLORS.crit },
                 ],
             },
         },
         4: {
             name: '鞋履',
-            lore: {
-                0: '千里之行，始于足下，此靴似曾踏遍山河。',
-                1: '凡铁轻靴，履之如风，步若疾风追月。',
-                2: '精钢战靴，闪避自如，来去无踪，步法通神。',
-                3: '玄玉神行靴，缩地成寸，天地之间任我行。',
-                4: '天仙步云靴，踏虚御风，来去自如超脱尘世。',
-            },
             stats: {
-                0: [{ label: '移速', value: '+10', color: STAT_COLORS.speed }],
-                1: [{ label: '移速', value: '+30', color: STAT_COLORS.speed }],
-                2: [
-                    { label: '移速', value: '+50', color: STAT_COLORS.speed },
+                0: [{ label: '身法', value: '+5', color: STAT_COLORS.speed }],
+                1: [{ label: '身法', value: '+15', color: STAT_COLORS.speed }],
+                2: [{ label: '身法', value: '+80', color: STAT_COLORS.speed }],
+                3: [
+                    { label: '身法', value: '+300', color: STAT_COLORS.speed },
                     { label: '闪避', value: '+5%', color: STAT_COLORS.speed },
                 ],
-                3: [
-                    { label: '移速', value: '+80', color: STAT_COLORS.speed },
-                    { label: '闪避', value: '+10%', color: STAT_COLORS.speed },
-                ],
                 4: [
-                    { label: '移速', value: '+120', color: STAT_COLORS.speed },
-                    { label: '闪避', value: '+18%', color: STAT_COLORS.speed },
+                    { label: '身法', value: '+2000', color: STAT_COLORS.speed },
+                    { label: '闪避', value: '+15%', color: STAT_COLORS.speed },
+                ],
+                5: [
+                    { label: '身法', value: '+10000', color: STAT_COLORS.speed },
+                    { label: '闪避', value: '+25%', color: STAT_COLORS.speed },
                 ],
             },
         },
         5: {
             name: '护符',
-            lore: {
-                0: '古旧符令，隐藏万法归一之力。',
-                1: '凡铁铸令，四维增益，万法归宗。',
-                2: '精钢符令，全属提升，减伤护体，攻守兼备。',
-                3: '玄玉符令，天地共鸣，万法归一，攻守无双。',
-                4: '天仙法令，号令万灵，天地归心，无上至尊。',
-            },
             stats: {
                 0: [{ label: '全属性', value: '+2', color: STAT_COLORS.allStat }],
-                1: [{ label: '全属性', value: '+5', color: STAT_COLORS.allStat }],
-                2: [
-                    { label: '全属性', value: '+20', color: STAT_COLORS.allStat },
-                    { label: '减伤', value: '+2%', color: STAT_COLORS.allStat },
-                ],
+                1: [{ label: '全属性', value: '+10', color: STAT_COLORS.allStat }],
+                2: [{ label: '全属性', value: '+40', color: STAT_COLORS.allStat }],
                 3: [
-                    { label: '全属性', value: '+50', color: STAT_COLORS.allStat },
-                    { label: '减伤', value: '+5%', color: STAT_COLORS.allStat },
+                    { label: '全属性', value: '+150', color: STAT_COLORS.allStat },
+                    { label: '终伤增', value: '+2%', color: STAT_COLORS.finalDmg },
                 ],
                 4: [
-                    { label: '全属性', value: '+100', color: STAT_COLORS.allStat },
-                    { label: '减伤', value: '+10%', color: STAT_COLORS.allStat },
+                    { label: '全属性', value: '+1000', color: STAT_COLORS.allStat },
+                    { label: '终伤增', value: '+5%', color: STAT_COLORS.finalDmg },
+                ],
+                5: [
+                    { label: '全属性', value: '+5000', color: STAT_COLORS.allStat },
+                    { label: '终伤增', value: '+10%', color: STAT_COLORS.finalDmg },
                 ],
             },
         },
@@ -481,9 +466,11 @@ const HeroHUD: FC = () => {
                         itemName: slot.itemName || null,
                         tier: slot.tier || 0,
                         displayName: slot.displayName || '',
+                        xp: slot.xp || 0,
+                        xpRequired: slot.xpRequired || 100,
                     });
                 } else {
-                    newSlots.push({ itemName: null, tier: 0, displayName: '' });
+                    newSlots.push({ itemName: null, tier: 0, displayName: '', xp: 0, xpRequired: 100 });
                 }
             }
             $.Msg(`[HeroHUD] 更新神器槽位: ${JSON.stringify(newSlots)}`);
@@ -1510,6 +1497,13 @@ const HeroHUD: FC = () => {
                                             }}
                                         />
                                     )}
+                                    {/* 经验值标签 - 蒙尘不显示 */}
+                                    {slot.tier > 0 && (
+                                        <Label
+                                            className="ArtifactXpLabel"
+                                            text={`${Math.min(Math.floor(((slot.xp || 0) / (slot.xpRequired || 100)) * 100), 100)}`}
+                                        />
+                                    )}
                                 </Panel>
                             );
                         })}
@@ -1591,6 +1585,13 @@ const HeroHUD: FC = () => {
                                             }}
                                         />
                                     )}
+                                    {/* 经验值标签 - 蒙尘不显示 */}
+                                    {slot.tier > 0 && (
+                                        <Label
+                                            className="ArtifactXpLabel"
+                                            text={`${Math.min(Math.floor(((slot.xp || 0) / (slot.xpRequired || 100)) * 100), 100)}`}
+                                        />
+                                    )}
                                 </Panel>
                             );
                         })}
@@ -1612,10 +1613,16 @@ const HeroHUD: FC = () => {
                         flowChildren: 'down' as const,
                     }}
                 >
-                    {/* 标题 - 神器名称 (从 NetTable 的 displayName 读取) */}
+                    {/* 标题 - 神器名称 (通过本地化 token 显示中文) */}
                     <Label
-                        text={artifactSlots[hoveredArtifact.slotIndex].displayName
-                            || ARTIFACT_INFO[hoveredArtifact.slotIndex].name}
+                        text={(() => {
+                            const dn = artifactSlots[hoveredArtifact.slotIndex].displayName;
+                            if (dn && dn.startsWith('#')) {
+                                const localized = $.Localize(dn);
+                                if (localized && localized !== dn) return localized;
+                            }
+                            return dn || ARTIFACT_INFO[hoveredArtifact.slotIndex].name;
+                        })()}
                         style={{
                             color: (() => {
                                 const t = artifactSlots[hoveredArtifact.slotIndex].tier;
@@ -1653,12 +1660,13 @@ const HeroHUD: FC = () => {
                         marginBottom: '6px',
                         opacity: '0.6',
                     }} />
-                    {/* 故事描述 */}
+                    {/* 故事描述 - 从本地化获取 */}
                     <Label
                         text={(() => {
-                            const tier = artifactSlots[hoveredArtifact.slotIndex].tier;
-                            const info = ARTIFACT_INFO[hoveredArtifact.slotIndex];
-                            return info.lore[tier] || info.lore[0];
+                            const itemName = artifactSlots[hoveredArtifact.slotIndex].itemName;
+                            const token = `#ItemDesc_${itemName}`;
+                            const localized = $.Localize(token);
+                            return (localized && localized !== token) ? localized : '';
                         })()}
                         style={{
                             color: '#c8b896',

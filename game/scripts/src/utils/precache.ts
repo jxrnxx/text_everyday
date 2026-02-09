@@ -82,7 +82,7 @@ export default function Precache(context: CScriptPrecacheContext) {
     precacheUnits(
         [
             // 单位名称
-            'npc_enemy_zombie_lvl1', // 练功房怪物
+            'npc_creep_train_tier1', // 练功房怪物
         ],
         context
     );

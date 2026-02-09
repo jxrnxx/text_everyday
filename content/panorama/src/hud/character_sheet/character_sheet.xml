@@ -171,7 +171,7 @@
                         </Panel>
                         <Panel class="StatRow">
                             <Label class="StatLabel" text="爆伤" />
-                            <Label id="Val_CritDamage" class="StatValue" text="150%" />
+                            <Label id="Val_CritDamage" class="StatValue" text="105%" />
                         </Panel>
                         <Panel class="StatRow">
                             <Label class="StatLabel" text="破势" />
@@ -180,6 +180,26 @@
                         <Panel class="StatRow">
                             <Label class="StatLabel" text="回血" />
                             <Label id="Val_LifeOnHit" class="StatValue Green" text="0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="技伤%" />
+                            <Label id="Val_SpellDamage" class="StatValue" text="0%" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="格挡" />
+                            <Label id="Val_Block" class="StatValue" text="0" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="终伤增%" />
+                            <Label id="Val_FinalDmgIncrease" class="StatValue Gold" text="0%" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="终伤减%" />
+                            <Label id="Val_FinalDmgReduct" class="StatValue Green" text="0%" />
+                        </Panel>
+                        <Panel class="StatRow">
+                            <Label class="StatLabel" text="闪避%" />
+                            <Label id="Val_Evasion" class="StatValue" text="0%" />
                         </Panel>
                         <Panel class="Divider" />
                         
@@ -234,6 +254,13 @@
                         <Label id="Debug_AtkSpeed" class="FormulaLabel" text="攻速: 100+身法面板+商店攻速" />
                         <Label id="Debug_MoveSpeed" class="FormulaLabel" text="移速: 基础+身法×0.4+商店" />
                         <Label id="Debug_HP" class="FormulaLabel" text="生命: 根骨面板×50" />
+                        <Panel class="Divider" />
+                        <Label id="Debug_CritChance" class="FormulaLabel" text="会心: (base+神器)×(1+bonus)" />
+                        <Label id="Debug_CritDamage" class="FormulaLabel" text="爆伤: (base+神器)×(1+bonus)" />
+                        <Label id="Debug_SpellDmg" class="FormulaLabel" text="技伤: (base+神器)×(1+bonus)" />
+                        <Label id="Debug_FinalDmgInc" class="FormulaLabel" text="终伤增: (base+神器)×(1+bonus)" />
+                        <Label id="Debug_FinalDmgRed" class="FormulaLabel" text="终伤减: (base+神器)×(1+bonus)" />
+                        <Label id="Debug_Evasion" class="FormulaLabel" text="闪避: (base+神器)×(1+bonus)" />
                     </Panel>
 
                 </Panel>

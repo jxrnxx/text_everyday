@@ -108,6 +108,65 @@ const DebugCallbacks: Record<string, { desc: string; func: DebugCallbackFunction
             }
         },
     },
+    ['-zhuangbeilevel']: {
+        desc: '给所有装备加经验: -zhuangbeilevel 100',
+        func: (hero, ...args: string[]) => {
+            const playerId = hero.GetPlayerID();
+            const xpAmount = tonumber(args[0]) || 100;
+            for (let i = 0; i < 6; i++) {
+                ArtifactSystem.GetInstance().AddArtifactXP(playerId, i, xpAmount, hero);
+            }
+            Say(hero, `所有装备 +${xpAmount} 经验`, false);
+        },
+    },
+    ['-zhuangbei1']: {
+        desc: '给武器加经验: -zhuangbei1 100',
+        func: (hero, ...args: string[]) => {
+            const xp = tonumber(args[0]) || 100;
+            ArtifactSystem.GetInstance().AddArtifactXP(hero.GetPlayerID(), 0, xp, hero);
+            Say(hero, `武器 +${xp} 经验`, false);
+        },
+    },
+    ['-zhuangbei2']: {
+        desc: '给护甲加经验: -zhuangbei2 100',
+        func: (hero, ...args: string[]) => {
+            const xp = tonumber(args[0]) || 100;
+            ArtifactSystem.GetInstance().AddArtifactXP(hero.GetPlayerID(), 1, xp, hero);
+            Say(hero, `护甲 +${xp} 经验`, false);
+        },
+    },
+    ['-zhuangbei3']: {
+        desc: '给头冠加经验: -zhuangbei3 100',
+        func: (hero, ...args: string[]) => {
+            const xp = tonumber(args[0]) || 100;
+            ArtifactSystem.GetInstance().AddArtifactXP(hero.GetPlayerID(), 2, xp, hero);
+            Say(hero, `头冠 +${xp} 经验`, false);
+        },
+    },
+    ['-zhuangbei4']: {
+        desc: '给饰品加经验: -zhuangbei4 100',
+        func: (hero, ...args: string[]) => {
+            const xp = tonumber(args[0]) || 100;
+            ArtifactSystem.GetInstance().AddArtifactXP(hero.GetPlayerID(), 3, xp, hero);
+            Say(hero, `饰品 +${xp} 经验`, false);
+        },
+    },
+    ['-zhuangbei5']: {
+        desc: '给靴子加经验: -zhuangbei5 100',
+        func: (hero, ...args: string[]) => {
+            const xp = tonumber(args[0]) || 100;
+            ArtifactSystem.GetInstance().AddArtifactXP(hero.GetPlayerID(), 4, xp, hero);
+            Say(hero, `靴子 +${xp} 经验`, false);
+        },
+    },
+    ['-zhuangbei6']: {
+        desc: '给护符加经验: -zhuangbei6 100',
+        func: (hero, ...args: string[]) => {
+            const xp = tonumber(args[0]) || 100;
+            ArtifactSystem.GetInstance().AddArtifactXP(hero.GetPlayerID(), 5, xp, hero);
+            Say(hero, `护符 +${xp} 经验`, false);
+        },
+    },
 };
 
 @reloadable
