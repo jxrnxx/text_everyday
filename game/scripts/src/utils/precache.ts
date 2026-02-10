@@ -65,6 +65,10 @@ export default function Precache(context: CScriptPrecacheContext) {
             'particles/artifact_upgrade_t4.vpcf',
             'particles/artifact_upgrade_t5.vpcf',
 
+            // NPC Overhead Nameplate
+            'particles/npc_overhead_nameplate.vpcf',
+            'particles/npc_overhead_nameplate_ability.vpcf',
+
             // Sound Events
             'soundevents/custom_game/custom_soundevents.vsndevts',
         ],

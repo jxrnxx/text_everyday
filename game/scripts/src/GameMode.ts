@@ -12,6 +12,7 @@ import { ZoneManager } from './systems/ZoneManager';
 import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
 import './modifiers/modifier_artifact_bonus';
+import './modifiers/modifier_merchant_display';
 import './items/item_buy_stats';
 import './abilities/soldier_war_strike';
 import './abilities/ability_public_martial_cleave';
