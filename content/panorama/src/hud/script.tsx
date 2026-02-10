@@ -17,6 +17,7 @@ import EnemyPanel from './EnemyPanel';
 // import { KnapsackPanel } from './KnapsackPanel'; // 已废弃
 import { DefaultBackpackPanel } from './DefaultBackpackPanel';
 import ZoneNotification from './ZoneNotification';
+import NPCOverheadManager from './NPCOverhead';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
 const Root: FC = () => {
@@ -33,6 +34,7 @@ const Root: FC = () => {
             {/* KnapsackPanel 已废弃，使用 DefaultBackpackPanel 替代 */}
             <DefaultBackpackPanel />
             <ZoneNotification />
+            <NPCOverheadManager />
         </>
     );
 };

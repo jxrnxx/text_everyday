@@ -4,6 +4,7 @@
 // SourceCode: https://github.com/XavierCHN/gulp-dotax/blob/master/src/sheetToKV.ts
 // Template: https://github.com/XavierCHN/x-template
 #base "npc_items_artifacts.txt"
+#base "npc_items_artifacts.txt"
 "DOTAItems"
 {
 	"item_buy_constitution" {
