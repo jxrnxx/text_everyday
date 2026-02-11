@@ -38,8 +38,26 @@ interface HeroStats {
     display_level: number; // 显示等级 (由服务端控制)
     custom_exp: number; // 自定义经验值 (绕过Dota2的30级限制)
     custom_exp_required: number; // 升级所需经验
-    crit_chance: number;
-    crit_damage: number;
+    // ===== 战斗属性 (base × (1 + bonus) 公式) =====
+    crit_chance_base: number; // 基础会心
+    crit_chance_bonus: number; // 会心加成
+    crit_chance: number; // 最终会心 (计算后)
+    crit_damage_base: number; // 基础爆伤
+    crit_damage_bonus: number; // 爆伤加成
+    crit_damage: number; // 最终爆伤 (计算后)
+    spell_damage_base: number; // 基础技伤
+    spell_damage_bonus: number; // 技伤加成
+    spell_damage: number; // 最终技伤% (计算后)
+    final_dmg_increase_base: number; // 基础终伤增
+    final_dmg_increase_bonus: number; // 终伤增加成
+    final_dmg_increase: number; // 最终终伤增% (计算后)
+    final_dmg_reduct_base: number; // 基础终伤减
+    final_dmg_reduct_bonus: number; // 终伤减加成
+    final_dmg_reduct: number; // 最终终伤减% (计算后)
+    evasion_base: number; // 基础闪避
+    evasion_bonus: number; // 闪避加成
+    evasion: number; // 最终闪避% (计算后)
+
     main_stat: string; // 主属性: 'Martial' 或 'Divinity'
     profession?: string;
 
@@ -60,6 +78,7 @@ interface HeroStats {
     base_move_speed: number; // 基础移速（从配置读取）
     life_on_hit_base: number; // 基础攻击回血（从配置读取）
     life_on_hit: number; // 攻击回血面板值 = 基础 + 额外
+    block: number; // 格挡(减伤)
 }
 
 const DEFAULT_STATS: HeroStats = {
@@ -88,8 +107,25 @@ const DEFAULT_STATS: HeroStats = {
     display_level: 1,
     custom_exp: 0,
     custom_exp_required: 230,
+    // 战斗属性
+    crit_chance_base: 0,
+    crit_chance_bonus: 0,
     crit_chance: 0,
-    crit_damage: 150,
+    crit_damage_base: 105,
+    crit_damage_bonus: 0,
+    crit_damage: 105,
+    spell_damage_base: 0,
+    spell_damage_bonus: 0,
+    spell_damage: 0,
+    final_dmg_increase_base: 0,
+    final_dmg_increase_bonus: 0,
+    final_dmg_increase: 0,
+    final_dmg_reduct_base: 0,
+    final_dmg_reduct_bonus: 0,
+    final_dmg_reduct: 0,
+    evasion_base: 0,
+    evasion_bonus: 0,
+    evasion: 0,
     main_stat: 'Martial',
     // 额外属性
     extra_constitution: 0,
@@ -108,6 +144,7 @@ const DEFAULT_STATS: HeroStats = {
     base_move_speed: 300,
     life_on_hit_base: 0,
     life_on_hit: 0,
+    block: 0,
 };
 
 @reloadable
@@ -160,6 +197,19 @@ export class CustomStats {
         const baseMoveSpeed = Number(heroConfig.MovementSpeed) || 300;
         // 基础攻击回血
         const lifeOnHitBase = Number(heroConfig.LifeOnHit) || 0;
+        // 战斗属性 (base + bonus)
+        const critChanceBase = Number(heroConfig.AttributeBaseCritChance) || 0;
+        const critChanceBonus = Number(heroConfig.AttributeCritChanceBonus) || 0;
+        const critDamageBase = Number(heroConfig.AttributeBaseCritDamage) || 105;
+        const critDamageBonus = Number(heroConfig.AttributeCritDamageBonus) || 0;
+        const spellDamageBase = Number(heroConfig.AttributeBaseSpellDamage) || 0;
+        const spellDamageBonus = Number(heroConfig.AttributeSpellDamageBonus) || 0;
+        const finalDmgIncBase = Number(heroConfig.AttributeBaseFinalDmgIncrease) || 0;
+        const finalDmgIncBonus = Number(heroConfig.AttributeFinalDmgIncreaseBonus) || 0;
+        const finalDmgRedBase = Number(heroConfig.AttributeBaseFinalDmgReduct) || 0;
+        const finalDmgRedBonus = Number(heroConfig.AttributeFinalDmgReductBonus) || 0;
+        const evasionBase = Number(heroConfig.AttributeBaseEvasion) || 0;
+        const evasionBonus = Number(heroConfig.AttributeEvasionBonus) || 0;
 
         const initialStats: HeroStats = {
             // 基础属性
@@ -187,8 +237,25 @@ export class CustomStats {
             display_level: 1, // 初始显示等级
             custom_exp: 0, // 初始自定义经验
             custom_exp_required: 230, // 1级升2级所需经验
-            crit_chance: 0,
-            crit_damage: 150,
+            // 战斗属性 (从 Excel 读取)
+            crit_chance_base: critChanceBase,
+            crit_chance_bonus: critChanceBonus,
+            crit_chance: Math.floor(critChanceBase * (1 + critChanceBonus)),
+            crit_damage_base: critDamageBase,
+            crit_damage_bonus: critDamageBonus,
+            crit_damage: Math.floor(critDamageBase * (1 + critDamageBonus)),
+            spell_damage_base: spellDamageBase,
+            spell_damage_bonus: spellDamageBonus,
+            spell_damage: Math.floor(spellDamageBase * (1 + spellDamageBonus)),
+            final_dmg_increase_base: finalDmgIncBase,
+            final_dmg_increase_bonus: finalDmgIncBonus,
+            final_dmg_increase: Math.floor(finalDmgIncBase * (1 + finalDmgIncBonus)),
+            final_dmg_reduct_base: finalDmgRedBase,
+            final_dmg_reduct_bonus: finalDmgRedBonus,
+            final_dmg_reduct: Math.floor(finalDmgRedBase * (1 + finalDmgRedBonus)),
+            evasion_base: evasionBase,
+            evasion_bonus: evasionBonus,
+            evasion: Math.floor(evasionBase * (1 + evasionBonus)),
             main_stat: mainStat,
             profession: heroConfig.CustomJob || `#Job_${unitName}`,
             // 额外属性
@@ -208,6 +275,7 @@ export class CustomStats {
             base_move_speed: baseMoveSpeed,
             life_on_hit_base: lifeOnHitBase,
             life_on_hit: lifeOnHitBase, // 初始面板值 = 基础值
+            block: 0,
         };
 
         // 1. Write to CustomValue (Source of Truth)

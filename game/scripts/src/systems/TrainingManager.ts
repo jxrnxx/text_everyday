@@ -16,7 +16,7 @@ export class TrainingManager {
     private playerData: Map<PlayerID, TrainingData> = new Map();
     private spawnTimer: Map<PlayerID, string> = new Map();
 
-    private readonly MONSTER_UNIT_NAME = 'npc_enemy_zombie_lvl1';
+    private readonly MONSTER_UNIT_NAME = 'npc_creep_train_tier1';
     private readonly MERCHANT_UNIT_NAME = 'npc_cultivation_merchant';
     private readonly MAX_MONSTERS_DEFAULT = 5;
 
@@ -266,25 +266,31 @@ export class TrainingManager {
             const hero = PlayerResource.GetSelectedHeroEntity(playerId);
             if (hero) {
                 const heroPos = hero.GetAbsOrigin();
-                const direction = ((heroPos - spawnPos) as Vector).Normalized();
-                merchant.SetForwardVector(direction);
+                const dir = (heroPos - spawnPos) as Vector;
+                const flatDir = Vector(dir.x, dir.y, 0).Normalized();
+                merchant.SetForwardVector(flatDir);
             }
 
-            // Persistent idle animation loop (survives alt-tab)
-            merchant.SetContextThink(
-                'MerchantIdleAnim',
-                () => {
-                    if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
-                        merchant.StartGesture(GameActivity.DOTA_IDLE);
-                        return 3.0; // Refresh animation every 3 seconds
-                    }
-                    return undefined; // Stop if merchant is gone
-                },
-                0
-            );
+            // 重新设置模型以强制动画图重新初始化
+            Timers.CreateTimer(0.1, () => {
+                if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
+                    merchant.SetModel('models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl');
+                }
+                return undefined;
+            });
 
             // Store reference
             data.merchantIndex = merchant.entindex();
+
+            // 隐藏血条、设为无敌
+            merchant.AddNewModifier(merchant, undefined, 'modifier_merchant_display', {});
+
+            // 头顶牌匾粒子特效
+            ParticleManager.CreateParticle(
+                'particles/npc_overhead_nameplate.vpcf',
+                ParticleAttachment.OVERHEAD_FOLLOW,
+                merchant
+            );
         }
     }
 

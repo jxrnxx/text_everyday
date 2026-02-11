@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getItemConfig, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP, isItemUsable, isSkillBook, getSellPrice } from './itemRarityConfig';
+import { getItemConfig, getLocalizedName, getLocalizedDesc, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP, isItemUsable, isSkillBook, getSellPrice } from './itemRarityConfig';
 
 // 预加载标记
 let imagesPreloaded = false;
@@ -1101,9 +1101,19 @@ export function DefaultBackpackPanel() {
     };
 
     // 切换背包可见性
+    const toggleInventoryRef = useRef<() => void>(() => { });
+    toggleInventoryRef.current = () => setIsOpen(prev => !prev);
+
     const toggleInventory = () => {
-        setIsOpen(!isOpen);
+        toggleInventoryRef.current();
     };
+
+    // 暴露 toggle 到全局，供 B 键快捷键调用
+    useEffect(() => {
+        (GameUI as any).ToggleBackpack = () => {
+            toggleInventoryRef.current();
+        };
+    }, []);
 
     // 使用物品
     const handleUseItem = (index: number, storageType: 'public' | 'private') => {
@@ -1434,7 +1444,7 @@ export function DefaultBackpackPanel() {
                     >
                         {/* 物品名称 */}
                         <Label
-                            text={hoveredItem.itemConfig?.displayName || hoveredItem.item.itemName.replace('item_', '').replace(/_/g, ' ')}
+                            text={hoveredItem.itemConfig ? getLocalizedName(hoveredItem.item.itemName) : hoveredItem.item.itemName.replace('item_', '').replace(/_/g, ' ')}
                             style={{
                                 color: hoveredItem.itemConfig ? (rarityColors[hoveredItem.itemConfig.rarity] || '#ffffff') : '#ffffff',
                                 fontSize: '16px',
@@ -1457,7 +1467,7 @@ export function DefaultBackpackPanel() {
                         {/* 描述 */}
                         <Label
                             html={true}
-                            text={hoveredItem.itemConfig?.description || '暂无描述'}
+                            text={hoveredItem.itemConfig ? getLocalizedDesc(hoveredItem.item.itemName) : '暂无描述'}
                             style={{
                                 color: '#cccccc',
                                 fontSize: '13px',

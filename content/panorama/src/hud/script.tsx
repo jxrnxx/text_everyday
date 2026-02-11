@@ -16,6 +16,7 @@ import HeroHUD from './HeroHUD';
 import EnemyPanel from './EnemyPanel';
 // import { KnapsackPanel } from './KnapsackPanel'; // 已废弃
 import { DefaultBackpackPanel } from './DefaultBackpackPanel';
+import ZoneNotification from './ZoneNotification';
 import { closeCurrentPanel, isAnyPanelOpen } from './PanelManager';
 
 const Root: FC = () => {
@@ -31,6 +32,7 @@ const Root: FC = () => {
             <EnemyPanel />
             {/* KnapsackPanel 已废弃，使用 DefaultBackpackPanel 替代 */}
             <DefaultBackpackPanel />
+            <ZoneNotification />
         </>
     );
 };
@@ -95,13 +97,34 @@ Game.AddCommand(cmdDashName, () => {
 // 绑定 D 键到冲刺命令
 Game.CreateCustomKeyBind('D', cmdDashName);
 
-// ===== Knapsack Toggle Keybind (B Key) =====
-const cmdKnapsackName = 'cmd_knapsack_' + Math.floor(Math.random() * 10000);
+// ===== Backpack Toggle Keybind (Tab Key) =====
+const cmdBackpackName = 'cmd_backpack_' + Math.floor(Math.random() * 10000);
 
-Game.AddCommand(cmdKnapsackName, () => {
-    if ((GameUI as any).ToggleKnapsack) {
-        (GameUI as any).ToggleKnapsack();
+Game.AddCommand(cmdBackpackName, () => {
+    if ((GameUI as any).ToggleBackpack) {
+        (GameUI as any).ToggleBackpack();
     }
 }, '', 0);
 
-Game.CreateCustomKeyBind('B', cmdKnapsackName);
+Game.CreateCustomKeyBind('TAB', cmdBackpackName);
+
+// ===== 滚轮调整镜头Z轴高度 =====
+// 用于在高海拔地形区域（如3000px高度差）查看地图
+let cameraHeightOffset = 0; // 当前镜头高度偏移
+const CAMERA_HEIGHT_STEP = 150; // 每次滚轮滚动的高度变化量
+const CAMERA_HEIGHT_MIN = -500; // 最低偏移（向下看）
+const CAMERA_HEIGHT_MAX = 4000; // 最高偏移（向上看，足以看清3000px高度的区域）
+
+GameUI.SetMouseCallback((event, value) => {
+    // 只处理滚轮事件
+    if (event === 'wheeled') {
+        const direction = value as MouseScrollDirection;
+        // 滚轮向上 (1) = 镜头升高, 滚轮向下 (-1) = 镜头降低
+        cameraHeightOffset += direction * CAMERA_HEIGHT_STEP;
+        // 限制范围
+        cameraHeightOffset = Math.max(CAMERA_HEIGHT_MIN, Math.min(CAMERA_HEIGHT_MAX, cameraHeightOffset));
+        GameUI.SetCameraLookAtPositionHeightOffset(cameraHeightOffset);
+        return true; // 消费事件，不传递给引擎
+    }
+    return false; // 其它鼠标事件正常传递
+});

@@ -131,16 +131,26 @@ export class RankSystem {
         const newRank = currentRank + 1;
         CustomStats.AddStat(hero, 'rank', 1);
 
-        // 3. Play Sound
-        EmitSoundOn('Hero_Juggernaut.OmniSlash.Arcana', hero);
+        // 3. 进阶音效 (金属铸造感)
+        EmitSoundOn('DOTA_Item.Refresher.Activate', hero);
 
-        // 4. Visual Effect
-        const particle = ParticleManager.CreateParticle(
-            'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_v2_trigger.vpcf',
+        // 4. 进阶特效
+        const particleBurst = ParticleManager.CreateParticle(
+            'particles/items_fx/aegis_respawn.vpcf',
             ParticleAttachment.ABSORIGIN_FOLLOW,
             hero
         );
-        ParticleManager.ReleaseParticleIndex(particle);
+        ParticleManager.ReleaseParticleIndex(particleBurst);
+
+        const particleShimmer = ParticleManager.CreateParticle(
+            'particles/generic_gameplay/rune_haste_owner.vpcf',
+            ParticleAttachment.ABSORIGIN_FOLLOW,
+            hero
+        );
+        Timers.CreateTimer(2.0, () => {
+            ParticleManager.DestroyParticle(particleShimmer, false);
+            ParticleManager.ReleaseParticleIndex(particleShimmer);
+        });
 
         // 5. Log and notify
         const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
@@ -191,23 +201,26 @@ export class RankSystem {
             CustomStats.ResetCustomExp(hero);
         }
 
-        // 播放特效
-        EmitSoundOn('Hero_Juggernaut.OmniSlash.Arcana', hero);
-        const particle = ParticleManager.CreateParticle(
-            'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_v2_trigger.vpcf',
+        // 播放进阶特效
+        EmitSoundOn('DOTA_Item.Refresher.Activate', hero);
+
+        const particleBurst = ParticleManager.CreateParticle(
+            'particles/items_fx/aegis_respawn.vpcf',
             ParticleAttachment.ABSORIGIN_FOLLOW,
             hero
         );
-        ParticleManager.ReleaseParticleIndex(particle);
+        ParticleManager.ReleaseParticleIndex(particleBurst);
 
-        const RANK_NAMES: { [key: number]: string } = {
-            0: '凡胎',
-            1: '觉醒',
-            2: '宗师',
-            3: '半神',
-            4: '神话',
-            5: '禁忌',
-        };
+        const particleShimmer = ParticleManager.CreateParticle(
+            'particles/generic_gameplay/rune_haste_owner.vpcf',
+            ParticleAttachment.ABSORIGIN_FOLLOW,
+            hero
+        );
+        Timers.CreateTimer(2.0, () => {
+            ParticleManager.DestroyParticle(particleShimmer, false);
+            ParticleManager.ReleaseParticleIndex(particleShimmer);
+        });
+
         const rankName = RANK_NAMES[newRank] || `境界${newRank}`;
 
         this.SendResult(player, true, newRank, `晋升${rankName}`);

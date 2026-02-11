@@ -11,6 +11,8 @@ import { InitGameStateManager, GetGameStateManager } from './systems/state_manag
 import { ZoneManager } from './systems/ZoneManager';
 import './enhance'; // CDOTA_BaseNPC 扩展方法 + 全局工具函数 + CDOTAPlayerController 扩展
 import './modifiers/modifier_custom_stats_handler';
+import './modifiers/modifier_artifact_bonus';
+import './modifiers/modifier_merchant_display';
 import './items/item_buy_stats';
 import './abilities/soldier_war_strike';
 import './abilities/ability_public_martial_cleave';
@@ -101,6 +103,13 @@ export class GameMode {
             knapsackSystem;
             print('[GameMode] KnapsackSystem 已初始化');
         } catch (e) { }
+
+        // [Zone] 延迟初始化域守卫 (等待地图实体加载完成)
+        Timers.CreateTimer(5, () => {
+            print('[GameMode] 开始初始化域守卫系统...');
+            ZoneManager.GetInstance().Initialize();
+            return undefined;
+        });
 
         // [Level] 监听英雄升级事件，更新显示等级
         ListenToGameEvent(
@@ -574,6 +583,14 @@ export class GameMode {
             }
         });
 
+        // 监听状态机的 '游戏-开始' 事件 (PlayingState.OnStart 触发)
+        Event.on('游戏-开始', () => {
+            if (!this.isGameStarted) {
+                print('[GameMode] 收到 游戏-开始 事件，启动游戏...');
+                this.StartGame();
+            }
+        });
+
         // 如果是重新加载脚本 (游戏已经在进行中)，则自动执行一次软重启以应用新逻辑
         if (GameRules.State_Get() >= 4) {
             // 4 = DOTA_GAMERULES_STATE_PRE_GAME
@@ -788,7 +805,7 @@ export class GameMode {
                 if (spawner) {
                     const spawnerPos = spawner.GetAbsOrigin();
                     CreateUnitByNameAsync(
-                        'npc_enemy_zombie_lvl1',
+                        'npc_creep_train_tier1',
                         spawnerPos,
                         true,
                         undefined,

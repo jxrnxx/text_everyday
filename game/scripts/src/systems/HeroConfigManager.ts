@@ -66,6 +66,20 @@ export interface HeroConfig {
     StatusMana?: number;
     StatusHealthRegen?: number;
     StatusManaRegen?: number;
+
+    // 战斗属性 (base + bonus)
+    AttributeBaseCritChance?: number;
+    AttributeCritChanceBonus?: number;
+    AttributeBaseCritDamage?: number;
+    AttributeCritDamageBonus?: number;
+    AttributeBaseSpellDamage?: number;
+    AttributeSpellDamageBonus?: number;
+    AttributeBaseFinalDmgIncrease?: number;
+    AttributeFinalDmgIncreaseBonus?: number;
+    AttributeBaseFinalDmgReduct?: number;
+    AttributeFinalDmgReductBonus?: number;
+    AttributeBaseEvasion?: number;
+    AttributeEvasionBonus?: number;
 }
 
 /** 可用英雄列表 */
@@ -186,6 +200,19 @@ export class HeroConfigManager {
             MovementSpeed: 300,
             LifeOnHit: 0,
             CustomMainStat: 'Martial',
+            // 战斗属性
+            AttributeBaseCritChance: 0,
+            AttributeCritChanceBonus: 0,
+            AttributeBaseCritDamage: 105,
+            AttributeCritDamageBonus: 0,
+            AttributeBaseSpellDamage: 0,
+            AttributeSpellDamageBonus: 0,
+            AttributeBaseFinalDmgIncrease: 0,
+            AttributeFinalDmgIncreaseBonus: 0,
+            AttributeBaseFinalDmgReduct: 0,
+            AttributeFinalDmgReductBonus: 0,
+            AttributeBaseEvasion: 0,
+            AttributeEvasionBonus: 0,
         };
     }
 }

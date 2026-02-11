@@ -82,15 +82,42 @@ export class DamageSystem {
         }
 
         // 应用伤害倍率
-        const finalDamage = event.damage * damageMultiplier;
+        let finalDamage = event.damage * damageMultiplier;
+
+        // 3. 终伤增% (攻击者) — 从神器修饰器读取
+        const attackerArtifactMod = attacker.FindModifierByName('modifier_artifact_bonus') as any;
+        if (attackerArtifactMod && attackerArtifactMod.GetBonusFinalDmgIncrease) {
+            const finalDmgIncrease = attackerArtifactMod.GetBonusFinalDmgIncrease();
+            if (finalDmgIncrease > 0) {
+                finalDamage *= 1 + finalDmgIncrease / 100;
+            }
+        }
+
+        // 4. 终伤减% (受害者) — 从神器修饰器读取
+        const victimArtifactMod = victim.FindModifierByName('modifier_artifact_bonus') as any;
+        if (victimArtifactMod && victimArtifactMod.GetBonusFinalDmgReduct) {
+            const finalDmgReduct = victimArtifactMod.GetBonusFinalDmgReduct();
+            if (finalDmgReduct > 0) {
+                finalDamage /= 1 + finalDmgReduct / 100;
+            }
+        }
+
+        // 5. 格挡 (受害者) — 固定减伤
+        if (victimArtifactMod && victimArtifactMod.GetBonusBlock) {
+            const block = victimArtifactMod.GetBonusBlock();
+            if (block > 0) {
+                finalDamage = Math.max(1, finalDamage - block);
+            }
+        }
+
         event.damage = finalDamage;
 
-        // 3. 吸血处理
+        // 6. 吸血处理
         if (stats.lifesteal > 0 && finalDamage > 0) {
             this.HandleLifesteal(attacker, finalDamage, stats.lifesteal);
         }
 
-        // 4. 攻击回血 - 仅普通攻击（物理伤害）
+        // 7. 攻击回血 - 仅普通攻击（物理伤害）
         if (event.damagetype_const === DamageTypes.PHYSICAL && stats.life_on_hit > 0) {
             this.HandleLifeOnHit(attacker, stats.life_on_hit);
         }

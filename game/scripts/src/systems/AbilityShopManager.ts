@@ -99,26 +99,32 @@ export class AbilityShopManager {
             const centerPoint = Entities.FindByName(undefined, 'start_player_1');
             if (centerPoint) {
                 const centerPos = centerPoint.GetAbsOrigin();
-                const direction = ((centerPos - spawnPos) as Vector).Normalized();
-                // 反转方向，旋转180度
-                merchant.SetForwardVector(Vector(-direction.x, -direction.y, direction.z));
+                const dir = (centerPos - spawnPos) as Vector;
+                // 反转方向，旋转180度，Z归零保持直立
+                const flatDir = Vector(-dir.x, -dir.y, 0).Normalized();
+                merchant.SetForwardVector(flatDir);
             }
 
-            // 持续播放空闲动画
-            merchant.SetContextThink(
-                'AbilityMerchantIdleAnim',
-                () => {
-                    if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
-                        merchant.StartGesture(GameActivity.DOTA_IDLE);
-                        return 3.0;
-                    }
-                    return undefined;
-                },
-                0
-            );
+            // 重新设置模型以强制动画图重新初始化
+            Timers.CreateTimer(0.1, () => {
+                if (merchant && !merchant.IsNull() && merchant.IsAlive()) {
+                    merchant.SetModel('models/heroes/shopkeeper/shopkeeper.vmdl');
+                }
+                return undefined;
+            });
 
             // 保存引用
             this.merchantEntities.set(index, merchant.entindex());
+
+            // 隐藏血条、设为无敌
+            merchant.AddNewModifier(merchant, undefined, 'modifier_merchant_display', {});
+
+            // 头顶牌匾粒子特效
+            ParticleManager.CreateParticle(
+                'particles/npc_overhead_nameplate_ability.vpcf',
+                ParticleAttachment.OVERHEAD_FOLLOW,
+                merchant
+            );
         }
     }
 

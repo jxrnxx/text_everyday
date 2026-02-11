@@ -153,10 +153,11 @@ export class Player {
     /**
      * 英雄出生时调用
      */
-    OnHeroSpawned(): void {
+    OnHeroSpawned(hero?: CDOTA_BaseNPC_Hero): void {
         // 初始化神器系统 - 装备 Tier 0 蒙尘神器
         const { ArtifactSystem } = require('../systems/ArtifactSystem');
-        ArtifactSystem.GetInstance().InitPlayerArtifacts(this.id);
+        const heroRef = hero || this.GetHero();
+        ArtifactSystem.GetInstance().InitPlayerArtifacts(this.id, heroRef || undefined);
     }
 
     /**

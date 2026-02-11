@@ -23,13 +23,13 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
 		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
 		"ArmorPhysical" "20"
-		"StatusHealth" "50000"
-		"StatusHealthRegen" "10"
+		"StatusHealth" "20000"
+		"StatusHealthRegen" "50"
 		"StatusMana" "0"
 		"BoundsHullName" "DOTA_HULL_SIZE_BUILDING"
 		"CustomDrop_Faith" "0"
 	}
-	"npc_enemy_zombie_lvl1" {
+	"npc_creep_train_tier1" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/creeps/neutral_creeps/n_creep_ghost_b/n_creep_ghost_b.vmdl"
 		"ModelScale" "1"
@@ -69,7 +69,7 @@
 		"HaveLevel" "30"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl2" {
+	"npc_creep_train_tier2" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/life_stealer/life_stealer.vmdl"
 		"ModelScale" "1"
@@ -87,8 +87,8 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "5"
-		"StatusHealth" "750"
+		"ArmorPhysical" "3"
+		"StatusHealth" "500"
 		"StatusHealthRegen" "5"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -109,7 +109,7 @@
 		"HaveLevel" "180"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl3" {
+	"npc_creep_train_tier3" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/necrolyte/necrolyte.vmdl"
 		"ModelScale" "1"
@@ -127,8 +127,8 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "10"
-		"StatusHealth" "2500"
+		"ArmorPhysical" "5"
+		"StatusHealth" "3000"
 		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -149,7 +149,7 @@
 		"HaveLevel" "450"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl4" {
+	"npc_creep_train_tier4" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/void_spirit/void_spirit.vmdl"
 		"ModelScale" "1"
@@ -167,8 +167,8 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "20"
-		"StatusHealth" "10000"
+		"ArmorPhysical" "10"
+		"StatusHealth" "15000"
 		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -189,7 +189,7 @@
 		"HaveLevel" "900"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl5" {
+	"npc_creep_train_tier5" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/chaos_knight/chaos_knight.vmdl"
 		"ModelScale" "1"
@@ -207,8 +207,8 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "40"
-		"StatusHealth" "50000"
+		"ArmorPhysical" "20"
+		"StatusHealth" "80000"
 		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -229,7 +229,7 @@
 		"HaveLevel" "2000"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl6" {
+	"npc_creep_train_tier6" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/faceless_void/faceless_void.vmdl"
 		"ModelScale" "1"
@@ -247,8 +247,8 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "80"
-		"StatusHealth" "200000"
+		"ArmorPhysical" "40"
+		"StatusHealth" "300000"
 		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -269,7 +269,7 @@
 		"HaveLevel" "5000"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl7" {
+	"npc_creep_train_tier7" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/enigma/enigma.vmdl"
 		"ModelScale" "1"
@@ -287,8 +287,8 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "150"
-		"StatusHealth" "1000000"
+		"ArmorPhysical" "80"
+		"StatusHealth" "1500000"
 		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -309,7 +309,7 @@
 		"HaveLevel" "12000"
 		"CustomDrop_DefenderPoints" "0"
 	}
-	"npc_enemy_zombie_lvl8" {
+	"npc_creep_train_tier8" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/shadow_fiend/shadow_fiend_arcana.vmdl"
 		"ModelScale" "1"
@@ -327,7 +327,7 @@
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
-		"ArmorPhysical" "300"
+		"ArmorPhysical" "150"
 		"StatusHealth" "5000000"
 		"StatusHealthRegen" "0.5000"
 		"StatusMana" "0"
@@ -363,9 +363,9 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
-		"HealthBarOffset" "0"
+		"HealthBarOffset" "250"
 		"MovementSpeed" "0"
-		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
 		"ArmorPhysical" "99"
 		"StatusHealth" "9999"
@@ -387,7 +387,7 @@
 	"npc_ability_merchant" {
 		"BaseClass" "npc_dota_creature"
 		"Model" "models/heroes/shopkeeper/shopkeeper.vmdl"
-		"ModelScale" "1"
+		"ModelScale" "1.1000"
 		"Creature" {
 			"AttachWearables" {
 			}
@@ -398,9 +398,9 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
-		"HealthBarOffset" "0"
+		"HealthBarOffset" "250"
 		"MovementSpeed" "0"
-		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_NONE"
+		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"
 		"ArmorPhysical" "99"
 		"StatusHealth" "9999"
@@ -438,7 +438,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "0"
-		"StatusHealth" "300"
+		"StatusHealth" "200"
 		"StatusHealthRegen" "0"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -478,7 +478,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "1"
-		"StatusHealth" "600"
+		"StatusHealth" "500"
 		"StatusHealthRegen" "1"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -518,7 +518,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "2"
-		"StatusHealth" "1200"
+		"StatusHealth" "800"
 		"StatusHealthRegen" "2"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -558,7 +558,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "3"
-		"StatusHealth" "2500"
+		"StatusHealth" "1500"
 		"StatusHealthRegen" "5"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -598,7 +598,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "5"
-		"StatusHealth" "6000"
+		"StatusHealth" "3000"
 		"StatusHealthRegen" "10"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -638,7 +638,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "8"
-		"StatusHealth" "12000"
+		"StatusHealth" "6000"
 		"StatusHealthRegen" "20"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -678,7 +678,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "10"
-		"StatusHealth" "25000"
+		"StatusHealth" "10000"
 		"StatusHealthRegen" "50"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -718,7 +718,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "15"
-		"StatusHealth" "50000"
+		"StatusHealth" "25000"
 		"StatusHealthRegen" "100"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -758,7 +758,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "20"
-		"StatusHealth" "100000"
+		"StatusHealth" "50000"
 		"StatusHealthRegen" "200"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -798,7 +798,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "30"
-		"StatusHealth" "250000"
+		"StatusHealth" "100000"
 		"StatusHealthRegen" "500"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -838,7 +838,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "40"
-		"StatusHealth" "600000"
+		"StatusHealth" "200000"
 		"StatusHealthRegen" "1000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -878,7 +878,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "50"
-		"StatusHealth" "1500000"
+		"StatusHealth" "400000"
 		"StatusHealthRegen" "2000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -918,7 +918,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "70"
-		"StatusHealth" "4000000"
+		"StatusHealth" "800000"
 		"StatusHealthRegen" "5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -958,7 +958,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "100"
-		"StatusHealth" "10000000"
+		"StatusHealth" "1500000"
 		"StatusHealthRegen" "10000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -998,7 +998,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "150"
-		"StatusHealth" "25000000"
+		"StatusHealth" "3000000"
 		"StatusHealthRegen" "20000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1038,7 +1038,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "200"
-		"StatusHealth" "60000000"
+		"StatusHealth" "8000000"
 		"StatusHealthRegen" "50000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1078,7 +1078,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "300"
-		"StatusHealth" "150000000"
+		"StatusHealth" "20000000"
 		"StatusHealthRegen" "100000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1118,7 +1118,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "400"
-		"StatusHealth" "400000000"
+		"StatusHealth" "60000000"
 		"StatusHealthRegen" "200000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1158,7 +1158,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "500"
-		"StatusHealth" "1000000000"
+		"StatusHealth" "200000000"
 		"StatusHealthRegen" "500000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1198,7 +1198,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "10"
-		"StatusHealth" "60000"
+		"StatusHealth" "20000"
 		"StatusHealthRegen" "100"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1217,7 +1217,7 @@
 		"CustomDrop_Faith" "50"
 		"StatLabel" "1"
 		"HaveLevel" "5000"
-		"CustomDrop_DefenderPoints" "500"
+		"CustomDrop_DefenderPoints" "200"
 	}
 	"npc_boss_wave_10" {
 		"BaseClass" "npc_dota_creature"
@@ -1238,7 +1238,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "30"
-		"StatusHealth" "1500000"
+		"StatusHealth" "500000"
 		"StatusHealthRegen" "5000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1278,7 +1278,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "100"
-		"StatusHealth" "800000000"
+		"StatusHealth" "20000000"
 		"StatusHealthRegen" "100000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1318,7 +1318,7 @@
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "1000"
-		"StatusHealth" "10000000000"
+		"StatusHealth" "3000000000"
 		"StatusHealthRegen" "2000000"
 		"StatusMana" "0"
 		"BountyGoldMin" "0"
@@ -1334,43 +1334,15 @@
 		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
 		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
 		"CustomDrop_Coin" "0"
-		"CustomDrop_Faith" "50"
+		"CustomDrop_Faith" "100"
 		"StatLabel" "5"
 		"HaveLevel" "1000000"
-		"CustomDrop_DefenderPoints" "500"
+		"CustomDrop_DefenderPoints" "5000"
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	"npc_guardian_zone_1" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/heroes/juggernaut/juggernaut.vmdl"
-		"ModelScale" "1.0"
+		"Model" "models/creeps/neutral_creeps/n_creep_ancient_frog/n_creep_ancient_frog_mage.vmdl"
+		"ModelScale" "1"
 		"Creature" {
 			"AttachWearables" {
 			}
@@ -1381,22 +1353,36 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "0"
 		"StatusHealth" "300"
 		"StatusHealthRegen" "1"
-		"AttackDamageMin" "20"
-		"AttackDamageMax" "20"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
+		"AttackDamageMin" "22"
+		"AttackDamageMax" "22"
 		"AttackRate" "1.5000"
 		"AttackRange" "150"
 		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
-		"AttackAcquisitionRange" "600"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "500"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "30"
+		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
+		"HaveLevel" "50"
+		"CustomDrop_DefenderPoints" "0"
+		"Artifact_Drop_Type" "1"
+		"Artifact_Drop_XP" "50"
 	}
 	"npc_guardian_zone_2" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/heroes/treant/treant.vmdl"
+		"Model" "models/creeps/neutral_creeps/n_creep_froglet/n_creep_froglet_mage.vmdl"
 		"ModelScale" "0.8000"
 		"Creature" {
 			"AttachWearables" {
@@ -1408,23 +1394,37 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "2"
 		"StatusHealth" "400"
 		"StatusHealthRegen" "1"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
 		"AttackDamageMin" "15"
 		"AttackDamageMax" "15"
 		"AttackRate" "1.5000"
 		"AttackRange" "150"
 		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
-		"AttackAcquisitionRange" "600"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "500"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "30"
+		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
+		"HaveLevel" "50"
+		"CustomDrop_DefenderPoints" "0"
+		"Artifact_Drop_Type" "2"
+		"Artifact_Drop_XP" "50"
 	}
 	"npc_guardian_zone_3" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/heroes/ember_spirit/ember_spirit.vmdl"
-		"ModelScale" "1.0"
+		"Model" "models/creeps/neutral_creeps/n_creep_ghost_b/n_creep_ghost_b.vmdl"
+		"ModelScale" "1"
 		"Creature" {
 			"AttachWearables" {
 			}
@@ -1435,23 +1435,37 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "0"
 		"StatusHealth" "300"
 		"StatusHealthRegen" "1"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
 		"AttackDamageMin" "20"
 		"AttackDamageMax" "20"
 		"AttackRate" "1.5000"
 		"AttackRange" "150"
 		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
-		"AttackAcquisitionRange" "600"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "500"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "30"
+		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
+		"HaveLevel" "50"
+		"CustomDrop_DefenderPoints" "0"
+		"Artifact_Drop_Type" "3"
+		"Artifact_Drop_XP" "50"
 	}
 	"npc_guardian_zone_4" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/heroes/ancient_apparition/ancient_apparition.vmdl"
-		"ModelScale" "1.0"
+		"Model" "models/items/broodmother/spiderling/the_glacial_creeper_creepling/the_glacial_creeper_creepling.vmdl"
+		"ModelScale" "1"
 		"Creature" {
 			"AttachWearables" {
 			}
@@ -1462,22 +1476,36 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "0"
 		"StatusHealth" "300"
 		"StatusHealthRegen" "1"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
 		"AttackDamageMin" "20"
 		"AttackDamageMax" "20"
 		"AttackRate" "1.5000"
 		"AttackRange" "150"
 		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
-		"AttackAcquisitionRange" "600"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "500"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "30"
+		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
+		"HaveLevel" "50"
+		"CustomDrop_DefenderPoints" "0"
+		"Artifact_Drop_Type" "4"
+		"Artifact_Drop_XP" "50"
 	}
 	"npc_guardian_zone_5" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/creeps/neutral_creeps/n_creep_thunder_lizard/n_creep_thunder_lizard_small.vmdl"
+		"Model" "models/creeps/neutral_creeps/n_creep_tadpole_c/n_creep_tadpole_c.vmdl"
 		"ModelScale" "0.9000"
 		"Creature" {
 			"AttachWearables" {
@@ -1489,23 +1517,37 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "0"
 		"StatusHealth" "300"
 		"StatusHealthRegen" "1"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
 		"AttackDamageMin" "25"
 		"AttackDamageMax" "25"
 		"AttackRate" "1.5000"
 		"AttackRange" "150"
 		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
-		"AttackAcquisitionRange" "600"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "500"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "30"
+		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
+		"HaveLevel" "50"
+		"CustomDrop_DefenderPoints" "0"
+		"Artifact_Drop_Type" "5"
+		"Artifact_Drop_XP" "50"
 	}
 	"npc_guardian_zone_6" {
 		"BaseClass" "npc_dota_creature"
-		"Model" "models/heroes/razor/razor.vmdl"
-		"ModelScale" "1.0"
+		"Model" "models/creeps/lane_creeps/creep_bird_radiant/creep_bird_radiant_melee.vmdl"
+		"ModelScale" "1"
 		"Creature" {
 			"AttachWearables" {
 			}
@@ -1516,17 +1558,31 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
+		"HealthBarOffset" "160"
 		"MovementSpeed" "300"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_MELEE_ATTACK"
 		"ArmorPhysical" "1"
 		"StatusHealth" "350"
 		"StatusHealthRegen" "1"
+		"StatusMana" "0"
+		"BountyGoldMin" "0"
+		"BountyGoldMax" "0"
 		"AttackDamageMin" "20"
 		"AttackDamageMax" "20"
 		"AttackRate" "1.5000"
 		"AttackRange" "150"
 		"BoundsHullName" "DOTA_HULL_SIZE_REGULAR"
-		"AttackAcquisitionRange" "600"
+		"AttackAcquisitionRange" "0"
+		"ChaseDistance" "500"
+		"CombatClassAttack" "DOTA_COMBAT_CLASS_ATTACK_BASIC"
+		"CombatClassDefend" "DOTA_COMBAT_CLASS_DEFEND_BASIC"
+		"CustomDrop_Coin" "30"
+		"CustomDrop_Faith" "1"
+		"StatLabel" "0"
+		"HaveLevel" "50"
+		"CustomDrop_DefenderPoints" "0"
+		"Artifact_Drop_Type" "6"
+		"Artifact_Drop_XP" "50"
 	}
 }

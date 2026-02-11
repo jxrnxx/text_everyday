@@ -25,6 +25,8 @@
         "sass"
     ],
     "prettier.tabWidth": 4,
+    // 关闭 LESS 内置语法检查（Panorama 使用非标准 CSS 属性会误报）
+    "less.validate": false,
     // markdown 默认预览模式
     "workbench.editorAssociations": {
         "*.md": "vscode.markdown.preview.editor"

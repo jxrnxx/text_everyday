@@ -76,45 +76,62 @@ function UpdateAllStats() {
 
         // ===== 15个属性字段 =====
 
-        // 根骨 (Constitution) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
+        // 读取神器加成值（从服务端同步）
+        const artCon = d.art_con || 0;
+        const artMar = d.art_mar || 0;
+        const artDiv = d.art_div || 0;
+        const artAgi = d.art_agi || 0;
+        const artDamage = d.art_damage || 0;
+        const artHP = d.art_hp || 0;
+        const artArmor = d.art_armor || 0;
+        const artMoveSpeed = d.art_move_speed || 0;
+        const artCritChance = d.art_crit_chance || 0;
+        const artCritDamage = d.art_crit_damage || 0;
+        const artSpellDmg = d.art_spell_damage || 0;
+        const artFinalInc = d.art_final_inc || 0;
+        const artFinalRed = d.art_final_red || 0;
+        const artBlock = d.art_block || 0;
+        const artEvasion = d.art_evasion || 0;
+
+        // 根骨 (Constitution) - 使用服务端计算的面板值（含神器加成）
         const conBase = d.constitution_base || 0;
         const conGain = d.constitution_gain || 0;
         const conBonus = d.constitution_bonus || 0;
         const conExtra = d.extra_constitution || 0;
-        const conPanel = Math.floor((conBase + (level - 1) * conGain + conExtra) * (1 + conBonus));
+        const conPanel = d.constitution || Math.floor((conBase + (level - 1) * conGain + conExtra) * (1 + conBonus));
         ($('#Val_Con_Base') as LabelPanel).text = conBase.toString();
         ($('#Val_Con_Gain') as LabelPanel).text = conGain.toString();
         ($('#Val_Con_Bonus') as LabelPanel).text = conBonus.toString();
         ($('#Val_Con_Panel') as LabelPanel).text = conPanel.toString();
 
-        // 武道 (Martial) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
+        // 武道 (Martial) - 使用服务端计算的面板值（含神器加成）
         const marBase = d.martial_base || 0;
         const marGain = d.martial_gain || 0;
         const marBonus = d.martial_bonus || 0;
         const marExtra = d.extra_martial || 0;
-        const marPanel = Math.floor((marBase + (level - 1) * marGain + marExtra) * (1 + marBonus));
+        const marPanel = d.martial || Math.floor((marBase + (level - 1) * marGain + marExtra) * (1 + marBonus));
         ($('#Val_Mar_Base') as LabelPanel).text = marBase.toString();
         ($('#Val_Mar_Gain') as LabelPanel).text = marGain.toString();
         ($('#Val_Mar_Bonus') as LabelPanel).text = marBonus.toString();
         ($('#Val_Mar_Panel') as LabelPanel).text = marPanel.toString();
 
-        // 神念 (Divinity) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
+        // 神念 (Divinity) - 使用服务端计算的面板值（含神器加成）
         const divBase = d.divinity_base || 0;
         const divGain = d.divinity_gain || 0;
         const divBonus = d.divinity_bonus || 0;
         const divExtra = d.extra_divinity || 0;
-        const divPanel = Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
+        const divPanel = d.divinity || Math.floor((divBase + (level - 1) * divGain + divExtra) * (1 + divBonus));
         ($('#Val_Div_Base') as LabelPanel).text = divBase.toString();
         ($('#Val_Div_Gain') as LabelPanel).text = divGain.toString();
         ($('#Val_Div_Bonus') as LabelPanel).text = divBonus.toString();
         ($('#Val_Div_Panel') as LabelPanel).text = divPanel.toString();
 
-        // 身法 (Agility) - 公式: (基础 + (等级-1)*成长 + 额外) * (1 + 加成)
+        // 身法 (Agility) - 使用服务端计算的面板值（含神器加成）
         const agiBase = d.agility_base || 0;
         const agiGain = d.agility_gain || 0;
         const agiBonus = d.agility_bonus || 0;
         const agiExtra = d.extra_agility || 0;
-        const agiPanel = Math.floor((agiBase + (level - 1) * agiGain + agiExtra) * (1 + agiBonus));
+        const agiPanel = Math.floor((agiBase + (level - 1) * agiGain + agiExtra + artAgi) * (1 + agiBonus));
         ($('#Val_Agi_Base') as LabelPanel).text = agiBase.toString();
         ($('#Val_Agi_Gain') as LabelPanel).text = agiGain.toString();
         ($('#Val_Agi_Bonus') as LabelPanel).text = agiBonus.toString();
@@ -130,22 +147,42 @@ function UpdateAllStats() {
         ($('#Val_Dmg_Gain') as LabelPanel).text = dmgGain.toString();
         ($('#Val_Dmg_Bonus') as LabelPanel).text = dmgBonus.toString();
 
-        // 主属性计算 (主属性*1.5)
+        // 主属性计算 (主属性*1.5) + 神器攻击
         const mainStat = d.main_stat || 'Martial';
         const mainPanel = mainStat === 'Martial' ? marPanel : divPanel;
-        const totalDmg = dmgPanel + Math.floor(mainPanel * 1.5);
+        const totalDmg = dmgPanel + Math.floor(mainPanel * 1.5) + artDamage;
         ($('#Val_Dmg_Panel') as LabelPanel).text = totalDmg.toString();
         ($('#Val_Attack_Display') as LabelPanel).text = totalDmg.toString();
 
         // Crit
         const critChance = d.crit_chance || 0;
-        const critDmg = d.crit_damage || 150;
+        const critDmg = d.crit_damage || 105;
         ($('#Val_CritChance') as LabelPanel).text = `${critChance}%`;
         ($('#Val_CritDamage') as LabelPanel).text = `${critDmg}%`;
 
         // 破势 (护甲穿透)
         const armorPen = d.armor_pen || 0;
         ($('#Val_ArmorPen') as LabelPanel).text = armorPen.toString();
+
+        // 技能伤害%
+        const spellDamage = d.spell_damage || 0;
+        ($('#Val_SpellDamage') as LabelPanel).text = `${spellDamage}%`;
+
+        // 格挡
+        const block = d.block || 0;
+        ($('#Val_Block') as LabelPanel).text = block.toString();
+
+        // 终伤增%
+        const finalDmgIncrease = d.final_dmg_increase || 0;
+        ($('#Val_FinalDmgIncrease') as LabelPanel).text = `${finalDmgIncrease}%`;
+
+        // 终伤减%
+        const finalDmgReduct = d.final_dmg_reduct || 0;
+        ($('#Val_FinalDmgReduct') as LabelPanel).text = `${finalDmgReduct}%`;
+
+        // 闪避%
+        const evasion = d.evasion || 0;
+        ($('#Val_Evasion') as LabelPanel).text = `${evasion}%`;
 
         // 攻击回血
         const lifeOnHit = d.life_on_hit || 0;
@@ -169,22 +206,50 @@ function UpdateAllStats() {
         const panelAtkSpeed = 100 + agiPanel + extraAtkSpeed;
         ($('#Val_AtkSpeed') as LabelPanel).text = panelAtkSpeed.toString();
 
-        // 公式说明 - 使用正确的公式（包含额外获得值）
+        // 公式说明 - 包含神器加成
         const mainStatCN = mainStat === 'Martial' ? '武道' : '神念';
-        ($('#Debug_Con') as LabelPanel).text = `根骨: (${conBase}+(${level}-1)×${conGain}+${conExtra})×(1+${conBonus}) = ${conPanel}`;
-        ($('#Debug_Mar') as LabelPanel).text = `武道: (${marBase}+(${level}-1)×${marGain}+${marExtra})×(1+${marBonus}) = ${marPanel}`;
-        ($('#Debug_Div') as LabelPanel).text = `神念: (${divBase}+(${level}-1)×${divGain}+${divExtra})×(1+${divBonus}) = ${divPanel}`;
-        ($('#Debug_Agi') as LabelPanel).text = `身法: (${agiBase}+(${level}-1)×${agiGain}+${agiExtra})×(1+${agiBonus}) = ${agiPanel}`;
-        ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×1.5 = ${totalDmg}`;
+        const artConStr = artCon > 0 ? `+神器${artCon}` : '';
+        const artMarStr = artMar > 0 ? `+神器${artMar}` : '';
+        const artDivStr = artDiv > 0 ? `+神器${artDiv}` : '';
+        const artAgiStr = artAgi > 0 ? `+神器${artAgi}` : '';
+        const artDmgStr = artDamage > 0 ? `+神器${artDamage}` : '';
+        const artHPStr = artHP > 0 ? `+神器${artHP}` : '';
+        ($('#Debug_Con') as LabelPanel).text = `根骨: (${conBase}+(${level}-1)×${conGain}+${conExtra}${artConStr})×(1+${conBonus}) = ${conPanel}`;
+        ($('#Debug_Mar') as LabelPanel).text = `武道: (${marBase}+(${level}-1)×${marGain}+${marExtra}${artMarStr})×(1+${marBonus}) = ${marPanel}`;
+        ($('#Debug_Div') as LabelPanel).text = `神念: (${divBase}+(${level}-1)×${divGain}+${divExtra}${artDivStr})×(1+${divBonus}) = ${divPanel}`;
+        ($('#Debug_Agi') as LabelPanel).text = `身法: (${agiBase}+(${level}-1)×${agiGain}+${agiExtra}${artAgiStr})×(1+${agiBonus}) = ${agiPanel}`;
+        ($('#Debug_Dmg') as LabelPanel).text = `攻击: ${dmgPanel} + 主属(${mainStatCN}${mainPanel})×1.5${artDmgStr} = ${totalDmg}`;
         ($('#Debug_AtkSpeed') as LabelPanel).text = `攻速: 100 + 身法${agiPanel} + 额外${extraAtkSpeed} = ${panelAtkSpeed}`;
-        ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×30 + 基础1 = ${conPanel * 30 + 1}`;
+        ($('#Debug_HP') as LabelPanel).text = `生命: 根骨面板(${conPanel})×30 + 基础1${artHPStr} = ${conPanel * 30 + 1 + artHP}`;
 
         // 移速公式 - 从 NetTable 读取基础移速
         const agiMoveBonus = Math.floor(agiPanel * 0.4);
         const baseMoveSpeed = d.base_move_speed || 300;
         const extraMoveSpeed = d.extra_move_speed || 0;
-        const panelMoveSpeed = baseMoveSpeed + agiMoveBonus + extraMoveSpeed;
-        ($('#Debug_MoveSpeed') as LabelPanel).text = `移速: ${baseMoveSpeed} + 身法${agiPanel}×0.4=${agiMoveBonus} + 额外${extraMoveSpeed} = ${panelMoveSpeed}`;
+        const artMoveStr = artMoveSpeed > 0 ? `+神器${artMoveSpeed}` : '';
+        const panelMoveSpeed = baseMoveSpeed + agiMoveBonus + extraMoveSpeed + artMoveSpeed;
+        ($('#Debug_MoveSpeed') as LabelPanel).text = `移速: ${baseMoveSpeed} + 身法${agiPanel}×0.4=${agiMoveBonus} + 额外${extraMoveSpeed}${artMoveStr} = ${panelMoveSpeed}`;
+
+        // 战斗属性公式 = (base + 神器) × (1 + bonus)
+        const critChanceBase = d.crit_chance_base || 0;
+        const critChanceBonus = d.crit_chance_bonus || 0;
+        const critDamageBase = d.crit_damage_base || 105;
+        const critDamageBonus = d.crit_damage_bonus || 0;
+        const spellDmgBase = d.spell_damage_base || 0;
+        const spellDmgBonus = d.spell_damage_bonus || 0;
+        const finalDmgIncBase = d.final_dmg_increase_base || 0;
+        const finalDmgIncBonus = d.final_dmg_increase_bonus || 0;
+        const finalDmgRedBase = d.final_dmg_reduct_base || 0;
+        const finalDmgRedBonus = d.final_dmg_reduct_bonus || 0;
+        const evasionBase = d.evasion_base || 0;
+        const evasionBonus = d.evasion_bonus || 0;
+
+        ($('#Debug_CritChance') as LabelPanel).text = `会心: (${critChanceBase}+神器${artCritChance})×(1+${critChanceBonus}) = ${critChance}%`;
+        ($('#Debug_CritDamage') as LabelPanel).text = `爆伤: (${critDamageBase}+神器${artCritDamage})×(1+${critDamageBonus}) = ${critDmg}%`;
+        ($('#Debug_SpellDmg') as LabelPanel).text = `技伤: (${spellDmgBase}+神器${artSpellDmg})×(1+${spellDmgBonus}) = ${spellDamage}%`;
+        ($('#Debug_FinalDmgInc') as LabelPanel).text = `终伤增: (${finalDmgIncBase}+神器${artFinalInc})×(1+${finalDmgIncBonus}) = ${finalDmgIncrease}%`;
+        ($('#Debug_FinalDmgRed') as LabelPanel).text = `终伤减: (${finalDmgRedBase}+神器${artFinalRed})×(1+${finalDmgRedBonus}) = ${finalDmgReduct}%`;
+        ($('#Debug_Evasion') as LabelPanel).text = `闪避: (${evasionBase}+神器${artEvasion})×(1+${evasionBonus}) = ${evasion}%`;
     }
 
     // 2. Economy from NetTable
@@ -327,9 +392,16 @@ function UpdateStatsFromEvent(stats: any) {
     safeSetText('#Val_Profession', professionName);
 
     const critChance = stats.crit_chance || 0;
-    const critDmg = stats.crit_damage || 150;
+    const critDmg = stats.crit_damage || 105;
     safeSetText('#Val_CritChance', `${critChance}%`);
     safeSetText('#Val_CritDamage', `${critDmg}%`);
+
+    // 其他战斗属性
+    safeSetText('#Val_SpellDamage', `${stats.spell_damage || 0}%`);
+    safeSetText('#Val_Block', `${stats.block || 0}`);
+    safeSetText('#Val_FinalDmgIncrease', `${stats.final_dmg_increase || 0}%`);
+    safeSetText('#Val_FinalDmgReduct', `${stats.final_dmg_reduct || 0}%`);
+    safeSetText('#Val_Evasion', `${stats.evasion || 0}%`);
 }
 
 (function () {

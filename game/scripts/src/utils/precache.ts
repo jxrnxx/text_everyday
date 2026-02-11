@@ -58,6 +58,17 @@ export default function Precache(context: CScriptPrecacheContext) {
 
             // Blink Dash - 使用幽灵假人法，无需粒子特效
 
+            // Artifact Upgrade Effects (per-tier colors)
+            'particles/artifact_upgrade_t1.vpcf',
+            'particles/artifact_upgrade_t2.vpcf',
+            'particles/artifact_upgrade_t3.vpcf',
+            'particles/artifact_upgrade_t4.vpcf',
+            'particles/artifact_upgrade_t5.vpcf',
+
+            // NPC Overhead Nameplate
+            'particles/npc_overhead_nameplate.vpcf',
+            'particles/npc_overhead_nameplate_ability.vpcf',
+
             // Sound Events
             'soundevents/custom_game/custom_soundevents.vsndevts',
         ],
@@ -75,7 +86,7 @@ export default function Precache(context: CScriptPrecacheContext) {
     precacheUnits(
         [
             // 单位名称
-            'npc_enemy_zombie_lvl1', // 练功房怪物
+            'npc_creep_train_tier1', // 练功房怪物
         ],
         context
     );
