@@ -7,7 +7,7 @@
 {
 	"npc_dota_home_base" {
 		"BaseClass" "npc_dota_building"
-		"Model" "models/props_structures/radiant_tower002.vmdl"
+		"Model" "particles/econ/events/fall_2022/player/fall_2022_emblem_effect_player_rock.vmdl"
 		"ModelScale" "1.3000"
 		"Creature" {
 			"AttachWearables" {
@@ -363,7 +363,7 @@
 		"Ability4" ""
 		"Ability5" ""
 		"Ability6" ""
-		"HealthBarOffset" "250"
+		"HealthBarOffset" "273"
 		"MovementSpeed" "0"
 		"MovementCapabilities" "DOTA_UNIT_CAP_MOVE_GROUND"
 		"AttackCapabilities" "DOTA_UNIT_CAP_NO_ATTACK"

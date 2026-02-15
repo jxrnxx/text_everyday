@@ -556,6 +556,9 @@ const HeroHUD: FC = () => {
             $.Schedule(0.2, buffLoop);
         });
 
+        // ====== 公共技能 HUD 显示 ======
+        // （F/G 按键绑定已移至 script.tsx）
+
         // 公共技能槽更新函数 - 扫描所有技能找公共技能
         const updatePublicSkills = () => {
             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
@@ -564,6 +567,9 @@ const HeroHUD: FC = () => {
             // 公共技能名映射（技能名 -> 品质等级）
             const PUBLIC_ABILITIES: Record<string, number> = {
                 'ability_public_martial_cleave': 1, // 武道·横扫 - 凡品
+                'ability_public_plague_cloud': 1, // 神念·噬魂毒阵 - 凡品
+                'ability_public_golden_bell': 1, // 通用·金钟罩 - 凡品
+                'ability_public_flame_storm': 2, // 神念·烈焰风暴 - 灵品
                 // 未来添加更多公共技能
             };
 
@@ -618,11 +624,12 @@ const HeroHUD: FC = () => {
             setPublicSkills(skills);
         };
 
-        // 公共技能更新循环 - 每0.5秒刷新
+        // 公共技能更新循环 - 每0.1秒刷新（CD动画需要较高频率）
         $.Schedule(1.0, function skillLoop() {
             updatePublicSkills();
-            $.Schedule(0.5, skillLoop);
+            $.Schedule(0.1, skillLoop);
         });
+
     }, []);
 
 
@@ -1007,7 +1014,7 @@ const HeroHUD: FC = () => {
                             src="file://{resources}/images/icon_attack.png"
                             style={{ width: '28px', height: '28px', marginTop: '-2px' }}
                         />
-                        <Label text="攻击1" style={statLabelStyle} />
+                        <Label text="攻击2" style={statLabelStyle} />
                         <Label text={String(stats.attack)} style={statValueStyle} />
                     </Panel>
 
@@ -1222,22 +1229,25 @@ const HeroHUD: FC = () => {
                                 }}
                             />
                         </Panel>
-                        {/* 键位标签 */}
+                        {/* 键位标签 - 左上角 */}
                         <Panel
                             style={{
-                                position: '2px 2px 0px' as const,
+                                position: '-2px -2px 0px' as const,
                                 width: '14px',
-                                height: '16px',
-                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                height: '14px',
+                                backgroundColor: '#1a1a2e',
+                                border: '1px solid #333355',
                                 borderRadius: '2px',
                             }}
                         >
                             <Label
                                 text="Q"
                                 style={{
-                                    color: '#ffcc00',
+                                    width: '100%',
+                                    color: '#cccccc',
                                     fontSize: '11px',
                                     fontWeight: 'bold',
+                                    textAlign: 'center' as const,
                                     horizontalAlign: 'center' as const,
                                     verticalAlign: 'center' as const,
                                 }}
@@ -1251,22 +1261,25 @@ const HeroHUD: FC = () => {
                             <Panel className="SkillSlotFrame">
                                 <Panel className="SkillSlotInner" />
                             </Panel>
-                            {/* 键位标签 - 空槽使用灰色 */}
+                            {/* 键位标签 - 左上角 */}
                             <Panel
                                 style={{
-                                    position: '2px 2px 0px' as const,
+                                    position: '-2px -2px 0px' as const,
                                     width: '14px',
-                                    height: '16px',
-                                    backgroundColor: 'rgba(0,0,0,0.5)',
+                                    height: '14px',
+                                    backgroundColor: '#1a1a2e',
+                                    border: '1px solid #333355',
                                     borderRadius: '2px',
                                 }}
                             >
                                 <Label
                                     text={key}
                                     style={{
-                                        color: '#888888',
+                                        width: '100%',
+                                        color: '#666666',
                                         fontSize: '11px',
                                         fontWeight: 'bold',
+                                        textAlign: 'center' as const,
                                         horizontalAlign: 'center' as const,
                                         verticalAlign: 'center' as const,
                                     }}
@@ -1297,6 +1310,9 @@ const HeroHUD: FC = () => {
                         // 技能图标路径映射（使用 spellicons 目录下的标准图标）
                         const SKILL_ICONS: Record<string, string> = {
                             'ability_public_martial_cleave': 'file://{images}/spellicons/ability_public_martial_cleave.png',
+                            'ability_public_plague_cloud': 'file://{images}/spellicons/plague_cloud_icon.png',
+                            'ability_public_golden_bell': 'file://{images}/spellicons/golden_bell_shield.png',
+                            'ability_public_flame_storm': 'file://{images}/spellicons/lina_light_strike_array.png',
                             // 未来添加更多公共技能图标
                         };
                         const frameImg = RARITY_FRAMES[skill.rarity] || RARITY_FRAMES[1];
@@ -1330,7 +1346,7 @@ const HeroHUD: FC = () => {
                                                 position: '0px 0px 0px' as const,
                                             }}
                                         />
-                                        {/* 技能图标层 - 使用直接路径加载 */}
+                                        {/* 技能图标层 */}
                                         <Image
                                             src={iconImg}
                                             style={{
@@ -1339,6 +1355,81 @@ const HeroHUD: FC = () => {
                                                 position: '3px 3px 0px' as const,
                                             }}
                                         />
+                                        {/* CD遮罩 - 像时钟一样顺时针消退 */}
+                                        {(() => {
+                                            if (skill.abilityEntityIndex === -1) return null;
+                                            // @ts-ignore
+                                            const cdRemain = Abilities.GetCooldownTimeRemaining(skill.abilityEntityIndex) || 0;
+                                            if (cdRemain <= 0) return null;
+                                            // @ts-ignore
+                                            const cdTotal = Abilities.GetCooldownLength(skill.abilityEntityIndex) || 1;
+                                            const ratio = cdRemain / cdTotal;
+                                            const revealAngle = (1 - ratio) * 360;
+                                            return (
+                                                <>
+                                                    {/* 右半遮罩 */}
+                                                    <Panel style={{
+                                                        width: '24px',
+                                                        height: '48px',
+                                                        position: '27px 3px 0px' as const,
+                                                        overflow: 'clip' as const,
+                                                    }}>
+                                                        {revealAngle < 180 && (
+                                                            <Panel style={{
+                                                                width: '24px',
+                                                                height: '48px',
+                                                                backgroundColor: 'rgba(0,0,0,0.75)',
+                                                                transformOrigin: '0% 50%',
+                                                                transform: `rotateZ(${revealAngle}deg)`,
+                                                            }} />
+                                                        )}
+                                                    </Panel>
+                                                    {/* 左半遮罩 */}
+                                                    <Panel style={{
+                                                        width: '24px',
+                                                        height: '48px',
+                                                        position: '3px 3px 0px' as const,
+                                                        overflow: 'clip' as const,
+                                                    }}>
+                                                        {revealAngle <= 180 ? (
+                                                            <Panel style={{
+                                                                width: '24px',
+                                                                height: '48px',
+                                                                backgroundColor: 'rgba(0,0,0,0.75)',
+                                                            }} />
+                                                        ) : (
+                                                            <Panel style={{
+                                                                width: '24px',
+                                                                height: '48px',
+                                                                backgroundColor: 'rgba(0,0,0,0.75)',
+                                                                transformOrigin: '100% 50%',
+                                                                transform: `rotateZ(${180 - revealAngle}deg)`,
+                                                            }} />
+                                                        )}
+                                                    </Panel>
+                                                    {/* CD秒数 - 居中显示 */}
+                                                    <Panel
+                                                        style={{
+                                                            width: '48px',
+                                                            height: '48px',
+                                                            position: '3px 3px 0px' as const,
+                                                        }}
+                                                    >
+                                                        <Label
+                                                            text={String(Math.ceil(cdRemain))}
+                                                            style={{
+                                                                color: '#ffffff',
+                                                                fontSize: '18px',
+                                                                fontWeight: 'bold',
+                                                                horizontalAlign: 'center' as const,
+                                                                verticalAlign: 'center' as const,
+                                                                textShadow: '0px 0px 6px 3 #000000' as const,
+                                                            }}
+                                                        />
+                                                    </Panel>
+                                                </>
+                                            );
+                                        })()}
                                         {/* 品质边框层 */}
                                         <Image
                                             src={frameImg}
@@ -1348,22 +1439,25 @@ const HeroHUD: FC = () => {
                                                 position: '0px 0px 0px' as const,
                                             }}
                                         />
-                                        {/* 键位标签 */}
+                                        {/* 键位标签 - 左上角 */}
                                         <Panel
                                             style={{
-                                                position: '2px 2px 0px' as const,
+                                                position: '-2px -2px 0px' as const,
                                                 width: '14px',
-                                                height: '16px',
-                                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                                height: '14px',
+                                                backgroundColor: '#1a1a2e',
+                                                border: '1px solid #333355',
                                                 borderRadius: '2px',
                                             }}
                                         >
                                             <Label
                                                 text={skill.slotKey}
                                                 style={{
-                                                    color: '#ffcc00',
+                                                    width: '100%',
+                                                    color: '#cccccc',
                                                     fontSize: '11px',
                                                     fontWeight: 'bold',
+                                                    textAlign: 'center' as const,
                                                     horizontalAlign: 'center' as const,
                                                     verticalAlign: 'center' as const,
                                                 }}
@@ -1375,21 +1469,27 @@ const HeroHUD: FC = () => {
                                         <Panel className="SkillSlotFrame">
                                             <Panel className="SkillSlotInner" />
                                         </Panel>
-                                        {/* 键位标签 */}
+                                        {/* 键位标签 - 左上角 */}
                                         <Panel
                                             style={{
-                                                position: '2px 2px 0px' as const,
-                                                backgroundColor: 'rgba(0,0,0,0.5)',
-                                                padding: '1px 3px',
+                                                position: '-2px -2px 0px' as const,
+                                                width: '14px',
+                                                height: '14px',
+                                                backgroundColor: '#1a1a2e',
+                                                border: '1px solid #333355',
                                                 borderRadius: '2px',
                                             }}
                                         >
                                             <Label
                                                 text={skill.slotKey}
                                                 style={{
-                                                    color: '#888888',
+                                                    width: '100%',
+                                                    color: '#666666',
                                                     fontSize: '11px',
                                                     fontWeight: 'bold',
+                                                    textAlign: 'center' as const,
+                                                    horizontalAlign: 'center' as const,
+                                                    verticalAlign: 'center' as const,
                                                 }}
                                             />
                                         </Panel>
@@ -1600,130 +1700,132 @@ const HeroHUD: FC = () => {
             </Panel>
 
             {/* 神器悬停提示 */}
-            {hoveredArtifact && (
-                <Panel
-                    style={{
-                        position: `${894 + hoveredArtifact.x + 70}px ${330 + hoveredArtifact.y - 20}px 0px` as const,
-                        width: '140px',
-                        padding: '10px 12px',
-                        backgroundColor: 'rgba(25, 50, 55, 0.95)',
-                        border: '1px solid #c9a861',
-                        borderRadius: '6px',
-                        boxShadow: '0px 0px 12px 4px rgba(60, 120, 110, 0.35)',
-                        flowChildren: 'down' as const,
-                    }}
-                >
-                    {/* 标题 - 神器名称 (通过本地化 token 显示中文) */}
-                    <Label
-                        text={(() => {
-                            const dn = artifactSlots[hoveredArtifact.slotIndex].displayName;
-                            if (dn && dn.startsWith('#')) {
-                                const localized = $.Localize(dn);
-                                if (localized && localized !== dn) return localized;
-                            }
-                            return dn || ARTIFACT_INFO[hoveredArtifact.slotIndex].name;
-                        })()}
+            {
+                hoveredArtifact && (
+                    <Panel
                         style={{
-                            color: (() => {
-                                const t = artifactSlots[hoveredArtifact.slotIndex].tier;
-                                if (t === 0) return '#888888';  // 蒙尘 - 灰色
-                                if (t === 1) return '#e0e0e0';  // 凡铁 - 银白
-                                if (t === 2) return '#66ff99';  // 精钢 - 绿色
-                                if (t === 3) return '#66ccff';  // 玄玉 - 蓝色
-                                if (t === 4) return '#cc66ff';  // 天仙 - 紫色
-                                return '#ff9933';               // 神魔 - 橙色
-                            })(),
-                            fontSize: '16px',
-                            fontWeight: 'bold' as const,
-                            textShadow: (() => {
-                                const t = artifactSlots[hoveredArtifact.slotIndex].tier;
-                                if (t === 0) return '0px 0px 4px #666666';
-                                if (t === 1) return '0px 0px 6px #aaaaaa';
-                                if (t === 2) return '0px 0px 8px #33cc66';
-                                if (t === 3) return '0px 0px 8px #3399cc';
-                                if (t === 4) return '0px 0px 10px #9933cc';
-                                return '0px 0px 10px #cc6600';
-                            })(),
-                            horizontalAlign: 'center' as const,
-                            textAlign: 'center' as const,
-                            letterSpacing: '2px',
-                            marginBottom: '4px',
+                            position: `${894 + hoveredArtifact.x + 70}px ${330 + hoveredArtifact.y - 20}px 0px` as const,
+                            width: '140px',
+                            padding: '10px 12px',
+                            backgroundColor: 'rgba(25, 50, 55, 0.95)',
+                            border: '1px solid #c9a861',
+                            borderRadius: '6px',
+                            boxShadow: '0px 0px 12px 4px rgba(60, 120, 110, 0.35)',
+                            flowChildren: 'down' as const,
                         }}
-                    />
-                    {/* 分割线 */}
-                    <Panel style={{
-                        width: '80%',
-                        height: '1px',
-                        backgroundColor: '#c9a861',
-                        horizontalAlign: 'center' as const,
-                        marginTop: '2px',
-                        marginBottom: '6px',
-                        opacity: '0.6',
-                    }} />
-                    {/* 故事描述 - 从本地化获取 */}
-                    <Label
-                        text={(() => {
-                            const itemName = artifactSlots[hoveredArtifact.slotIndex].itemName;
-                            const token = `#ItemDesc_${itemName}`;
-                            const localized = $.Localize(token);
-                            return (localized && localized !== token) ? localized : '';
-                        })()}
-                        style={{
-                            color: '#c8b896',
-                            fontSize: '11px',
-                            horizontalAlign: 'center' as const,
-                            textAlign: 'center' as const,
-                            opacity: '0.75',
-                            marginBottom: '6px',
-                            fontStyle: 'italic' as const,
-                        }}
-                    />
-                    {/* 分割线2 */}
-                    <Panel style={{
-                        width: '80%',
-                        height: '1px',
-                        backgroundColor: '#c9a861',
-                        horizontalAlign: 'center' as const,
-                        marginBottom: '6px',
-                        opacity: '0.4',
-                    }} />
-                    {/* 属性加成 - 每条独立着色 */}
-                    {(() => {
-                        const tier = artifactSlots[hoveredArtifact.slotIndex].tier;
-                        const info = ARTIFACT_INFO[hoveredArtifact.slotIndex];
-                        const statList = info.stats[tier] || info.stats[0];
-                        return statList.map((stat, i) => (
-                            <Label
-                                key={`stat-${i}`}
-                                text={`${stat.label}  ${stat.value}`}
-                                style={{
-                                    color: stat.color,
-                                    fontSize: '13px',
-                                    fontWeight: 'bold' as const,
-                                    textShadow: `0px 0px 6px ${stat.color}66`,
-                                    horizontalAlign: 'center' as const,
-                                    textAlign: 'center' as const,
-                                    marginBottom: '2px',
-                                }}
-                            />
-                        ));
-                    })()}
-                    {/* Tier 0 升级提示 - 呼吸动画 */}
-                    {artifactSlots[hoveredArtifact.slotIndex].tier === 0 && (
+                    >
+                        {/* 标题 - 神器名称 (通过本地化 token 显示中文) */}
                         <Label
-                            text="点击唤醒"
-                            className="TooltipActionHint"
+                            text={(() => {
+                                const dn = artifactSlots[hoveredArtifact.slotIndex].displayName;
+                                if (dn && dn.startsWith('#')) {
+                                    const localized = $.Localize(dn);
+                                    if (localized && localized !== dn) return localized;
+                                }
+                                return dn || ARTIFACT_INFO[hoveredArtifact.slotIndex].name;
+                            })()}
                             style={{
-                                fontSize: '12px',
+                                color: (() => {
+                                    const t = artifactSlots[hoveredArtifact.slotIndex].tier;
+                                    if (t === 0) return '#888888';  // 蒙尘 - 灰色
+                                    if (t === 1) return '#e0e0e0';  // 凡铁 - 银白
+                                    if (t === 2) return '#66ff99';  // 精钢 - 绿色
+                                    if (t === 3) return '#66ccff';  // 玄玉 - 蓝色
+                                    if (t === 4) return '#cc66ff';  // 天仙 - 紫色
+                                    return '#ff9933';               // 神魔 - 橙色
+                                })(),
+                                fontSize: '16px',
+                                fontWeight: 'bold' as const,
+                                textShadow: (() => {
+                                    const t = artifactSlots[hoveredArtifact.slotIndex].tier;
+                                    if (t === 0) return '0px 0px 4px #666666';
+                                    if (t === 1) return '0px 0px 6px #aaaaaa';
+                                    if (t === 2) return '0px 0px 8px #33cc66';
+                                    if (t === 3) return '0px 0px 8px #3399cc';
+                                    if (t === 4) return '0px 0px 10px #9933cc';
+                                    return '0px 0px 10px #cc6600';
+                                })(),
                                 horizontalAlign: 'center' as const,
                                 textAlign: 'center' as const,
-                                marginTop: '4px',
+                                letterSpacing: '2px',
+                                marginBottom: '4px',
                             }}
                         />
-                    )}
-                </Panel>
-            )}
-        </Panel>
+                        {/* 分割线 */}
+                        <Panel style={{
+                            width: '80%',
+                            height: '1px',
+                            backgroundColor: '#c9a861',
+                            horizontalAlign: 'center' as const,
+                            marginTop: '2px',
+                            marginBottom: '6px',
+                            opacity: '0.6',
+                        }} />
+                        {/* 故事描述 - 从本地化获取 */}
+                        <Label
+                            text={(() => {
+                                const itemName = artifactSlots[hoveredArtifact.slotIndex].itemName;
+                                const token = `#ItemDesc_${itemName}`;
+                                const localized = $.Localize(token);
+                                return (localized && localized !== token) ? localized : '';
+                            })()}
+                            style={{
+                                color: '#c8b896',
+                                fontSize: '11px',
+                                horizontalAlign: 'center' as const,
+                                textAlign: 'center' as const,
+                                opacity: '0.75',
+                                marginBottom: '6px',
+                                fontStyle: 'italic' as const,
+                            }}
+                        />
+                        {/* 分割线2 */}
+                        <Panel style={{
+                            width: '80%',
+                            height: '1px',
+                            backgroundColor: '#c9a861',
+                            horizontalAlign: 'center' as const,
+                            marginBottom: '6px',
+                            opacity: '0.4',
+                        }} />
+                        {/* 属性加成 - 每条独立着色 */}
+                        {(() => {
+                            const tier = artifactSlots[hoveredArtifact.slotIndex].tier;
+                            const info = ARTIFACT_INFO[hoveredArtifact.slotIndex];
+                            const statList = info.stats[tier] || info.stats[0];
+                            return statList.map((stat, i) => (
+                                <Label
+                                    key={`stat-${i}`}
+                                    text={`${stat.label}  ${stat.value}`}
+                                    style={{
+                                        color: stat.color,
+                                        fontSize: '13px',
+                                        fontWeight: 'bold' as const,
+                                        textShadow: `0px 0px 6px ${stat.color}66`,
+                                        horizontalAlign: 'center' as const,
+                                        textAlign: 'center' as const,
+                                        marginBottom: '2px',
+                                    }}
+                                />
+                            ));
+                        })()}
+                        {/* Tier 0 升级提示 - 呼吸动画 */}
+                        {artifactSlots[hoveredArtifact.slotIndex].tier === 0 && (
+                            <Label
+                                text="点击唤醒"
+                                className="TooltipActionHint"
+                                style={{
+                                    fontSize: '12px',
+                                    horizontalAlign: 'center' as const,
+                                    textAlign: 'center' as const,
+                                    marginTop: '4px',
+                                }}
+                            />
+                        )}
+                    </Panel>
+                )
+            }
+        </Panel >
     );
 };
 

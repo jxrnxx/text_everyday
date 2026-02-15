@@ -100,3 +100,4 @@ runes (符文)
 先搜 projectile (看看有没有飞剑)。
 再搜 econ skywrath (天怒法师的不朽，全是光剑)。
 最后搜 bristleback quill (钢背兽的刺，虽是刺，但改个颜色就像飞针)。
+紫色斜 光圈particles/econ/items/enigma/ti9_cache_enigma_lord_armor/ti9_cache_enigma_lord_armor_ambient_edge.vpcf

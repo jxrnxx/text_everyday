@@ -47,8 +47,18 @@ export default function Precache(context: CScriptPrecacheContext) {
             'particles/econ/items/juggernaut/jugg_arcana/juggernaut_arcana_trigger_crit_red.vpcf',
             'particles/units/heroes/hero_dragon_knight/dragon_knight_breathe_fire.vpcf',
             'particles/units/heroes/hero_nevermore/nevermore_shadowraze.vpcf',
-            // Martial Cleave (横扫) - white cleave arc
-            'particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf',
+            // Martial Cleave (横扫) - Sven大分裂扇形波 (橙红色)
+            'particles/sven_spell_great_cleave_text.vpcf',
+            // Plague Cloud (噬魂毒阵) - 自定义组合粒子
+            'particles/custom_plague_cloud.vpcf',
+            // Plague Cloud Sound Events
+            'soundevents/game_sounds_heroes/game_sounds_pugna.vsndevts',
+            // Golden Bell Shield (金钟罩) - 金色护盾 + 风暴之锤爆炸
+            'particles/omniknight_repel_buff_text.vpcf',
+            'particles/units/heroes/hero_sven/sven_storm_bolt_projectile_explosion.vpcf',
+            // Golden Bell Sound Events
+            'soundevents/game_sounds_heroes/game_sounds_omniknight.vsndevts',
+            'soundevents/game_sounds_heroes/game_sounds_earthshaker.vsndevts',
 
             // Cultivation Merchant
             'models/props_gameplay/shopkeeper_fountain/shopkeeper_fountain.vmdl',

@@ -108,6 +108,64 @@ Game.AddCommand(cmdBackpackName, () => {
 
 Game.CreateCustomKeyBind('TAB', cmdBackpackName);
 
+// ===== Public Skill Keybinds (F/G Keys) =====
+// 公共技能名列表
+const PUBLIC_ABILITY_NAMES = [
+    'ability_public_martial_cleave',
+    'ability_public_plague_cloud',
+    'ability_public_golden_bell',
+    'ability_public_flame_storm',
+    // 未来添加更多
+];
+
+// 扫描英雄所有技能，找到第 slotIdx 个公共技能的 entityIndex
+const findPublicAbilityEntity = (slotIdx: number): number => {
+    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+    if (localHero === -1) return -1;
+
+    let found = 0;
+    // @ts-ignore
+    const abilityCount = Entities.GetAbilityCount(localHero) || 24;
+    for (let i = 0; i < Math.min(abilityCount, 24); i++) {
+        // @ts-ignore
+        const ability = Entities.GetAbility(localHero, i);
+        if (!ability || ability === -1) continue;
+        // @ts-ignore
+        const name = Abilities.GetAbilityName(ability);
+        // @ts-ignore
+        const level = Abilities.GetLevel(ability);
+        if (PUBLIC_ABILITY_NAMES.indexOf(name) !== -1 && level > 0) {
+            if (found === slotIdx) return ability;
+            found++;
+        }
+    }
+    return -1;
+};
+
+// F 键 → 第一个公共技能
+const cmdSkillF = 'cmd_public_skill_f_' + Math.floor(Math.random() * 10000);
+Game.AddCommand(cmdSkillF, () => {
+    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+    const ability = findPublicAbilityEntity(0);
+    if (ability !== -1 && localHero !== -1) {
+        // @ts-ignore
+        Abilities.ExecuteAbility(ability, localHero, false);
+    }
+}, '', 0);
+Game.CreateCustomKeyBind('F', cmdSkillF);
+
+// G 键 → 第二个公共技能
+const cmdSkillG = 'cmd_public_skill_g_' + Math.floor(Math.random() * 10000);
+Game.AddCommand(cmdSkillG, () => {
+    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+    const ability = findPublicAbilityEntity(1);
+    if (ability !== -1 && localHero !== -1) {
+        // @ts-ignore
+        Abilities.ExecuteAbility(ability, localHero, false);
+    }
+}, '', 0);
+Game.CreateCustomKeyBind('G', cmdSkillG);
+
 // ===== 滚轮调整镜头Z轴高度 =====
 // 用于在高海拔地形区域（如3000px高度差）查看地图
 let cameraHeightOffset = 0; // 当前镜头高度偏移

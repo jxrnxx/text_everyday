@@ -21,81 +21,6 @@
 			"particle" "particles/mars_shield_bash_crit_strike_text.vpcf"
 		}
 	}
-	"generic_hidden" {
-		"BaseClass" "ability_datadriven"
-		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_PASSIVE | DOTA_ABILITY_BEHAVIOR_HIDDEN"
-		"MaxLevel" "1"
-		"AbilityValues" {
-		}
-		"Precache" {
-		}
-	}
-	"crystal_nova_x" {
-		"BaseClass" "ability_lua"
-		"ScriptFile" "examples/abilities/crystal_nova_x.lua"
-		"AbilityTextureName" "crystal_maiden_crystal_nova"
-		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_POINT | DOTA_ABILITY_BEHAVIOR_AOE"
-		"MaxLevel" "4"
-		"AbilityCooldown" "12.0 12.0 12.0 12.0"
-		"AbilityManaCost" "100 120 140 160"
-		"AbilityType" "DOTA_ABILITY_TYPE_BASIC"
-		"AbilityUnitDamageType" "DAMAGE_TYPE_MAGICAL"
-		"AbilityCastRange" "700"
-		"AbilityCastPoint" "0.3000"
-		"AbilityValues" {
-			"duration" "4.5"
-			"aoe_radius" "400"
-			"movespeed_slow" "-20 -30 -40 -50"
-			"attackspeed_slow" "-20 -30 -40 -50"
-			"vision_duration" "6.0"
-			"vision_radius" "900"
-			"nova_damage" "100 150 200 250"
-		}
-		"Precache" {
-		}
-	}
-	"counter_helix_x" {
-		"BaseClass" "ability_lua"
-		"ScriptFile" "examples/abilities/counter_helix_x.lua"
-		"AbilityTextureName" "axe_counter_helix"
-		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_PASSIVE"
-		"MaxLevel" "4"
-		"AbilityType" "DOTA_ABILITY_TYPE_BASIC"
-		"AbilityUnitDamageType" "DAMAGE_TYPE_PURE"
-		"AbilityValues" {
-			"damage" "75 110 145 180"
-			"radius" "275"
-			"hit_count" "7 6 5 4"
-		}
-		"Precache" {
-			"particle" "particles/units/heroes/hero_axe/axe_counterhelix_ad.vpcf"
-			"soundfile" "soundevents/game_sounds_heroes/game_sounds_axe.vsndevts"
-		}
-	}
-	"tiny_toss_x" {
-		"BaseClass" "ability_lua"
-		"ScriptFile" "examples/abilities/tiny_toss_x.lua"
-		"AbilityTextureName" "tiny_toss"
-		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_UNIT_TARGET | DOTA_ABILITY_BEHAVIOR_AOE"
-		"MaxLevel" "4"
-		"AbilityCooldown" "10"
-		"AbilityManaCost" "70"
-		"AbilityUnitDamageType" "DAMAGE_TYPE_MAGICAL"
-		"AbilityCastRange" "1200"
-		"AbilityCastPoint" "0"
-		"AbilityUnitTargetTeam" "DOTA_UNIT_TARGET_TEAM_BOTH"
-		"AbilityUnitTargetType" "DOTA_UNIT_TARGET_HERO | DOTA_UNIT_TARGET_BASIC"
-		"AbilityValues" {
-			"duration" "1.1"
-			"grab_radius" "275"
-			"radius" "275"
-			"bonus_damage_pct" "30 60 90"
-			"toss_damage" "200 250 300 350"
-		}
-		"Precache" {
-			"particle" "particles/units/heroes/hero_tiny/tiny_toss_blur.vpcf"
-		}
-	}
 	"ability_public_martial_cleave" {
 		"BaseClass" "ability_lua"
 		"ScriptFile" "abilities/ability_public_martial_cleave"
@@ -113,6 +38,72 @@
 		}
 		"Precache" {
 			"particle" "particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf"
+		}
+	}
+	"ability_public_plague_cloud" {
+		"BaseClass" "ability_lua"
+		"ScriptFile" "abilities/ability_public_plague_cloud"
+		"AbilityTextureName" "venomancer_poison_nova"
+		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_POINT | DOTA_ABILITY_BEHAVIOR_AOE"
+		"MaxLevel" "4"
+		"AbilityCooldown" "12"
+		"AbilityManaCost" "10"
+		"AbilityCastRange" "600"
+		"AbilityCastPoint" "0.3000"
+		"AbilityCategory" "PUBLIC"
+		"AbilityStar" "1"
+		"AbilityElement" "DIVINITY"
+		"AbilityValues" {
+			"radius" "300"
+			"duration" "5"
+			"dmg_multiplier" "1 1.2 1.5 1.8"
+		}
+		"Precache" {
+			"particle" "particles/units/heroes/hero_alchemist/alchemist_acid_spray.vpcf"
+		}
+	}
+	"ability_public_golden_bell" {
+		"BaseClass" "ability_lua"
+		"ScriptFile" "abilities/ability_public_golden_bell"
+		"AbilityTextureName" "golden_bell_shield"
+		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+		"MaxLevel" "4"
+		"AbilityCooldown" "8"
+		"AbilityManaCost" "10"
+		"AbilityCategory" "PUBLIC"
+		"AbilityStar" "1"
+		"AbilityElement" "GENERAL"
+		"AbilityValues" {
+			"dmg_multiplier" "5 7 9 11"
+			"shield_multiplier" "5"
+			"shield_duration" "3"
+			"explosion_radius" "400"
+		}
+		"Precache" {
+			"particle" "particles/units/heroes/hero_omniknight/omniknight_repel_buff.vpcf"
+		}
+	}
+	"ability_public_flame_storm" {
+		"BaseClass" "ability_lua"
+		"ScriptFile" "abilities/ability_public_flame_storm"
+		"AbilityTextureName" "lina_light_strike_array"
+		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_POINT | DOTA_ABILITY_BEHAVIOR_AOE"
+		"MaxLevel" "4"
+		"AbilityCooldown" "10"
+		"AbilityManaCost" "10"
+		"AbilityCastRange" "700"
+		"AbilityCastPoint" "0.3000"
+		"AbilityCategory" "PUBLIC"
+		"AbilityStar" "2"
+		"AbilityElement" "DIVINITY"
+		"AbilityValues" {
+			"radius" "350"
+			"wave_count" "3"
+			"wave_interval" "0.8"
+			"dmg_multiplier" "4 5 6 7"
+		}
+		"Precache" {
+			"particle" "particles/units/heroes/hero_lina/lina_spell_light_strike_array.vpcf"
 		}
 	}
 }

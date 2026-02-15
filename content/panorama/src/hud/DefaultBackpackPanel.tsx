@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getItemConfig, getLocalizedName, getLocalizedDesc, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP, isItemUsable, isSkillBook, getSellPrice } from './itemRarityConfig';
+import { getItemConfig, getLocalizedName, getLocalizedDesc, getRarityFrame, getRarityBg, RARITY_BG_MAP, RARITY_FRAME_MAP, ITEM_CONFIG_MAP, isItemUsable, isSkillBook, getSellPrice, SKILL_BOOK_CATEGORY_CONFIG, getSkillBookCategory } from './itemRarityConfig';
 
 // 预加载标记
 let imagesPreloaded = false;
@@ -540,7 +540,26 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
             >
                 {item && (
                     <>
-                        {/* 边框层 - 始终显示品质边框 */}
+                        {/* 物品图标 - 先渲染（在下层） */}
+                        {itemConfig ? (
+                            <Image
+                                src={itemConfig.icon}
+                                style={{
+                                    width: '90%',
+                                    height: '90%',
+                                    horizontalAlign: 'center' as const,
+                                    verticalAlign: 'center' as const,
+                                }}
+                                hittest={false}
+                            />
+                        ) : (
+                            <DOTAItemImage
+                                itemname={item.itemName}
+                                style={{ width: '100%', height: '100%' }}
+                                hittest={false}
+                            />
+                        )}
+                        {/* 边框层 - 后渲染（在上层），确保不被图标遮挡 */}
                         {rarityFrame && (
                             <Image
                                 src={rarityFrame}
@@ -551,25 +570,6 @@ function ItemCell({ index, item, storageType, onUseItem, onDragStart, onDragDrop
                                     verticalAlign: 'center',
                                     opacity: '1.0',
                                 }}
-                                hittest={false}
-                            />
-                        )}
-                        {/* 物品图标 - 使用透明图标或默认图标 */}
-                        {itemConfig ? (
-                            <Image
-                                src={itemConfig.icon}
-                                style={{
-                                    width: '99%',
-                                    height: '99%',
-                                    horizontalAlign: 'center' as const,
-                                    verticalAlign: 'center' as const,
-                                }}
-                                hittest={false}
-                            />
-                        ) : (
-                            <DOTAItemImage
-                                itemname={item.itemName}
-                                style={{ width: '100%', height: '100%' }}
                                 hittest={false}
                             />
                         )}
@@ -1453,16 +1453,46 @@ export function DefaultBackpackPanel() {
                                 textShadow: '0px 0px 4px rgba(0, 0, 0, 0.8)',
                             }}
                         />
-                        {/* 品质 */}
+                        {/* 技能书分类标签 + 品质 */}
                         {hoveredItem.itemConfig && (
-                            <Label
-                                text={`[${rarityNames[hoveredItem.itemConfig.rarity] || '未知'}]`}
-                                style={{
-                                    color: rarityColors[hoveredItem.itemConfig.rarity] || '#888888',
-                                    fontSize: '12px',
-                                    marginBottom: '8px',
-                                }}
-                            />
+                            <Panel style={{
+                                flowChildren: 'right' as const,
+                                marginBottom: '8px',
+                            }}>
+                                {/* 技能书分类标签 */}
+                                {(() => {
+                                    const cat = getSkillBookCategory(hoveredItem.item.itemName);
+                                    const catCfg = SKILL_BOOK_CATEGORY_CONFIG[cat];
+                                    if (!catCfg) return null;
+                                    return (
+                                        <Label
+                                            text={catCfg.label}
+                                            style={{
+                                                color: catCfg.color,
+                                                fontSize: '12px',
+                                                fontWeight: 'bold' as const,
+                                                backgroundColor: `${catCfg.color}22`,
+                                                border: `1px solid ${catCfg.color}66`,
+                                                borderRadius: '3px',
+                                                padding: '1px 6px',
+                                                marginRight: '6px',
+                                            }}
+                                        />
+                                    );
+                                })()}
+                                {/* 品质 */}
+                                <Label
+                                    text={`${rarityNames[hoveredItem.itemConfig.rarity] || '未知'}`}
+                                    style={{
+                                        color: rarityColors[hoveredItem.itemConfig.rarity] || '#888888',
+                                        fontSize: '12px',
+                                        backgroundColor: `${rarityColors[hoveredItem.itemConfig.rarity] || '#888888'}22`,
+                                        border: `1px solid ${rarityColors[hoveredItem.itemConfig.rarity] || '#888888'}66`,
+                                        borderRadius: '3px',
+                                        padding: '1px 6px',
+                                    }}
+                                />
+                            </Panel>
                         )}
                         {/* 描述 */}
                         <Label

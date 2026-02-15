@@ -1,0 +1,177 @@
+Sheet: npc_abilities_custom
+Rows: 8, Cols: 35
+
+  Col 1: 技能名
+  Col 2: 基类
+  Col 3: 脚本路径
+  Col 4: 图标
+  Col 5: 技能行为
+  Col 6: 最大等级
+  Col 7: 冷却
+  Col 8: 魔耗
+  Col 9: 技能类型
+  Col 10: 伤害类型
+  Col 11: 施法距离
+  Col 12: 施法前摇
+  Col 13: 目标团队
+  Col 14: 目标类型
+  Col 15: 分类
+  Col 16: 星级
+  Col 17: 元素
+  Col 18: 数值区域
+  Col 19: 数值1
+  Col 20: 数值2
+  Col 21: 数值3
+  Col 22: 数值4
+  Col 23: 数值5
+  Col 24: 数值6
+  Col 25: 数值7
+  Col 26: 数值8
+  Col 27: 数值9
+  Col 28: 数值10
+  Col 29: None
+  Col 30: 预载区域
+  Col 31: 粒子
+  Col 32: 音效
+  Col 33: None
+  Col 34: 名称(中)
+  Col 35: 描述(中)
+
+=== Row 2: name ===
+  [1] 技能名: name
+  [2] 基类: BaseClass
+  [3] 脚本路径: ScriptFile
+  [4] 图标: AbilityTextureName
+  [5] 技能行为: AbilityBehavior
+  [6] 最大等级: MaxLevel
+  [7] 冷却: AbilityCooldown
+  [8] 魔耗: AbilityManaCost
+  [9] 技能类型: AbilityType
+  [10] 伤害类型: AbilityUnitDamageType
+  [11] 施法距离: AbilityCastRange
+  [12] 施法前摇: AbilityCastPoint
+  [13] 目标团队: AbilityUnitTargetTeam
+  [14] 目标类型: AbilityUnitTargetType
+  [15] 分类: AbilityCategory
+  [16] 星级: AbilityStar
+  [17] 元素: AbilityElement
+  [18] 数值区域: AbilityValues[{]
+  [19] 数值1: 1
+  [20] 数值2: 2
+  [21] 数值3: 3
+  [22] 数值4: 4
+  [23] 数值5: 5
+  [24] 数值6: 6
+  [25] 数值7: 7
+  [26] 数值8: 8
+  [27] 数值9: 9
+  [28] 数值10: 10
+  [29] col_29: [}]
+  [30] 预载区域: Precache[{]
+  [31] 粒子: particle
+  [32] 音效: soundfile
+  [33] col_33: [}]
+  [34] 名称(中): #LocDOTA_Tooltip_ability_{}
+  [35] 描述(中): #LocDOTA_Tooltip_ability_{}_Description
+
+=== Row 3: soldier_war_strike ===
+  [1] 技能名: soldier_war_strike
+  [2] 基类: ability_lua
+  [3] 脚本路径: abilities/soldier_war_strike
+  [4] 图标: soldier_war_strike
+  [5] 技能行为: DOTA_ABILITY_BEHAVIOR_PASSIVE
+  [6] 最大等级: 1
+  [19] 数值1: attacks_to_proc 3
+  [20] 数值2: damage_pct 250
+  [21] 数值3: cleave_radius 400
+  [22] 数值4: cleave_angle 120
+  [31] 粒子: particles/mars_shield_bash_crit_strike_text.vpcf
+  [34] 名称(中): 兵伐 · 裂空
+  [35] 描述(中): 被动：每第3次攻击造成250%暴击伤害，并对前方扇形区域400范围内的敌人造成等额物理伤害。
+
+=== Row 4: generic_hidden ===
+  [1] 技能名: generic_hidden
+  [2] 基类: ability_datadriven
+  [5] 技能行为: DOTA_ABILITY_BEHAVIOR_PASSIVE | DOTA_ABILITY_BEHAVIOR_HIDDEN
+  [6] 最大等级: 1
+
+=== Row 5: crystal_nova_x ===
+  [1] 技能名: crystal_nova_x
+  [2] 基类: ability_lua
+  [3] 脚本路径: examples/abilities/crystal_nova_x.lua
+  [4] 图标: crystal_maiden_crystal_nova
+  [5] 技能行为: DOTA_ABILITY_BEHAVIOR_POINT | DOTA_ABILITY_BEHAVIOR_AOE
+  [6] 最大等级: 4
+  [7] 冷却: 12.0 12.0 12.0 12.0
+  [8] 魔耗: 100 120 140 160
+  [9] 技能类型: DOTA_ABILITY_TYPE_BASIC
+  [10] 伤害类型: DAMAGE_TYPE_MAGICAL
+  [11] 施法距离: 700
+  [12] 施法前摇: 0.3
+  [19] 数值1: duration 4.5
+  [20] 数值2: aoe_radius 400
+  [21] 数值3: movespeed_slow -20 -30 -40 -50
+  [22] 数值4: attackspeed_slow -20 -30 -40 -50
+  [23] 数值5: vision_duration 6.0
+  [24] 数值6: vision_radius 900
+  [25] 数值7: nova_damage 100 150 200 250
+  [34] 名称(中): 冰霜新星
+  [35] 描述(中): 召唤具有破坏性的冰爆，降低目标区域内的敌人的移动速度。
+
+=== Row 6: counter_helix_x ===
+  [1] 技能名: counter_helix_x
+  [2] 基类: ability_lua
+  [3] 脚本路径: examples/abilities/counter_helix_x.lua
+  [4] 图标: axe_counter_helix
+  [5] 技能行为: DOTA_ABILITY_BEHAVIOR_PASSIVE
+  [6] 最大等级: 4
+  [9] 技能类型: DOTA_ABILITY_TYPE_BASIC
+  [10] 伤害类型: DAMAGE_TYPE_PURE
+  [19] 数值1: damage 75 110 145 180
+  [20] 数值2: radius 275
+  [21] 数值3: hit_count 7 6 5 4
+  [31] 粒子: particles/units/heroes/hero_axe/axe_counterhelix_ad.vpcf
+  [32] 音效: soundevents/game_sounds_heroes/game_sounds_axe.vsndevts
+  [34] 名称(中): 反击螺旋
+  [35] 描述(中): 受到一定次数攻击后，斜王就会做出螺旋反击，对附近所有敌方单位造成纯粹伤害。
+
+=== Row 7: tiny_toss_x ===
+  [1] 技能名: tiny_toss_x
+  [2] 基类: ability_lua
+  [3] 脚本路径: examples/abilities/tiny_toss_x.lua
+  [4] 图标: tiny_toss
+  [5] 技能行为: DOTA_ABILITY_BEHAVIOR_UNIT_TARGET | DOTA_ABILITY_BEHAVIOR_AOE
+  [6] 最大等级: 4
+  [7] 冷却: 10
+  [8] 魔耗: 70
+  [10] 伤害类型: DAMAGE_TYPE_MAGICAL
+  [11] 施法距离: 1200
+  [12] 施法前摇: 0
+  [13] 目标团队: DOTA_UNIT_TARGET_TEAM_BOTH
+  [14] 目标类型: DOTA_UNIT_TARGET_HERO | DOTA_UNIT_TARGET_BASIC
+  [19] 数值1: duration 1.1
+  [20] 数值2: grab_radius 275
+  [21] 数值3: radius 275
+  [22] 数值4: bonus_damage_pct 30 60 90
+  [23] 数值5: toss_damage 200 250 300 350
+  [31] 粒子: particles/units/heroes/hero_tiny/tiny_toss_blur.vpcf
+  [34] 名称(中): 投掷
+  [35] 描述(中): 投掷的技能描述！（懒得去找了）你们自己看看这对不对吧！
+
+=== Row 8: ability_public_martial_cleave ===
+  [1] 技能名: ability_public_martial_cleave
+  [2] 基类: ability_lua
+  [3] 脚本路径: abilities/ability_public_martial_cleave
+  [4] 图标: ability_public_martial_cleave
+  [5] 技能行为: DOTA_ABILITY_BEHAVIOR_PASSIVE
+  [6] 最大等级: 4
+  [15] 分类: PUBLIC
+  [16] 星级: 1
+  [17] 元素: MARTIAL
+  [19] 数值1: cleave_percent 30 40 50 60
+  [20] 数值2: cleave_start_width 150
+  [21] 数值3: cleave_end_width 350
+  [22] 数值4: cleave_distance 650
+  [31] 粒子: particles/units/heroes/hero_sven/sven_spell_great_cleave.vpcf
+  [34] 名称(中): 武道 · 横扫
+  [35] 描述(中): 被动：每次普通攻击对前方扇形区域650范围内的敌人造成30%的分裂物理伤害。

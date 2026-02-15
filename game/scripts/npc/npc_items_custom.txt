@@ -4,6 +4,7 @@
 // SourceCode: https://github.com/XavierCHN/gulp-dotax/blob/master/src/sheetToKV.ts
 // Template: https://github.com/XavierCHN/x-template
 #base "npc_items_artifacts.txt"
+#base "npc_items_artifacts.txt"
 "DOTAItems"
 {
 	"item_buy_constitution" {
@@ -206,5 +207,60 @@
 		"IconPath" "file://{images}/custom_game/hud/skill_cleave.png"
 		"ItemUsable" "1"
 		"IsSkillBook" "1"
+		"SkillBookCategory" "MARTIAL"
+	}
+	"item_book_plague_cloud_1" {
+		"AbilityTextureName" "item_book_plague_cloud_1"
+		"BaseClass" "item_lua"
+		"ScriptFile" "items/item_learn_skill"
+		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+		"ID" "1402"
+		"ItemCost" "0"
+		"ItemPurchasable" "0"
+		"ItemSellable" "0"
+		"ItemStackable" "0"
+		"ItemPermanent" "0"
+		"ItemQuality" "1"
+		"LearnAbilityName" "ability_public_plague_cloud"
+		"IconPath" "file://{images}/spellicons/plague_cloud_icon.png"
+		"ItemUsable" "1"
+		"IsSkillBook" "1"
+		"SkillBookCategory" "DIVINITY"
+	}
+	"item_book_golden_bell_1" {
+		"AbilityTextureName" "item_book_golden_bell_1"
+		"BaseClass" "item_lua"
+		"ScriptFile" "items/item_learn_skill"
+		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+		"ID" "1403"
+		"ItemCost" "0"
+		"ItemPurchasable" "0"
+		"ItemSellable" "0"
+		"ItemStackable" "0"
+		"ItemPermanent" "0"
+		"ItemQuality" "1"
+		"LearnAbilityName" "ability_public_golden_bell"
+		"IconPath" "file://{images}/spellicons/golden_bell_shield.png"
+		"ItemUsable" "1"
+		"IsSkillBook" "1"
+		"SkillBookCategory" "GENERAL"
+	}
+	"item_book_flame_storm_1" {
+		"AbilityTextureName" "item_book_flame_storm_1"
+		"BaseClass" "item_lua"
+		"ScriptFile" "items/item_learn_skill"
+		"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_IMMEDIATE | DOTA_ABILITY_BEHAVIOR_NO_TARGET"
+		"ID" "1404"
+		"ItemCost" "0"
+		"ItemPurchasable" "0"
+		"ItemSellable" "0"
+		"ItemStackable" "0"
+		"ItemPermanent" "0"
+		"ItemQuality" "2"
+		"LearnAbilityName" "ability_public_flame_storm"
+		"IconPath" "file://{images}/spellicons/lina_light_strike_array.png"
+		"ItemUsable" "1"
+		"IsSkillBook" "1"
+		"SkillBookCategory" "DIVINITY"
 	}
 }

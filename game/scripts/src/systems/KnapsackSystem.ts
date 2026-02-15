@@ -239,6 +239,9 @@ export class KnapsackSystem {
         // 根据物品名称执行不同效果
         switch (item.itemName) {
             case 'item_book_martial_cleave_1':
+            case 'item_book_plague_cloud_1':
+            case 'item_book_golden_bell_1':
+            case 'item_book_flame_storm_1':
                 // 技能书效果 - 学习技能
                 this.LearnSkillFromBook(playerId, hero, item, storageType, index);
                 break;
@@ -345,7 +348,9 @@ export class KnapsackSystem {
     // 技能书名到技能名的映射
     private readonly SKILL_BOOK_MAP: Record<string, string> = {
         item_book_martial_cleave_1: 'ability_public_martial_cleave', // 武道·横扫
-        // 未来添加更多技能书映射
+        item_book_plague_cloud_1: 'ability_public_plague_cloud', // 神念·噬魂毒阵
+        item_book_golden_bell_1: 'ability_public_golden_bell', // 通用·金钟罩
+        item_book_flame_storm_1: 'ability_public_flame_storm', // 神念·烈焰风暴
     };
 
     // 公共技能格索引 (对应 Ability3, Ability4, Ability5 = F, G, R)
@@ -419,8 +424,10 @@ export class KnapsackSystem {
 
         // 如果有空格子，直接学习
         if (emptySlotIndex !== -1) {
-            this.DoLearnAbility(playerId, hero, abilityName, emptySlotIndex);
-            this.ConsumeItem(playerId, storageType, itemIndex, 1);
+            const success = this.DoLearnAbility(playerId, hero, abilityName, emptySlotIndex);
+            if (success) {
+                this.ConsumeItem(playerId, storageType, itemIndex, 1);
+            }
             return;
         }
 
@@ -451,27 +458,43 @@ export class KnapsackSystem {
 
     /**
      * 执行学习技能
-     * 注意: hero.AddAbility() 会把技能添加到第一个空位
-     * SwapAbilities 不能真正交换槽位，只改变可见性
-     * 所以我们只需添加技能并确保可见，UI会按技能名查找
+     * 只需 AddAbility + SetLevel，引擎会把技能加到末尾。
+     * 自定义 HUD 会扫描所有技能并按发现顺序显示到 F/G/R。
+     * F/G 按键由 Panorama 侧的 $.RegisterKeyBind 处理。
      */
-    private DoLearnAbility(playerId: PlayerID, hero: CDOTA_BaseNPC_Hero, abilityName: string, slotIndex: number): void {
-        // 添加新技能
+    private DoLearnAbility(
+        playerId: PlayerID,
+        hero: CDOTA_BaseNPC_Hero,
+        abilityName: string,
+        slotIndex: number
+    ): boolean {
+        // 添加新技能（引擎放到末尾空位）
+        print(`[KnapsackSystem] DoLearnAbility: Adding ability '${abilityName}' to hero`);
         hero.AddAbility(abilityName);
         const newAbility = hero.FindAbilityByName(abilityName);
 
         if (!newAbility) {
-            return;
+            print(
+                `[KnapsackSystem] ERROR: FindAbilityByName('${abilityName}') returned null! Ability definition not found.`
+            );
+            // 列出英雄当前所有技能
+            for (let i = 0; i < 24; i++) {
+                const ab = hero.GetAbilityByIndex(i);
+                if (ab) {
+                    print(`  -> Ability[${i}]: ${ab.GetAbilityName()} (level=${ab.GetLevel()})`);
+                }
+            }
+            return false;
         }
 
-        // 设置技能属性 - 确保技能可见且激活
+        print(`[KnapsackSystem] DoLearnAbility: Found ability '${abilityName}', setting level 1`);
+
+        // 设置技能可见、激活、等级1
         newAbility.SetLevel(1);
         newAbility.SetHidden(false);
         newAbility.SetActivated(true);
 
-        const currentIndex = newAbility.GetAbilityIndex();
-
-        // 再次确保技能不隐藏（有时候需要延迟设置）
+        // 延迟再确认一次（引擎有时需要一帧）
         Timers.CreateTimer(0.1, () => {
             const ab = hero.FindAbilityByName(abilityName);
             if (ab) {
@@ -480,9 +503,8 @@ export class KnapsackSystem {
             }
         });
 
-        // 槽位 2/3/4 对应 F/G/R
+        // 槽位 0/1/2 对应 F/G/R
         const slotKey = slotIndex === 2 ? 'F' : slotIndex === 3 ? 'G' : 'R';
-
         const player = PlayerResource.GetPlayer(playerId);
         if (player) {
             CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
@@ -493,6 +515,7 @@ export class KnapsackSystem {
 
         // 播放学习特效
         EmitSoundOn('General.LevelUp', hero);
+        return true;
     }
 
     /**
@@ -679,13 +702,15 @@ export class KnapsackSystem {
         if (itemId === 1) {
             // 技能书池 (目前只有一本，以后可以扩展)
             const skillBooks = [
-                { name: 'item_book_martial_cleave_1', displayName: '武道·横扫秘籍', rarity: 1 },
-                // 未来可以添加更多技能书：
-                // { name: 'item_book_xxx_2', displayName: 'xxx', rarity: 2 },
+                { name: 'item_book_martial_cleave_1', displayName: '横扫秘籍', rarity: 1 },
+                { name: 'item_book_plague_cloud_1', displayName: '噬魂毒阵秘籍', rarity: 1 },
+                { name: 'item_book_golden_bell_1', displayName: '金钟罩秘籍', rarity: 1 },
+                { name: 'item_book_flame_storm_1', displayName: '烈焰风暴秘籍', rarity: 2 },
             ];
 
-            // 随机选择一本技能书 (目前只有一本，未来可以加入概率逻辑)
-            const selectedBook = skillBooks[0]; // 目前固定给武道·横扫
+            // 随机选择一本技能书
+            const randomIndex = RandomInt(0, skillBooks.length - 1);
+            const selectedBook = skillBooks[randomIndex];
 
             const skillBookItem: KnapsackItem = {
                 itemName: selectedBook.name,

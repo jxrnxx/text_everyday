@@ -145,7 +145,7 @@ export class modifier_soldier_war_strike extends BaseModifier {
         // CP 1: 扇形位置
         ParticleManager.SetParticleControl(pIndex, 1, targetPos);
 
-        // CP 2: 你要求的参数 (5, 0, 0)
+        // CP 2: 缩放参数 (5, 0, 0)
         ParticleManager.SetParticleControl(pIndex, 2, Vector(5, 0, 0));
 
         // [关键一步!] 强制设置特效的“正前方”为英雄的“正前方”

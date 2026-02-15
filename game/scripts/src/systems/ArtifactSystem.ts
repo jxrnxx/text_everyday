@@ -81,7 +81,6 @@ export class ArtifactSystem {
     private LoadArtifactItemKVs(): void {
         const itemsKV = LoadKeyValues('scripts/npc/npc_items_artifacts.txt');
         if (!itemsKV || typeof itemsKV !== 'object') {
-            print('[ArtifactSystem] 警告: 无法加载 npc_items_artifacts.txt');
             return;
         }
 
@@ -100,11 +99,6 @@ export class ArtifactSystem {
                 }
             }
         }
-        print(
-            `[ArtifactSystem] 装备经验需求已加载: ${Object.keys(this.tierXPRequired)
-                .map(t => `T${t}=${this.tierXPRequired[Number(t)]}`)
-                .join(', ')}`
-        );
     }
 
     /**
@@ -114,7 +108,6 @@ export class ArtifactSystem {
     private LoadArtifactDropKVs(): void {
         const unitsKV = LoadKeyValues('scripts/npc/custom_units.txt');
         if (!unitsKV || typeof unitsKV !== 'object') {
-            print('[ArtifactSystem] 警告: 无法加载 custom_units.txt');
             return;
         }
 
@@ -135,7 +128,6 @@ export class ArtifactSystem {
                 }
             }
         }
-        print(`[ArtifactSystem] 装备经验掉落配置已加载, 共 ${count} 个单位`);
     }
 
     /**
@@ -198,7 +190,6 @@ export class ArtifactSystem {
         const required = this.GetXPRequired(slot.tier);
         const MAX_TIER = 5;
         if (slot.xp >= required && slot.tier < MAX_TIER) {
-            print(`[ArtifactSystem] 击杀触发升阶: 槽位 ${slotIndex}, 经验 ${slot.xp}/${required}`);
             if (slot.tier === 0) {
                 this.UpgradeDormantArtifact(playerId, slotIndex, hero || undefined);
             } else {
@@ -230,11 +221,6 @@ export class ArtifactSystem {
         slot.xp += xpAmount;
         const required = this.GetXPRequired(slot.tier);
         slot.xpRequired = required;
-        print(`[ArtifactSystem] 槽位 ${slotIndex} 获得 ${xpAmount} 经验, 当前: ${slot.xp}/${required}`);
-
-        if (slot.xp >= required) {
-            print(`[ArtifactSystem] 槽位 ${slotIndex} 经验已满! 等待升阶触发`);
-        }
 
         this.SyncToClient(playerId);
     }
@@ -275,11 +261,9 @@ export class ArtifactSystem {
             if (hero) {
                 this.RefreshHeroModifier(hero);
             } else {
-                print(`[ArtifactSystem] WARNING: 初始化时找不到英雄, playerId=${playerId}`);
             }
 
             this.SyncToClient(playerId);
-            print(`[ArtifactSystem] 玩家 ${playerId} 神器数据已初始化 (装备6件蒙尘神器)`);
         }
     }
 
@@ -294,20 +278,17 @@ export class ArtifactSystem {
         }
 
         if (slotIndex < 0 || slotIndex >= this.SLOT_COUNT) {
-            print(`[ArtifactSystem] 无效槽位: ${slotIndex}`);
             return false;
         }
 
         // 从 KV 获取神器信息
         const artifactInfo = this.GetArtifactInfo(itemName);
         if (!artifactInfo) {
-            print(`[ArtifactSystem] 未知神器: ${itemName}`);
             return false;
         }
 
         // 检查槽位是否匹配
         if (artifactInfo.slot !== slotIndex) {
-            print(`[ArtifactSystem] 神器 ${itemName} 不属于槽位 ${slotIndex}`);
             return false;
         }
 
@@ -327,7 +308,6 @@ export class ArtifactSystem {
         }
 
         this.SyncToClient(playerId);
-        print(`[ArtifactSystem] 玩家 ${playerId} 装备了 ${artifactInfo.displayName} (槽位${slotIndex})`);
         return true;
     }
 
@@ -365,25 +345,21 @@ export class ArtifactSystem {
     public UpgradeDormantArtifact(playerId: PlayerID, slotIndex: number, heroOverride?: CDOTA_BaseNPC_Hero): boolean {
         const artifacts = this.playerArtifacts.get(playerId);
         if (!artifacts) {
-            print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
             return false;
         }
 
         if (slotIndex < 0 || slotIndex >= this.SLOT_COUNT) {
-            print(`[ArtifactSystem] 无效槽位: ${slotIndex}`);
             return false;
         }
 
         const currentSlot = artifacts.slots[slotIndex];
         if (!currentSlot.itemName || currentSlot.tier !== 0) {
-            print(`[ArtifactSystem] 槽位 ${slotIndex} 不是蒙尘神器`);
             return false;
         }
 
         // 检查经验是否足够
         const required = this.GetXPRequired(currentSlot.tier);
         if (currentSlot.xp < required) {
-            print(`[ArtifactSystem] 槽位 ${slotIndex} 经验不足: ${currentSlot.xp}/${required}`);
             return false;
         }
         const overflow = currentSlot.xp - required;
@@ -400,14 +376,12 @@ export class ArtifactSystem {
 
         const t1ItemName = slotToT1Item[slotIndex];
         if (!t1ItemName) {
-            print(`[ArtifactSystem] 无法找到槽位 ${slotIndex} 的 Tier 1 物品`);
             return false;
         }
 
         // 获取 Tier 1 物品信息
         const t1Info = this.GetArtifactInfo(t1ItemName);
         if (!t1Info) {
-            print(`[ArtifactSystem] 无法获取 ${t1ItemName} 的信息`);
             return false;
         }
 
@@ -422,9 +396,6 @@ export class ArtifactSystem {
             xp: overflow,
             xpRequired: this.GetXPRequired(t1Info.tier),
         };
-        print(
-            `[ArtifactSystem] 槽位 ${slotIndex} 升级后 tier=${artifacts.slots[slotIndex].tier}, displayName=${artifacts.slots[slotIndex].displayName}`
-        );
 
         // 播放音效和特效
         const hero = heroOverride || PlayerResource.GetSelectedHeroEntity(playerId);
@@ -457,7 +428,6 @@ export class ArtifactSystem {
         }
 
         this.SyncToClient(playerId);
-        print(`[ArtifactSystem] 玩家 ${playerId} 升级了 ${currentSlot.displayName} -> ${t1Info.displayName}`);
         return true;
     }
 
@@ -468,12 +438,10 @@ export class ArtifactSystem {
     public UpgradeSingleArtifact(playerId: PlayerID, slotIndex: number): boolean {
         const artifacts = this.playerArtifacts.get(playerId);
         if (!artifacts) {
-            print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
             return false;
         }
 
         if (slotIndex < 0 || slotIndex >= this.SLOT_COUNT) {
-            print(`[ArtifactSystem] 无效槽位: ${slotIndex}`);
             return false;
         }
 
@@ -493,20 +461,17 @@ export class ArtifactSystem {
         const MAX_TIER = 5;
         const current = artifacts.slots[slotIndex];
         if (!current.itemName) {
-            print(`[ArtifactSystem] 槽位 ${slotIndex} 没有装备神器`);
             return false;
         }
 
         const nextTier = current.tier + 1;
         if (nextTier > MAX_TIER) {
-            print(`[ArtifactSystem] 槽位 ${slotIndex} 已达最高阶 (T${current.tier})`);
             return false;
         }
 
         // 检查经验是否足够
         const required = this.GetXPRequired(current.tier);
         if (current.xp < required) {
-            print(`[ArtifactSystem] 槽位 ${slotIndex} 经验不足: ${current.xp}/${required}`);
             return false;
         }
         const overflow = current.xp - required;
@@ -527,9 +492,7 @@ export class ArtifactSystem {
             xpRequired: this.GetXPRequired(nextTier),
         };
 
-        print(
-            `[ArtifactSystem] 槽位 ${slotIndex} 升级: ${current.displayName} (T${current.tier}) -> ${displayName} (T${nextTier})`
-        );
+        print();
 
         const hero = PlayerResource.GetSelectedHeroEntity(playerId);
         if (hero) {
@@ -573,7 +536,6 @@ export class ArtifactSystem {
     public UpgradeAllArtifacts(playerId: PlayerID): number {
         const artifacts = this.playerArtifacts.get(playerId);
         if (!artifacts) {
-            print(`[ArtifactSystem] 玩家 ${playerId} 没有神器数据`);
             return 0;
         }
 
@@ -610,7 +572,6 @@ export class ArtifactSystem {
 
             const nextTier = current.tier + 1;
             if (nextTier > MAX_TIER) {
-                print(`[ArtifactSystem] 槽位 ${slot} 已达最高阶 (T${current.tier})`);
                 continue;
             }
 
@@ -635,9 +596,6 @@ export class ArtifactSystem {
                 xpRequired: this.GetXPRequired(nextTier),
             };
 
-            print(
-                `[ArtifactSystem] 槽位 ${slot} 升级: ${current.displayName} (T${current.tier}) -> ${displayName} (T${nextTier})`
-            );
             upgraded++;
             if (nextTier > maxTierReached) maxTierReached = nextTier;
         }
@@ -681,7 +639,6 @@ export class ArtifactSystem {
             }
 
             this.SyncToClient(playerId);
-            print(`[ArtifactSystem] 玩家 ${playerId} 全部神器升级完成, 共 ${upgraded} 个槽位`);
         }
 
         return upgraded;
@@ -781,7 +738,6 @@ export class ArtifactSystem {
         // 物品也使用 GetAbilityKeyValuesByName
         const kv = GetAbilityKeyValuesByName(itemName) as any;
         if (!kv) {
-            print(`[ArtifactSystem] GetAbilityKeyValuesByName 返回null: ${itemName}`);
             return null;
         }
 

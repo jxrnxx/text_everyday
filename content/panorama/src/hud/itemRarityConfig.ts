@@ -26,6 +26,7 @@ export interface ItemConfig {
     itemName: string; // 物品内部名 (Excel: 物品名 / name)
     usable: boolean; // 是否可使用 (Excel: 是否可使用 / ItemUsable)
     isSkillBook: boolean; // 是否技能书 (Excel: 是否技能书 / IsSkillBook)
+    skillBookCategory: string; // 技能书分类: MARTIAL/DIVINITY/GENERAL (Excel: 技能书分类 / SkillBookCategory)
 }
 
 // ==================== 本地化函数 ====================
@@ -68,6 +69,7 @@ function buildConfigMap(): Record<string, ItemConfig> {
                 itemName, // 物品内部名
                 usable: Number(data.ItemUsable) === 1, // 是否可使用
                 isSkillBook: Number(data.IsSkillBook) === 1, // 是否技能书
+                skillBookCategory: String(data.SkillBookCategory || ''), // 技能书分类
             };
         }
     }
@@ -143,4 +145,18 @@ export function isItemUsable(itemName: string): boolean {
 /** 检查物品是否是技能书 (Excel: 是否技能书 / IsSkillBook) */
 export function isSkillBook(itemName: string): boolean {
     return ITEM_CONFIG_MAP[itemName]?.isSkillBook || false;
+}
+
+// ==================== 技能书分类 ====================
+
+/** 技能书分类配置 */
+export const SKILL_BOOK_CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
+    MARTIAL: { label: '武道', color: '#ff8c42' },  // 橙红
+    DIVINITY: { label: '神念', color: '#42d4f5' }, // 青蓝
+    GENERAL: { label: '通用', color: '#f5d442' },  // 金黄
+};
+
+/** 获取技能书分类 */
+export function getSkillBookCategory(itemName: string): string {
+    return ITEM_CONFIG_MAP[itemName]?.skillBookCategory || '';
 }
