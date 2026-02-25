@@ -119,11 +119,12 @@ const HeroHUD: FC = () => {
         hasAbility: boolean;
         rarity: number; // 品质等级: 1=凡, 2=灵, 3=仙, 4=神
         abilityEntityIndex: number; // 技能实体索引，用于tooltip显示
+        isPassive: boolean; // 是否被动技能（被动隐藏按键图标）
     }
     const [publicSkills, setPublicSkills] = useState<PublicSkillInfo[]>([
-        { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
-        { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
-        { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
+        { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1, isPassive: false },
+        { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1, isPassive: false },
+        { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1, isPassive: false },
     ]);
 
     // Q技能（soldier_war_strike）的实体索引
@@ -564,20 +565,20 @@ const HeroHUD: FC = () => {
             const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
             if (localHero === -1) return;
 
-            // 公共技能名映射（技能名 -> 品质等级）
-            const PUBLIC_ABILITIES: Record<string, number> = {
-                'ability_public_martial_cleave': 1, // 武道·横扫 - 凡品
-                'ability_public_plague_cloud': 1, // 神念·噬魂毒阵 - 凡品
-                'ability_public_golden_bell': 1, // 通用·金钟罩 - 凡品
-                'ability_public_flame_storm': 2, // 神念·烈焰风暴 - 灵品
+            // 公共技能名映射（技能名 -> {品质, 是否被动}）
+            const PUBLIC_ABILITIES: Record<string, { rarity: number; isPassive: boolean }> = {
+                'ability_public_martial_cleave': { rarity: 1, isPassive: true },  // 武道·横扫 - 凡品 - 被动
+                'ability_public_plague_cloud': { rarity: 1, isPassive: false }, // 神念·噬魂毒阵 - 凡品 - 主动
+                'ability_public_golden_bell': { rarity: 1, isPassive: false }, // 通用·金钟罩 - 凡品 - 主动
+                'ability_public_flame_storm': { rarity: 2, isPassive: false }, // 神念·烈焰风暴 - 灵品 - 主动
                 // 未来添加更多公共技能
             };
 
             // 初始化三个槽位为空
-            const skills: { slotIndex: number; slotKey: string; abilityName: string; hasAbility: boolean; rarity: number; abilityEntityIndex: number }[] = [
-                { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
-                { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
-                { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1 },
+            const skills: { slotIndex: number; slotKey: string; abilityName: string; hasAbility: boolean; rarity: number; abilityEntityIndex: number; isPassive: boolean }[] = [
+                { slotIndex: 0, slotKey: 'F', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1, isPassive: false },
+                { slotIndex: 1, slotKey: 'G', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1, isPassive: false },
+                { slotIndex: 2, slotKey: 'R', abilityName: '', hasAbility: false, rarity: 1, abilityEntityIndex: -1, isPassive: false },
             ];
 
             // 扫描英雄的所有技能（最多24个）
@@ -602,9 +603,9 @@ const HeroHUD: FC = () => {
                 }
 
                 // 检查是否是公共技能
-                const abilityRarity = PUBLIC_ABILITIES[abilityName];
-                if (abilityName && abilityRarity !== undefined && level > 0) {
-                    foundAbilities.push({ name: abilityName, rarity: abilityRarity, entityIndex: ability });
+                const abilityInfo = PUBLIC_ABILITIES[abilityName];
+                if (abilityName && abilityInfo !== undefined && level > 0) {
+                    foundAbilities.push({ name: abilityName, rarity: abilityInfo.rarity, isPassive: abilityInfo.isPassive, entityIndex: ability });
                 }
             }
 
@@ -618,6 +619,7 @@ const HeroHUD: FC = () => {
                     skills[idx].hasAbility = true;
                     skills[idx].rarity = ability.rarity;
                     skills[idx].abilityEntityIndex = ability.entityIndex;
+                    skills[idx].isPassive = ability.isPassive;
                 }
             });
 
@@ -1229,30 +1231,7 @@ const HeroHUD: FC = () => {
                                 }}
                             />
                         </Panel>
-                        {/* 键位标签 - 左上角 */}
-                        <Panel
-                            style={{
-                                position: '-2px -2px 0px' as const,
-                                width: '14px',
-                                height: '14px',
-                                backgroundColor: '#1a1a2e',
-                                border: '1px solid #333355',
-                                borderRadius: '2px',
-                            }}
-                        >
-                            <Label
-                                text="Q"
-                                style={{
-                                    width: '100%',
-                                    color: '#cccccc',
-                                    fontSize: '11px',
-                                    fontWeight: 'bold',
-                                    textAlign: 'center' as const,
-                                    horizontalAlign: 'center' as const,
-                                    verticalAlign: 'center' as const,
-                                }}
-                            />
-                        </Panel>
+                        {/* Q技能(兵伐·裂空)为被动技能，不显示键位标签 */}
                     </Panel>
 
                     {/* 第2-3个技能槽 - 职业技能2、3 (空槽) W/E */}
@@ -1312,7 +1291,7 @@ const HeroHUD: FC = () => {
                             'ability_public_martial_cleave': 'file://{images}/spellicons/ability_public_martial_cleave.png',
                             'ability_public_plague_cloud': 'file://{images}/spellicons/plague_cloud_icon.png',
                             'ability_public_golden_bell': 'file://{images}/spellicons/golden_bell_shield.png',
-                            'ability_public_flame_storm': 'file://{images}/spellicons/lina_light_strike_array.png',
+                            'ability_public_flame_storm': 'file://{images}/spellicons/flame_storm_icon.png',
                             // 未来添加更多公共技能图标
                         };
                         const frameImg = RARITY_FRAMES[skill.rarity] || RARITY_FRAMES[1];
@@ -1355,7 +1334,7 @@ const HeroHUD: FC = () => {
                                                 position: '3px 3px 0px' as const,
                                             }}
                                         />
-                                        {/* CD遮罩 - 像时钟一样顺时针消退 */}
+                                        {/* CD遮罩 - 精灵图扇形扫过（60帧预渲染） */}
                                         {(() => {
                                             if (skill.abilityEntityIndex === -1) return null;
                                             // @ts-ignore
@@ -1363,58 +1342,34 @@ const HeroHUD: FC = () => {
                                             if (cdRemain <= 0) return null;
                                             // @ts-ignore
                                             const cdTotal = Abilities.GetCooldownLength(skill.abilityEntityIndex) || 1;
-                                            const ratio = cdRemain / cdTotal;
-                                            const revealAngle = (1 - ratio) * 360;
+                                            const ratio = cdRemain / cdTotal; // 1.0=刚进CD, 0.0=CD结束
+                                            // 60帧精灵图: frame 0=全遮, frame 59=几乎全露
+                                            const frameIndex = Math.min(59, Math.max(0, Math.floor((1 - ratio) * 60)));
+                                            const offsetX = -(frameIndex * 48);
                                             return (
                                                 <>
-                                                    {/* 右半遮罩 */}
+                                                    {/* 扇形遮罩帧 */}
                                                     <Panel style={{
-                                                        width: '24px',
-                                                        height: '48px',
-                                                        position: '27px 3px 0px' as const,
-                                                        overflow: 'clip' as const,
-                                                    }}>
-                                                        {revealAngle < 180 && (
-                                                            <Panel style={{
-                                                                width: '24px',
-                                                                height: '48px',
-                                                                backgroundColor: 'rgba(0,0,0,0.75)',
-                                                                transformOrigin: '0% 50%',
-                                                                transform: `rotateZ(${revealAngle}deg)`,
-                                                            }} />
-                                                        )}
-                                                    </Panel>
-                                                    {/* 左半遮罩 */}
-                                                    <Panel style={{
-                                                        width: '24px',
+                                                        width: '48px',
                                                         height: '48px',
                                                         position: '3px 3px 0px' as const,
                                                         overflow: 'clip' as const,
                                                     }}>
-                                                        {revealAngle <= 180 ? (
-                                                            <Panel style={{
-                                                                width: '24px',
+                                                        <Image
+                                                            src='file://{images}/hud/cd_sweep_spritesheet.png'
+                                                            style={{
+                                                                width: '2880px',
                                                                 height: '48px',
-                                                                backgroundColor: 'rgba(0,0,0,0.75)',
-                                                            }} />
-                                                        ) : (
-                                                            <Panel style={{
-                                                                width: '24px',
-                                                                height: '48px',
-                                                                backgroundColor: 'rgba(0,0,0,0.75)',
-                                                                transformOrigin: '100% 50%',
-                                                                transform: `rotateZ(${180 - revealAngle}deg)`,
-                                                            }} />
-                                                        )}
+                                                                marginLeft: `${offsetX}px`,
+                                                            }}
+                                                        />
                                                     </Panel>
-                                                    {/* CD秒数 - 居中显示 */}
-                                                    <Panel
-                                                        style={{
-                                                            width: '48px',
-                                                            height: '48px',
-                                                            position: '3px 3px 0px' as const,
-                                                        }}
-                                                    >
+                                                    {/* CD秒数 */}
+                                                    <Panel style={{
+                                                        width: '48px',
+                                                        height: '48px',
+                                                        position: '3px 3px 0px' as const,
+                                                    }}>
                                                         <Label
                                                             text={String(Math.ceil(cdRemain))}
                                                             style={{
@@ -1439,30 +1394,32 @@ const HeroHUD: FC = () => {
                                                 position: '0px 0px 0px' as const,
                                             }}
                                         />
-                                        {/* 键位标签 - 左上角 */}
-                                        <Panel
-                                            style={{
-                                                position: '-2px -2px 0px' as const,
-                                                width: '14px',
-                                                height: '14px',
-                                                backgroundColor: '#1a1a2e',
-                                                border: '1px solid #333355',
-                                                borderRadius: '2px',
-                                            }}
-                                        >
-                                            <Label
-                                                text={skill.slotKey}
+                                        {/* 键位标签 - 左上角（被动技能隐藏） */}
+                                        {!skill.isPassive && (
+                                            <Panel
                                                 style={{
-                                                    width: '100%',
-                                                    color: '#cccccc',
-                                                    fontSize: '11px',
-                                                    fontWeight: 'bold',
-                                                    textAlign: 'center' as const,
-                                                    horizontalAlign: 'center' as const,
-                                                    verticalAlign: 'center' as const,
+                                                    position: '-2px -2px 0px' as const,
+                                                    width: '14px',
+                                                    height: '14px',
+                                                    backgroundColor: '#1a1a2e',
+                                                    border: '1px solid #333355',
+                                                    borderRadius: '2px',
                                                 }}
-                                            />
-                                        </Panel>
+                                            >
+                                                <Label
+                                                    text={skill.slotKey}
+                                                    style={{
+                                                        width: '100%',
+                                                        color: '#cccccc',
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        textAlign: 'center' as const,
+                                                        horizontalAlign: 'center' as const,
+                                                        verticalAlign: 'center' as const,
+                                                    }}
+                                                />
+                                            </Panel>
+                                        )}
                                     </>
                                 ) : (
                                     <>

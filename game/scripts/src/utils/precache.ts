@@ -53,6 +53,14 @@ export default function Precache(context: CScriptPrecacheContext) {
             'particles/custom_plague_cloud.vpcf',
             // Plague Cloud Sound Events
             'soundevents/game_sounds_heroes/game_sounds_pugna.vsndevts',
+            // Flame Storm (烈焰风暴) - 自定义火焰粒子
+            'particles/custom_flame_storm.vpcf',
+            'particles/custom_flame_storm_ring.vpcf',
+            'particles/custom_flame_storm_smoke.vpcf',
+            'particles/custom_flame_storm_burst.vpcf',
+            'soundevents/game_sounds_heroes/game_sounds_lina.vsndevts',
+            'soundevents/game_sounds_heroes/game_sounds_phoenix.vsndevts',
+            'soundevents/game_sounds_heroes/game_sounds_jakiro.vsndevts',
             // Golden Bell Shield (金钟罩) - 金色护盾 + 风暴之锤爆炸
             'particles/omniknight_repel_buff_text.vpcf',
             'particles/units/heroes/hero_sven/sven_storm_bolt_projectile_explosion.vpcf',

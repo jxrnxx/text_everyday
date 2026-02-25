@@ -70,7 +70,9 @@ export class KnapsackSystem {
         CustomGameEventManager.RegisterListener('backpack_combine_equip', (_, event) => { });
 
         // 合成技能
-        CustomGameEventManager.RegisterListener('backpack_combine_skill', (_, event) => { });
+        CustomGameEventManager.RegisterListener('backpack_combine_skill', (_, event) => {
+            this.CombineSkillBooks(event.PlayerID);
+        });
 
         // 技能商人购买
         CustomGameEventManager.RegisterListener('cmd_ability_shop_purchase', (_, event) => {
@@ -609,9 +611,10 @@ export class KnapsackSystem {
      * 整理单个存储
      */
     private TidyStorage(items: (KnapsackItem | null)[], maxSize: number): void {
-        // 收集所有非空物品
+        // 收集所有非空物品 (使用索引循环，避免 Lua ipairs 遇 nil 断开)
         const nonNullItems: KnapsackItem[] = [];
-        for (const item of items) {
+        for (let i = 0; i < maxSize; i++) {
+            const item = items[i];
             if (item) {
                 nonNullItems.push(item);
             }
@@ -619,13 +622,18 @@ export class KnapsackSystem {
 
         // 合并同类可堆叠物品
         const mergedItems: KnapsackItem[] = [];
-        for (const item of nonNullItems) {
+        for (let j = 0; j < nonNullItems.length; j++) {
+            const item = nonNullItems[j];
             if (item.stackable) {
-                const existing = mergedItems.find(i => i.itemName === item.itemName);
-                if (existing) {
-                    existing.charges += item.charges;
-                    continue;
+                let found = false;
+                for (let k = 0; k < mergedItems.length; k++) {
+                    if (mergedItems[k].itemName === item.itemName) {
+                        mergedItems[k].charges += item.charges;
+                        found = true;
+                        break;
+                    }
                 }
+                if (found) continue;
             }
             mergedItems.push({ ...item });
         }
@@ -708,9 +716,21 @@ export class KnapsackSystem {
                 { name: 'item_book_flame_storm_1', displayName: '烈焰风暴秘籍', rarity: 2 },
             ];
 
-            // 随机选择一本技能书
-            const randomIndex = RandomInt(0, skillBooks.length - 1);
-            const selectedBook = skillBooks[randomIndex];
+            // 加权随机选择一本技能书
+            // 92% 凡品(1级) → 3本均分, 7% 灵品(2级), 1% 神品(4级)
+            const roll = RandomInt(1, 100);
+            let selectedBook;
+            if (roll <= 92) {
+                // 92%: 随机1级书 (3本均分 ≈ 30.67% each)
+                const subRoll = RandomInt(0, 2);
+                selectedBook = skillBooks[subRoll]; // 横扫/噬魂毒阵/金钟罩
+            } else if (roll <= 99) {
+                // 7%: 2级书
+                selectedBook = skillBooks[3]; // 烈焰风暴
+            } else {
+                // 1%: 4级书 (暂时给烈焰风暴，后续有4级书时替换)
+                selectedBook = skillBooks[3]; // TODO: 替换为4级技能书
+            }
 
             const skillBookItem: KnapsackItem = {
                 itemName: selectedBook.name,
@@ -765,6 +785,133 @@ export class KnapsackSystem {
                 } as never);
             }
         }
+    }
+
+    /**
+     * 合成技能书 - 将私人背包中最前方的 3 本相同品质的技能书合成为 1 本更高级别的随机技能书
+     * 逻辑：
+     * - 扫描私人背包从前往后，找到所有技能书
+     * - 找到第一组 3 本相同品质(rarity)的技能书
+     * - 消耗它们，生成 1 本 rarity+1 的随机技能书
+     */
+    private CombineSkillBooks(playerId: PlayerID): void {
+        const storage = this.playerStorage.get(playerId);
+        if (!storage) return;
+
+        const privateItems = storage.privateItems;
+
+        // 技能书品质映射 (与 gacha 中的定义保持一致)
+        const BOOK_RARITY: Record<string, number> = {
+            item_book_martial_cleave_1: 1,
+            item_book_plague_cloud_1: 1,
+            item_book_golden_bell_1: 1,
+            item_book_flame_storm_1: 2,
+            // 未来可扩展更高级别的技能书
+        };
+
+        // 合成产出池：每个品质等级对应的可产出技能书
+        // 品质 1 合成 → 随机获得品质 2 的技能书
+        // 品质 2 合成 → 随机获得品质 3 的技能书 (待扩展)
+        const COMBINE_OUTPUT: Record<number, { name: string; displayName: string; rarity: number }[]> = {
+            1: [
+                // 3本凡品 → 1本灵品
+                { name: 'item_book_flame_storm_1', displayName: '烈焰风暴秘籍', rarity: 2 },
+            ],
+            // 未来可添加更高级别的合成产出
+        };
+
+        // Step 1: 扫描私人背包，找出所有技能书及其位置和品质
+        const bookSlots: { index: number; rarity: number; itemName: string }[] = [];
+        for (let i = 0; i < privateItems.length; i++) {
+            const item = privateItems[i];
+            if (item && BOOK_RARITY[item.itemName] !== undefined) {
+                bookSlots.push({ index: i, rarity: BOOK_RARITY[item.itemName], itemName: item.itemName });
+            }
+        }
+
+        // Step 2: 按品质分组，找第一个有 >= 3 本的品质组（按品质从低到高）
+        const rarityGroups: Record<number, number[]> = {};
+        for (const slot of bookSlots) {
+            if (!rarityGroups[slot.rarity]) {
+                rarityGroups[slot.rarity] = [];
+            }
+            rarityGroups[slot.rarity].push(slot.index);
+        }
+
+        const sortedRarities = Object.keys(rarityGroups)
+            .map(k => parseInt(k))
+            .sort((a, b) => a - b);
+        let targetRarity = -1;
+        let targetIndices: number[] = [];
+
+        for (const rarity of sortedRarities) {
+            if (rarityGroups[rarity].length >= 3) {
+                targetRarity = rarity;
+                targetIndices = rarityGroups[rarity].slice(0, 3); // 取最前面3本
+                break;
+            }
+        }
+
+        const player = PlayerResource.GetPlayer(playerId);
+
+        if (targetRarity === -1 || targetIndices.length < 3) {
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: '需要3本相同品质的技能书才能合成！',
+                    duration: 3,
+                } as never);
+            }
+            return;
+        }
+
+        // Step 3: 检查是否有合成产出
+        const outputPool = COMBINE_OUTPUT[targetRarity];
+        if (!outputPool || outputPool.length === 0) {
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: '该品质的技能书已是最高级，无法合成！',
+                    duration: 3,
+                } as never);
+            }
+            return;
+        }
+
+        // Step 4: 消耗 3 本技能书 (从后往前删除以避免索引偏移)
+        const sortedTargetIndices = [...targetIndices].sort((a, b) => b - a);
+        for (const idx of sortedTargetIndices) {
+            privateItems[idx] = null;
+        }
+
+        // Step 5: 随机选择产出技能书
+        const outputIndex = RandomInt(0, outputPool.length - 1);
+        const outputBook = outputPool[outputIndex];
+
+        const newBook: KnapsackItem = {
+            itemName: outputBook.name,
+            itemId: 200 + outputIndex, // 合成技能书ID从200开始
+            charges: 1,
+            stackable: false,
+        };
+
+        // Step 6: 添加到私人背包
+        const success = this.AddItemToPrivate(playerId, newBook);
+        if (success) {
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: `合成成功！获得: ${outputBook.displayName}`,
+                    duration: 3,
+                } as never);
+            }
+        } else {
+            if (player) {
+                CustomGameEventManager.Send_ServerToPlayer(player, 'custom_toast', {
+                    message: '背包已满，合成失败！',
+                    duration: 3,
+                } as never);
+            }
+        }
+
+        this.SyncToClient(playerId);
     }
 
     /**

@@ -686,7 +686,13 @@ function ActionButton({ id, text, width, height, marginLeft = 0, onClick }: {
     marginLeft?: number;
     onClick?: () => void;
 }) {
+    const [isPressed, setIsPressed] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
     const handleClick = () => {
+        // 按下动画
+        setIsPressed(true);
+        $.Schedule(0.15, () => setIsPressed(false));
         onClick?.();
     };
 
@@ -695,18 +701,44 @@ function ActionButton({ id, text, width, height, marginLeft = 0, onClick }: {
         height: `${height}px`,
         marginLeft: `${marginLeft}px`,
         marginRight: '3px',
+        // 按下时缩小
+        transform: isPressed ? 'scale3d(0.93, 0.93, 1)' : (isHovered ? 'scale3d(1.03, 1.03, 1)' : 'none'),
+        transition: 'transform 0.1s ease-out 0s',
     };
 
     const imageStyle = {
         ...styles.buttonImage,
         width: '100%',
         height: '100%',
+        // 按下时增加金色发光，hover时微亮
+        boxShadow: isPressed
+            ? '0px 0px 12px rgba(255, 215, 0, 0.8), inset 0px 0px 8px rgba(255, 215, 0, 0.3)'
+            : (isHovered
+                ? '0px 0px 8px rgba(255, 215, 0, 0.4), 0px 2px 6px rgba(0, 0, 0, 0.4)'
+                : '0px 2px 6px rgba(0, 0, 0, 0.4)'),
+        border: isPressed
+            ? '1px solid #ffd700'
+            : (isHovered ? '1px solid #daa520' : '1px solid #b8860b'),
+        brightness: isPressed ? 1.3 : 1.0,
+    };
+
+    const textStyle = {
+        ...styles.buttonText,
+        color: isPressed ? '#ffffff' : (isHovered ? '#ffe066' : '#ffd700'),
+        textShadow: isPressed
+            ? '0px 0px 8px rgba(255, 215, 0, 0.9), 0px 1px 3px rgba(0, 0, 0, 0.9)'
+            : '0px 1px 3px rgba(0, 0, 0, 0.9)',
     };
 
     return (
         <Panel style={wrapperStyle}>
-            <Button style={imageStyle} onactivate={handleClick}>
-                <Label style={styles.buttonText} text={text} />
+            <Button
+                style={imageStyle}
+                onactivate={handleClick}
+                onmouseover={() => setIsHovered(true)}
+                onmouseout={() => { setIsHovered(false); setIsPressed(false); }}
+            >
+                <Label style={textStyle} text={text} />
             </Button>
         </Panel>
     );
@@ -1388,7 +1420,7 @@ export function DefaultBackpackPanel() {
                                 text="合成装备"
                                 width={110}
                                 height={38}
-                                marginLeft={0}
+                                marginLeft={5}
                                 onClick={handleCombineEquip}
                             />
                             <ActionButton

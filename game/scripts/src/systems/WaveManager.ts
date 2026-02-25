@@ -362,14 +362,14 @@ export class WaveManager {
                     Timers.CreateTimer(0.1, () => {
                         ExecuteOrderFromTable({
                             UnitIndex: unit.entindex(),
-                            OrderType: UnitOrder.ATTACK_MOVE,
+                            OrderType: UnitOrder.MOVE_TO_POSITION,
                             Position: targetPos,
                             Queue: false,
                         });
                         return undefined;
                     });
 
-                    // 设置 AI 思考能力（与旧代码一致的仇恨逻辑）
+                    // 设置 AI 思考能力（只攻击英雄和基地，不攻击路过的野怪）
                     unit.SetContextThink(
                         'CreepThink',
                         () => {
@@ -378,23 +378,22 @@ export class WaveManager {
                                 const currentTarget = unit.GetAggroTarget();
 
                                 // 1. Leash 机制（防风筝/脱战）
-                                // 追英雄超过 1000 距离就放弃，继续去打基地
                                 if (currentTarget && currentTarget.IsHero()) {
                                     const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
                                     if (dist > 1000) {
+                                        // 放弃追击，走回基地（不用ATTACK_MOVE，避免打野怪）
                                         ExecuteOrderFromTable({
                                             UnitIndex: unit.entindex(),
-                                            OrderType: UnitOrder.ATTACK_MOVE,
+                                            OrderType: UnitOrder.MOVE_TO_POSITION,
                                             Position: targetPos,
                                             Queue: false,
                                         });
                                         return 1.0;
                                     }
-                                    return 0.5; // 正在追英雄，检查频率稍高
+                                    return 0.5;
                                 }
 
-                                // 2. 转火机制
-                                // 攻击建筑时，如果附近 800 范围有英雄，就转火
+                                // 2. 在攻击基地(建筑)时，检测周围有没有英雄要转火
                                 if (currentTarget && currentTarget.IsBuilding()) {
                                     const enemies = FindUnitsInRadius(
                                         unit.GetTeamNumber(),
@@ -419,16 +418,68 @@ export class WaveManager {
                                     }
                                 }
 
-                                // 3. 发呆补救
-                                // 如果单位 Idle，重新下达移动命令
-                                if (unit.IsIdle()) {
+                                // 3. 空闲/没目标时：主动搜索英雄或攻击基地
+                                if (unit.IsIdle() || !currentTarget) {
+                                    // 先搜索附近 700 范围的英雄
+                                    const nearbyHeroes = FindUnitsInRadius(
+                                        unit.GetTeamNumber(),
+                                        origin,
+                                        undefined,
+                                        700,
+                                        UnitTargetTeam.ENEMY,
+                                        UnitTargetType.HERO,
+                                        UnitTargetFlags.NONE,
+                                        FindOrder.CLOSEST,
+                                        false
+                                    );
+
+                                    if (nearbyHeroes.length > 0) {
+                                        ExecuteOrderFromTable({
+                                            UnitIndex: unit.entindex(),
+                                            OrderType: UnitOrder.ATTACK_TARGET,
+                                            TargetIndex: nearbyHeroes[0].entindex(),
+                                            Queue: false,
+                                        });
+                                        return 0.5;
+                                    }
+
+                                    // 没有英雄，检查是否到达基地附近
+                                    const dx = origin.x - targetPos.x;
+                                    const dy = origin.y - targetPos.y;
+                                    const distToBase = math.sqrt(dx * dx + dy * dy);
+
+                                    if (distToBase < 500) {
+                                        // 到达基地附近，搜索基地建筑并攻击
+                                        const nearbyBuildings = FindUnitsInRadius(
+                                            unit.GetTeamNumber(),
+                                            origin,
+                                            undefined,
+                                            600,
+                                            UnitTargetTeam.ENEMY,
+                                            UnitTargetType.BUILDING,
+                                            UnitTargetFlags.NONE,
+                                            FindOrder.CLOSEST,
+                                            false
+                                        );
+                                        if (nearbyBuildings.length > 0) {
+                                            ExecuteOrderFromTable({
+                                                UnitIndex: unit.entindex(),
+                                                OrderType: UnitOrder.ATTACK_TARGET,
+                                                TargetIndex: nearbyBuildings[0].entindex(),
+                                                Queue: false,
+                                            });
+                                            return 1.0;
+                                        }
+                                    }
+
+                                    // 还没到基地，继续走（用 MOVE_TO_POSITION 避免打野怪）
                                     const canFindPath = GridNav.CanFindPath(origin, targetPos);
                                     if (!canFindPath) {
                                         FindClearSpaceForUnit(unit, origin, true);
                                     }
                                     ExecuteOrderFromTable({
                                         UnitIndex: unit.entindex(),
-                                        OrderType: UnitOrder.ATTACK_MOVE,
+                                        OrderType: UnitOrder.MOVE_TO_POSITION,
                                         Position: targetPos,
                                         Queue: false,
                                     });
@@ -467,11 +518,11 @@ export class WaveManager {
             this.spawnedUnits.push(boss);
             boss.SetAcquisitionRange(700);
 
-            // Boss也向目标移动
+            // Boss也向目标移动（用 MOVE_TO_POSITION 避免打野怪）
             const targetPos = this.GetTargetPosition();
             ExecuteOrderFromTable({
                 UnitIndex: boss.entindex(),
-                OrderType: UnitOrder.ATTACK_MOVE,
+                OrderType: UnitOrder.MOVE_TO_POSITION,
                 Position: targetPos,
                 Queue: false,
             });
@@ -523,7 +574,7 @@ export class WaveManager {
                 const targetPos = this.GetTargetPosition();
                 ExecuteOrderFromTable({
                     UnitIndex: guard.entindex(),
-                    OrderType: UnitOrder.ATTACK_MOVE,
+                    OrderType: UnitOrder.MOVE_TO_POSITION,
                     Position: targetPos,
                     Queue: false,
                 });

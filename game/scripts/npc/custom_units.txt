@@ -28,6 +28,7 @@
 		"StatusMana" "0"
 		"BoundsHullName" "DOTA_HULL_SIZE_BUILDING"
 		"CustomDrop_Faith" "0"
+		"TeamName" "DOTA_TEAM_GOODGUYS"
 	}
 	"npc_creep_train_tier1" {
 		"BaseClass" "npc_dota_creature"

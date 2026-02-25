@@ -48,9 +48,9 @@ $.GetContextPanel().SetPanelEvent('oncontextmenu', () => {
     }
 });
 
-// Helper: Reload Scripts with 'R' (Only in Tools Mode)
+// Helper: Reload Scripts with 'F5' (Only in Tools Mode) — R key reserved for public skill
 if (Game.IsInToolsMode()) {
-    $.RegisterKeyBind($.GetContextPanel(), 'key_r', () => {
+    $.RegisterKeyBind($.GetContextPanel(), 'key_f5', () => {
         Game.ServerCmd('dota_reload_addon_script');
     });
 }
@@ -108,7 +108,7 @@ Game.AddCommand(cmdBackpackName, () => {
 
 Game.CreateCustomKeyBind('TAB', cmdBackpackName);
 
-// ===== Public Skill Keybinds (F/G Keys) =====
+// ===== Public Skill Keybinds (F/G/R Keys) =====
 // 公共技能名列表
 const PUBLIC_ABILITY_NAMES = [
     'ability_public_martial_cleave',
@@ -165,6 +165,18 @@ Game.AddCommand(cmdSkillG, () => {
     }
 }, '', 0);
 Game.CreateCustomKeyBind('G', cmdSkillG);
+
+// R 键 → 第三个公共技能
+const cmdSkillR = 'cmd_public_skill_r_' + Math.floor(Math.random() * 10000);
+Game.AddCommand(cmdSkillR, () => {
+    const localHero = Players.GetPlayerHeroEntityIndex(Players.GetLocalPlayer());
+    const ability = findPublicAbilityEntity(2);
+    if (ability !== -1 && localHero !== -1) {
+        // @ts-ignore
+        Abilities.ExecuteAbility(ability, localHero, false);
+    }
+}, '', 0);
+Game.CreateCustomKeyBind('R', cmdSkillR);
 
 // ===== 滚轮调整镜头Z轴高度 =====
 // 用于在高海拔地形区域（如3000px高度差）查看地图

@@ -692,6 +692,11 @@ export class GameMode {
             unit.SetDeathXP(0); // 禁用击杀经验奖励
         }
 
+        // [Base] 确保基地属于 GOODGUYS 阵营（防止玩家攻击自己基地）
+        if (unit.GetUnitName() === 'npc_dota_home_base') {
+            unit.SetTeam(DotaTeam.GOODGUYS);
+        }
+
         if (unit.IsRealHero()) {
             const hero = unit as CDOTA_BaseNPC_Hero;
             const heroName = hero.GetUnitName();
@@ -825,7 +830,7 @@ export class GameMode {
                                     Profession: '妖兽', // 可从 KV 读取
                                 });
 
-                                // 强制赋予 AI 思考能力 (优化版：只在必要时干预)
+                                // 强制赋予 AI 思考能力 (优化版：只攻击英雄和基地，不攻击路过的野怪)
                                 unit.SetContextThink(
                                     'ZombieThink',
                                     () => {
@@ -834,14 +839,13 @@ export class GameMode {
                                             const currentTarget = unit.GetAggroTarget();
 
                                             // 1. Leash 机制 (防风筝/脱战)
-                                            // 引擎自带的 ChaseDistance 往往对自定义单位无效，所以保留这个简单的距离检查
                                             if (currentTarget && currentTarget.IsHero()) {
                                                 const dist = CalcDistanceBetweenEntityOBB(unit, currentTarget);
                                                 if (dist > 1000) {
-                                                    // 追太远了，放弃追击，继续去打基地
+                                                    // 追太远了，放弃追击，走回基地（不用ATTACK_MOVE，避免打野怪）
                                                     ExecuteOrderFromTable({
                                                         UnitIndex: unit.entindex(),
-                                                        OrderType: UnitOrder.ATTACK_MOVE,
+                                                        OrderType: UnitOrder.MOVE_TO_POSITION,
                                                         Position: targetPos,
                                                         Queue: false,
                                                     });
@@ -850,14 +854,13 @@ export class GameMode {
                                                 return 0.5; // 正在追英雄，检查频率稍微高一点
                                             }
 
-                                            // 2. 只有在攻击基地(建筑)时，才去检测周围有没有英雄
-                                            // 这样避免了走路时也一直在搜敌(原生 AttackMove 走路时会自动搜敌)
+                                            // 2. 在攻击基地(建筑)时，检测周围有没有英雄要转火
                                             if (currentTarget && currentTarget.IsBuilding()) {
                                                 const enemies = FindUnitsInRadius(
                                                     unit.GetTeamNumber(),
                                                     origin,
                                                     undefined,
-                                                    800, // 就在这个时候看一眼周围有没有人
+                                                    800,
                                                     UnitTargetTeam.ENEMY,
                                                     UnitTargetType.HERO, // 只找英雄
                                                     UnitTargetFlags.NONE,
@@ -866,7 +869,6 @@ export class GameMode {
                                                 );
 
                                                 if (enemies.length > 0) {
-                                                    // 既然在打塔的时候旁边有人，那肯定是玩家来守塔了，转火！
                                                     ExecuteOrderFromTable({
                                                         UnitIndex: unit.entindex(),
                                                         OrderType: UnitOrder.ATTACK_TARGET,
@@ -877,16 +879,69 @@ export class GameMode {
                                                 }
                                             }
 
-                                            // 3. 断线重连/发呆补救
-                                            // 如果单位当前没有在做什么 (Idle)，才下达命令
-                                            if (unit.IsIdle()) {
+                                            // 3. 空闲/没目标时：主动搜索英雄或攻击基地
+                                            if (unit.IsIdle() || !currentTarget) {
+                                                // 先搜索附近 700 范围的英雄
+                                                const nearbyHeroes = FindUnitsInRadius(
+                                                    unit.GetTeamNumber(),
+                                                    origin,
+                                                    undefined,
+                                                    700,
+                                                    UnitTargetTeam.ENEMY,
+                                                    UnitTargetType.HERO,
+                                                    UnitTargetFlags.NONE,
+                                                    FindOrder.CLOSEST,
+                                                    false
+                                                );
+
+                                                if (nearbyHeroes.length > 0) {
+                                                    // 附近有英雄，攻击最近的
+                                                    ExecuteOrderFromTable({
+                                                        UnitIndex: unit.entindex(),
+                                                        OrderType: UnitOrder.ATTACK_TARGET,
+                                                        TargetIndex: nearbyHeroes[0].entindex(),
+                                                        Queue: false,
+                                                    });
+                                                    return 0.5;
+                                                }
+
+                                                // 没有英雄，检查是否到达基地附近
+                                                const dx = origin.x - targetPos.x;
+                                                const dy = origin.y - targetPos.y;
+                                                const distToBase = math.sqrt(dx * dx + dy * dy);
+
+                                                if (distToBase < 500) {
+                                                    // 到达基地附近，搜索基地建筑并攻击
+                                                    const buildings = FindUnitsInRadius(
+                                                        unit.GetTeamNumber(),
+                                                        origin,
+                                                        undefined,
+                                                        600,
+                                                        UnitTargetTeam.ENEMY,
+                                                        UnitTargetType.BUILDING,
+                                                        UnitTargetFlags.NONE,
+                                                        FindOrder.CLOSEST,
+                                                        false
+                                                    );
+                                                    if (buildings.length > 0) {
+                                                        ExecuteOrderFromTable({
+                                                            UnitIndex: unit.entindex(),
+                                                            OrderType: UnitOrder.ATTACK_TARGET,
+                                                            TargetIndex: buildings[0].entindex(),
+                                                            Queue: false,
+                                                        });
+                                                        return 1.0;
+                                                    }
+                                                }
+
+                                                // 还没到基地，继续走（用 MOVE_TO_POSITION 避免打野怪）
                                                 const canFindPath = GridNav.CanFindPath(origin, targetPos);
                                                 if (!canFindPath) {
                                                     FindClearSpaceForUnit(unit, origin, true);
                                                 }
                                                 ExecuteOrderFromTable({
                                                     UnitIndex: unit.entindex(),
-                                                    OrderType: UnitOrder.ATTACK_MOVE,
+                                                    OrderType: UnitOrder.MOVE_TO_POSITION,
                                                     Position: targetPos,
                                                     Queue: false,
                                                 });

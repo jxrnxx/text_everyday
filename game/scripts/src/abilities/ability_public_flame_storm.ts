@@ -16,6 +16,16 @@ export class ability_public_flame_storm extends BaseAbility {
         return this.GetSpecialValueFor('radius') || 350;
     }
 
+    Precache(context: CScriptPrecacheContext) {
+        PrecacheResource('particle', 'particles/custom_flame_storm.vpcf', context);
+        PrecacheResource('particle', 'particles/custom_flame_storm_ring.vpcf', context);
+        PrecacheResource('particle', 'particles/custom_flame_storm_smoke.vpcf', context);
+        PrecacheResource('particle', 'particles/custom_flame_storm_burst.vpcf', context);
+        PrecacheResource('soundfile', 'soundevents/game_sounds_heroes/game_sounds_lina.vsndevts', context);
+        PrecacheResource('soundfile', 'soundevents/game_sounds_heroes/game_sounds_phoenix.vsndevts', context);
+        PrecacheResource('soundfile', 'soundevents/game_sounds_heroes/game_sounds_jakiro.vsndevts', context);
+    }
+
     OnSpellStart(): void {
         if (!IsServer()) return;
 
@@ -27,8 +37,8 @@ export class ability_public_flame_storm extends BaseAbility {
         const wave_count = this.GetSpecialValueFor('wave_count') || 3;
         const wave_interval = this.GetSpecialValueFor('wave_interval') || 0.8;
 
-        // 播放施法音效
-        caster.EmitSound('Hero_Lina.LightStrikeArray');
+        // 播放施法音效 — Phoenix 火灵施放的「嗖」声（蓄力感）
+        EmitSoundOnLocationWithCaster(targetPoint, 'Hero_Phoenix.FireSpirits.Cast', caster);
 
         // 依次释放3波火雨，每波间隔 wave_interval 秒
         for (let i = 0; i < wave_count; i++) {
@@ -83,17 +93,18 @@ export class modifier_flame_storm_wave extends BaseModifier {
         const parent = this.GetParent();
         const pos = parent.GetAbsOrigin();
 
-        // 使用 Lina Light Strike Array 特效（Dota2 内置，无需自定义 vpcf）
-        // 这个粒子只需要 CP0=位置 即可正常显示
+        // 使用自定义火焰风暴粒子（需要在 Workshop Tools 中打开并保存编译）
         this.particleFx = ParticleManager.CreateParticle(
-            'particles/units/heroes/hero_lina/lina_spell_light_strike_array.vpcf',
+            'particles/custom_flame_storm.vpcf',
             ParticleAttachment.WORLDORIGIN,
-            undefined
+            parent
         );
         ParticleManager.SetParticleControl(this.particleFx, 0, pos);
+        ParticleManager.SetParticleControl(this.particleFx, 1, Vector(this.radius, 0, 0));
 
-        // 播放波次音效
+        // 播放波次音效 — Lina 光击（冲击感）+ Jakiro 双息（火焰扫过感）
         EmitSoundOnLocationWithCaster(pos, 'Hero_Lina.LightStrikeArray', this.GetCaster()!);
+        EmitSoundOnLocationWithCaster(pos, 'Hero_Jakiro.DualBreath', this.GetCaster()!);
 
         // 施加伤害
         this.DealWaveDamage(pos);
@@ -171,7 +182,7 @@ export class modifier_flame_storm_burn extends BaseModifier {
     }
 
     GetTexture(): string {
-        return 'lina_light_strike_array';
+        return 'flame_storm_icon';
     }
 
     OnCreated(): void {
